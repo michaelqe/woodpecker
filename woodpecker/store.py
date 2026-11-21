@@ -262,7 +262,18 @@ def set_meta(name: str, title: str | None = None, description: str | None = None
     return _edit(name, fn)
 
 
-def create(name: str, title: str, description: str = "", copy_from: str | None = None) -> Design:
+# A blank design starts with common stock so the Board tool has something to draw with.
+STARTER_MATERIALS = {
+    "ply18": {"name": "Birch plywood 18 mm", "kind": "sheet", "thickness": 18, "stock": [2500, 1250], "density": 680},
+    "ply12": {"name": "Birch plywood 12 mm", "kind": "sheet", "thickness": 12, "stock": [2500, 1250], "density": 680},
+    "pine18x95": {"name": "Pine board 18x95, planed", "kind": "lumber", "section": [18, 95], "stock_length": 3000, "density": 500},
+    "spruce45x45": {"name": "Spruce 45x45, planed", "kind": "lumber", "section": [45, 45], "stock_length": 3000, "density": 450},
+    "spruce45x95": {"name": "Spruce 45x95, planed", "kind": "lumber", "section": [45, 95], "stock_length": 3000, "density": 450},
+}
+
+
+def create(name: str, title: str, description: str = "", copy_from: str | None = None,
+           created_by: str | None = None) -> Design:
     path = design_path(name)
     if path.exists():
         raise DesignError(f"design {name!r} already exists")
@@ -273,8 +284,11 @@ def create(name: str, title: str, description: str = "", copy_from: str | None =
     else:
         raw = {
             "title": title, "description": description, "units": "mm",
-            "params": {}, "materials": {}, "parts": [], "joints": [], "hardware": [],
+            "params": {}, "materials": copy.deepcopy(STARTER_MATERIALS), "parts": [], "joints": [], "hardware": [],
         }
+    if created_by:
+        raw["created_by"] = created_by
+    raw.pop("magpie_page_id", None)
     return write(name, raw)
 
 

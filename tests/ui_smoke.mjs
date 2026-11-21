@@ -109,6 +109,17 @@ try {
     check(!!id, `part uses the imported catalog item (${id})`);
   }
 
+  // ---- New design dialog: blank design with starter materials
+  await api("/api/designs/ui-smoke-new/delete", {}).catch(() => {});
+  await evaluate("document.querySelector('#newDesign').click(); true");
+  check(await waitFor("document.querySelector('#newDlg').open", 3000), "new design dialog opens");
+  await evaluate(`(() => { const t = document.querySelector('#ndTitle'); t.value = 'UI smoke new'; t.dispatchEvent(new Event('input'));
+    document.querySelector('#newDlg button[value=ok]').click(); return true; })()`);
+  check(await waitFor("wp.state.name === 'ui-smoke-new' && document.querySelector('#design').value === 'ui-smoke-new'", 8000),
+    "new blank design is created and opened");
+  check(await waitFor("document.querySelector('#boardMat').options.length >= 3", 3000), "blank design has starter materials for the Board tool");
+  await api("/api/designs/ui-smoke-new/delete", {});
+
   // ---- holes are cut once Manifold arrives
   check(await waitFor("!!wp.state.wasm", 20000), "Manifold (WebAssembly) loads");
 

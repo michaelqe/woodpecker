@@ -13,6 +13,7 @@
 <header class="bar">
   <span class="brand">woodpecker</span>
   <select id="design" aria-label="Design"></select>
+  <button id="newDesign" title="Start a new design">New</button>
   <nav class="views seg" aria-label="View">
     <button data-view="persp" class="on" title="3D (1)">3D</button>
     <button data-view="front" title="Front (2)">Front</button>
@@ -44,6 +45,7 @@
   <label class="toggle"><input type="checkbox" id="showDims" checked> dims</label>
   <label class="toggle"><input type="checkbox" id="showRef" checked> reference</label>
   <button id="undo" title="Undo the last change, yours or the agent's (⌘Z)">Undo</button>
+  <a id="pageLink" class="pagelink" target="_blank" rel="noopener" hidden>Magpie page</a>
   <span id="status" class="status"></span>
 </header>
 <main>
@@ -97,6 +99,21 @@
     <label>Name <input id="bdName" autocomplete="off"></label>
     <label>What does it do? <input id="bdRole" placeholder="e.g. shelf for the Apple TV" autocomplete="off"></label>
     <div class="row2 rev"><button value="ok">Add</button><button value="cancel" class="quiet">Cancel</button></div>
+  </form>
+</dialog>
+<dialog id="newDlg">
+  <form method="dialog">
+    <h2>New design</h2>
+    <label>Title <input id="ndTitle" placeholder="e.g. Garage shelving 2 m" autocomplete="off" required></label>
+    <label>File name <input id="ndName" placeholder="garage-shelving" autocomplete="off" pattern="[a-z0-9][a-z0-9_-]*"></label>
+    <label>Start from
+      <select id="ndFrom"><option value="">a blank design (common plywood and timber ready)</option></select>
+    </label>
+    <label>What do you want to build? <span class="muted small">(optional: the agent starts on it in the Ask tab)</span>
+      <textarea id="ndAsk" rows="4" placeholder="A wall shelf for the garage, 2 m wide, 4 shelves, 40 cm deep, holding paint cans. Spruce frame, plywood shelves."></textarea>
+    </label>
+    <p class="muted small" id="ndPage"></p>
+    <div class="row2 rev"><button value="ok">Create</button><button value="cancel" class="quiet">Cancel</button></div>
   </form>
 </dialog>
 <script type="module" src="/static/app.js"></script>

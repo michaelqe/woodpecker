@@ -5,14 +5,19 @@ from typing import Any
 
 from mcp.server.mcpserver import MCPServer
 
-from . import catalog, cutlist, ikea, store
-from .model import EPS, Design
+from . import catalog, cutlist, ikea, magpie, render, store
+from .model import EPS, Design, DesignError
 from .server import format_cutlist
 
 INSTRUCTIONS = """\
 Woodpecker is a woodworking / garage-building design tool. A design is a JSON file of
-parametric parts; the human watches it in a 3D viewer (http://127.0.0.1:8790) that
-reloads on every change you make.
+parametric parts; the human watches it in a 3D viewer that reloads on every change you make.
+
+Every design has a Magpie page (when publishing is on): drawings from 5 angles, shopping
+list, cut list, parameters and the tip check. It refreshes about 20 s after the design stops
+changing; call wp_publish to refresh it at once and get its link, e.g. after a round of
+edits or when the human asks for the page, pictures, materials or cut list. To start a
+design from scratch, wp_create_design (no copy_from), then add materials and parts.
 
 Model rules:
 - Lengths in millimetres, angles in degrees. Axes: x = width (left->right), y = depth
@@ -210,7 +215,7 @@ def wp_set_meta(name: str, title: str | None = None, description: str | None = N
 @mcp.tool()
 def wp_create_design(name: str, title: str, description: str = "", copy_from: str | None = None) -> dict:
     """Create a new design file (name: lowercase, digits, - and _). copy_from clones another."""
-    return _summary(store.create(name, title, description, copy_from))
+    return _summary(store.create(name, title, description, copy_from, created_by="agent"))
 
 
 @mcp.tool()
@@ -284,6 +289,33 @@ def wp_ikea_import(ref: str) -> dict:
     wp_catalog_add if the human measures. Products already in the catalog are kept as they are.
     Returns the catalog id to use as a part's `component`."""
     return ikea.import_product(ref)
+
+
+@mcp.tool()
+def wp_publish(name: str) -> dict:
+    """Create or refresh the design's Magpie page now (drawings from 5 angles, shopping
+    list, cut list, parameters, tip check). Returns the page link. Anything people wrote
+    under the page's Notes heading is kept."""
+    return magpie.publish(name)
+
+
+@mcp.tool()
+def wp_export_images(name: str, views: list[str] | None = None) -> dict:
+    """Render PNG drawings of a design and save them under .woodpecker/exports/<name>/.
+    views: any of 3d, 3d-back, front, side, top (default all). Front/side/top are flat
+    scale views with overall dimensions. Returns the file paths (and the Magpie page link,
+    where the same pictures are published)."""
+    d = store.load(name)
+    out_dir = store.STATE / "exports" / name
+    out_dir.mkdir(parents=True, exist_ok=True)
+    files = {}
+    for v in views or list(render.VIEWS):
+        if v not in render.VIEWS:
+            raise DesignError(f"unknown view {v!r}; use {', '.join(render.VIEWS)}")
+        f = out_dir / f"{name}-{v}.png"
+        f.write_bytes(render.render(d, v))
+        files[v] = str(f)
+    return {"files": files, "page": magpie.info(name)}
 
 
 def main():

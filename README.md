@@ -2,6 +2,10 @@
 
 Design furniture and garage builds by talking to an agent, and watch the 3D model change.
 
+Live at **https://woodpecker.app.kennedy.ee** (shared login; both users see the same designs
+and product catalog). Each design has a page in Magpie (project Woodpecker) with drawings
+from 5 angles, the shopping list, cut list, parameters and tip check, kept up to date.
+
 ```bash
 .venv/bin/woodpecker serve      # open http://127.0.0.1:8790
 ```
@@ -10,6 +14,22 @@ Then either use the **Ask** tab in the viewer, or run `claude-home` in this fold
 `woodpecker` MCP tools load from `.mcp.json`). Things to try: "make the base 650 deep",
 click a part and ask "explain this", "give me the cut list", "will it tip if a kid pulls on
 the TV?", "swap the base for a KALLAX".
+
+## New designs
+
+**New** (next to the design list) starts a blank design, already stocked with common plywood
+and timber, or a copy of an existing one. Describe what you want to build and the agent
+starts on it in the Ask tab. A Magpie page is made for it straight away.
+
+## Magpie pages
+
+Woodpecker rewrites everything above the page's **Notes** heading about 20 seconds after a
+design stops changing (or at once with **Publish to Magpie now** in the Cut list tab, or the
+agent's `wp_publish`). Write under Notes; that part is kept. Pictures are drawn on the server
+(`woodpecker/render.py`, numpy + Pillow; holes from joints are not shown there) and are also
+at `/api/designs/<name>/render/<3d|3d-back|front|side|top>`. The agent can save them with
+`wp_export_images`. Publishing is on only where `MAGPIE_API_TOKEN` is set (the droplet), so a
+laptop copy never makes duplicate pages.
 
 ## Viewer
 
@@ -63,3 +83,19 @@ The Ask tab runs `claude -p` with only the woodpecker tools plus web lookup. It 
 Override with `WOODPECKER_CLAUDE`, `WOODPECKER_CLAUDE_CONFIG_DIR`, `WOODPECKER_CHAT_MODEL`.
 
 See `AGENTS.md` for the design-file model and the code layout.
+
+## Deploy
+
+```bash
+deploy/deploy.sh      # from the Mac: code to ~/woodpecker, restart, health check
+```
+
+The droplet runs `woodpecker serve` on 127.0.0.1:8514 behind Caddy forward-auth
+(`deploy/Caddyfile.snippet`). Shared data lives in `~/woodpecker/data` (designs, catalog, chat,
+undo history, page ids). Deploys add new example designs and catalog files there but never
+overwrite ones edited on the site. First time only, in a real terminal on the droplet:
+`sudo ~/woodpecker/deploy/install.sh` (unit, Caddy block, restart rule).
+
+The Ask tab needs a working `claude` login on the droplet, kept separate from the droplet's
+default one: `CLAUDE_CONFIG_DIR=~/.claude-woodpecker ~/.local/bin/claude` then `/login`
+(or put `ANTHROPIC_API_KEY=...` in `~/woodpecker/.env`). Both users' chats run on that login.

@@ -585,7 +585,9 @@ function renderCut() {
   const el = $("#tab-cut");
   const unitHead = U.getUnit() === "in" ? "in" : U.getUnit();
   el.innerHTML = `
-    <div class="actions"><a class="btn" href="/print/${esc(state.name)}" target="_blank">Printable build sheet</a></div>
+    <div class="actions"><a class="btn" href="/print/${esc(state.name)}" target="_blank">Printable build sheet</a>
+      ${state.page?.enabled ? `<button id="publishNow" title="Update the Magpie page now (it also updates by itself ~20 s after changes)">Publish to Magpie now</button>` : ""}
+      ${state.page?.url ? `<a class="btn" href="${esc(state.page.url)}" target="_blank" rel="noopener">Open Magpie page</a>` : ""}</div>
     <h3>Cut list (${unitHead})</h3>
     ${c.rows.length ? `<table><tr><th>Qty</th><th>Part</th><th class="n">L × W × T</th></tr>
     ${c.rows.map((r) => `<tr class="click" data-sel="${esc(r.parts[0])}">
@@ -713,6 +715,14 @@ async function sendChat() {
   }
 }
 $("#chatSend").addEventListener("click", sendChat);
+$("#tab-cut").addEventListener("click", async (e) => {
+  if (e.target.id !== "publishNow") return;
+  e.target.disabled = true; e.target.textContent = "Publishing…";
+  try {
+    state.page = await api(`/api/designs/${state.name}/publish`, { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+    await refreshPageLink(); renderCut(); status("Magpie page updated");
+  } catch (err) { showError(err.message); renderCut(); }
+});
 $("#chatIn").addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendChat(); } });
 $("#chatReset").addEventListener("click", async () => {
   if (!confirm("Start a new conversation for this design?")) return;
@@ -741,11 +751,24 @@ function accept(data, msg) {
   if (msg) status(msg);
 }
 
+async function refreshPageLink() {
+  const a = $("#pageLink");
+  try {
+    const p = await api(`/api/designs/${state.name}/page`);
+    state.page = p;
+    a.hidden = !p.url;
+    if (p.url) { a.href = p.url; a.title = p.error ? `Last publish failed: ${p.error}` : "Drawings, shopping list and cut list in Magpie"; }
+    a.textContent = p.error ? "Magpie page (out of date)" : "Magpie page";
+  } catch { a.hidden = true; }
+}
+
 async function loadDesign(name, { keepView = false } = {}) {
   try {
     const data = await api(`/api/designs/${name}`);
+    const switched = state.name !== name;
     state.name = name;
     accept(data);
+    if (switched) refreshPageLink();
     if (!state.fitted || !keepView) { setView(state.view); state.fitted = true; }
     status(`loaded ${new Date().toLocaleTimeString()}`);
   } catch (err) {
@@ -765,6 +788,7 @@ async function poll() {
   if (!state.name || drag) return;
   try {
     if (++polls % 5 === 0) await refreshDesignList();
+    if (polls % 15 === 0) refreshPageLink();
     const { mtime } = await api(`/api/designs/${state.name}/mtime`);
     if (mtime !== state.mtime) {
       state.mtime = mtime;
@@ -773,6 +797,49 @@ async function poll() {
     }
   } catch { /* server restarting */ }
 }
+
+// ------------------------------------------------------------------ new design
+const slug = (t) => t.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
+  .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60);
+$("#newDesign").addEventListener("click", async () => {
+  const list = await api("/api/designs");
+  $("#ndFrom").innerHTML = `<option value="">a blank design (common plywood and timber ready)</option>` +
+    list.map((d) => `<option value="${esc(d.name)}">a copy of ${esc(d.title)}</option>`).join("");
+  for (const id of ["#ndTitle", "#ndName", "#ndAsk"]) $(id).value = "";
+  $("#ndName").dataset.touched = "";
+  $("#ndPage").textContent = state.page?.enabled ? "A Magpie page with drawings, shopping list and cut list is made for it and kept up to date." : "";
+  $("#newDlg").showModal();
+});
+$("#ndTitle").addEventListener("input", () => { if (!$("#ndName").dataset.touched) $("#ndName").value = slug($("#ndTitle").value); });
+$("#ndName").addEventListener("input", () => { $("#ndName").dataset.touched = "1"; });
+$("#newDlg").addEventListener("close", async () => {
+  if ($("#newDlg").returnValue !== "ok") return;
+  const title = $("#ndTitle").value.trim();
+  const name = $("#ndName").value.trim() || slug(title);
+  const ask = $("#ndAsk").value.trim();
+  if (!title || !name) return;
+  try {
+    await api("/api/designs", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, title, description: ask, copy_from: $("#ndFrom").value || null }),
+    });
+    const list = await api("/api/designs");
+    $("#design").innerHTML = list.map((d) => `<option value="${esc(d.name)}">${esc(d.title)}</option>`).join("");
+    $("#design").value = name;
+    state.selected.clear(); state.fitted = false; chatLoaded = null;
+    try { localStorage.setItem("wp.design", name); } catch { /* private mode */ }
+    await loadDesign(name);
+    setTimeout(refreshPageLink, 4000);
+    if (ask) {
+      showTab("ask");
+      await loadChat();
+      $("#chatIn").value = ask;
+      sendChat();
+    } else {
+      status(`created ${title}: draw boards, add products, or ask the agent`);
+    }
+  } catch (err) { showError(err.message); }
+});
 
 // ------------------------------------------------------------------ events
 document.querySelector(".views").addEventListener("click", (e) => { if (e.target.dataset.view) setView(e.target.dataset.view); });
@@ -861,7 +928,7 @@ window.wp = { state, tcontrols, proxy, get camera() { return camera; }, setTool,
   let saved = null;
   try { saved = localStorage.getItem("wp.design"); } catch { /* private mode */ }
   const start = qs.get("design") || (list.some((d) => d.name === saved) ? saved : list[0]?.name);
-  if (!start) { showError("No designs yet. Ask the agent to create one."); return; }
+  if (!start) { showError("No designs yet. Click New to start one."); return; }
   sel.value = start;
   resize();
   await loadDesign(start);

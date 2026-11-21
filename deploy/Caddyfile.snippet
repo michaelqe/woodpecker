@@ -1,0 +1,11 @@
+# Woodpecker. deploy/install.sh appends or refreshes this in /etc/caddy/Caddyfile
+# (marker line below), then validates and reloads Caddy. Shared login via forward-auth,
+# which also tells Woodpecker who is drawing (X-Remote-User).
+# flush_interval -1: the Ask tab streams the agent's reply line by line.
+# --- woodpecker (deploy/Caddyfile.snippet) ---
+woodpecker.app.kennedy.ee {
+	import protected
+	reverse_proxy 127.0.0.1:8514 {
+		flush_interval -1
+	}
+}

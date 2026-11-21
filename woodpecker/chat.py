@@ -12,6 +12,7 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 import threading
 import time
 from pathlib import Path
@@ -24,9 +25,14 @@ model, which reloads after each of your edits, so do not describe what they can 
 see. Use the woodpecker tools (their instructions explain the model). Keep replies short and
 plain: a few sentences or a short list. Give measurements in mm, adding inches in brackets
 when the human uses inches. "This"/"that" means the selected parts named in the viewer
-context line. For IKEA or other bought products use wp_catalog_search; if a product is
-missing, look it up on the maker's own site (WebSearch/WebFetch) and add it with
-wp_catalog_add using only published numbers, listing whatever you had to assume.
+context line. For bought products use wp_catalog_search first; for IKEA, wp_ikea_search and
+wp_ikea_import (live from ikea.com). For other makers look the product up on the maker's own
+site (WebSearch/WebFetch) and add it with wp_catalog_add using only published numbers,
+listing whatever you had to assume. When the design is new or empty and the human describes
+what they want, build it from scratch: materials first, then parts with params, roles and
+joints, then wp_check. Each design has a Magpie page with drawings, shopping list and cut
+list that refreshes by itself; call wp_publish when you finish a round of changes and give
+the human the page link if they ask for it.
 """
 
 _locks: dict[str, threading.Lock] = {}
@@ -51,6 +57,23 @@ def _env() -> dict:
     if cfg:
         env["CLAUDE_CONFIG_DIR"] = cfg
     return env
+
+
+_PASS_ENV = ("WOODPECKER_HOME", "MAGPIE_API_BASE", "MAGPIE_API_TOKEN", "WOODPECKER_MAGPIE_PROJECT",
+             "WOODPECKER_PUBLIC_URL", "MAGPIE_PUBLIC_URL", "WOODPECKER_IKEA_COUNTRY", "WOODPECKER_IKEA_LANGUAGE")
+
+
+def mcp_config() -> Path:
+    """MCP config for the chat's claude: this install's woodpecker-mcp, same data dir."""
+    exe = Path(sys.executable).with_name("woodpecker-mcp")
+    env = {k: os.environ[k] for k in _PASS_ENV if os.environ.get(k)}
+    env["WOODPECKER_HOME"] = str(store.ROOT)
+    cfg = {"mcpServers": {"woodpecker": {"command": str(exe), "env": env}}}
+    store.STATE.mkdir(parents=True, exist_ok=True)
+    path = store.STATE / "chat-mcp.json"
+    path.write_text(json.dumps(cfg, indent=1))
+    path.chmod(0o600)  # may hold the Magpie token
+    return path
 
 
 def _state_file(design: str) -> Path:
@@ -80,7 +103,8 @@ def reset(design: str) -> dict:
 
 def status() -> dict:
     b = claude_bin()
-    return {"available": bool(b and Path(b).exists()), "binary": b}
+    return {"available": bool(b and Path(b).exists()), "binary": b,
+            "config_dir": _env().get("CLAUDE_CONFIG_DIR")}
 
 
 def context_line(design: str, selection: list[str]) -> str:
@@ -104,7 +128,7 @@ def stream(design: str, message: str, selection: list[str]):
         _save(design, h)
         cmd = [b, "-p", f"{context_line(design, selection)}\n{message}",
                "--output-format", "stream-json", "--verbose",
-               "--mcp-config", str(store.ROOT / ".mcp.json"), "--strict-mcp-config",
+               "--mcp-config", str(mcp_config()), "--strict-mcp-config",
                "--allowedTools", "mcp__woodpecker", "WebSearch", "WebFetch",
                "--append-system-prompt", CHAT_PROMPT]
         if os.environ.get("WOODPECKER_CHAT_MODEL"):

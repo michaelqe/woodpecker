@@ -5,3 +5,4 @@ __pycache__/
 *.json.tmp
 .DS_Store
 .idea/
+woodpecker/BUILD_SHA

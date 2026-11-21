@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import threading
 import mimetypes
 import re
 from http import HTTPStatus
@@ -10,10 +11,11 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlparse
 
-from . import catalog, chat, cutlist, ikea, store
+from . import catalog, chat, cutlist, ikea, magpie, store
 from .model import DesignError
 
 STATIC = Path(__file__).resolve().parent / "static"
+BUILD_SHA_FILE = Path(__file__).resolve().parent / "BUILD_SHA"
 mimetypes.add_type("text/javascript", ".js")
 mimetypes.add_type("application/wasm", ".wasm")
 
@@ -65,6 +67,11 @@ class Handler(BaseHTTPRequestHandler):
         n = int(self.headers.get("Content-Length") or 0)
         return json.loads(self.rfile.read(n) or b"{}")
 
+    def _user(self) -> str | None:
+        """Login name from Caddy forward-auth (absent when run locally)."""
+        u = (self.headers.get("X-Remote-User") or "").strip()
+        return u or None
+
     def _query(self) -> dict:
         return {k: v[0] for k, v in parse_qs(urlparse(self.path).query).items()}
 
@@ -101,6 +108,16 @@ class Handler(BaseHTTPRequestHandler):
         ctype = mimetypes.guess_type(f.name)[0] or "application/octet-stream"
         self._send(HTTPStatus.OK, f.read_bytes(), ctype)
 
+    # ---- health / who
+    @route("GET", r"/api/health")
+    def health(self):
+        sha = BUILD_SHA_FILE.read_text().strip() if BUILD_SHA_FILE.exists() else "dev"
+        self._json({"ok": True, "git_sha": sha, "magpie": magpie.enabled()})
+
+    @route("GET", r"/api/me")
+    def me(self):
+        self._json({"user": self._user(), "magpie": magpie.enabled()})
+
     # ---- designs
     @route("GET", r"/api/designs")
     def designs(self):
@@ -109,7 +126,9 @@ class Handler(BaseHTTPRequestHandler):
     @route("POST", r"/api/designs")
     def create_design(self):
         b = self._body()
-        store.create(b["name"], b.get("title", b["name"]), b.get("description", ""), b.get("copy_from"))
+        store.create(b["name"], b.get("title") or b["name"], b.get("description", ""), b.get("copy_from"),
+                     created_by=self._user())
+        _publish_soon(b["name"], self._user())
         self._json(design_payload(b["name"]))
 
     @route("GET", rf"/api/designs/{NAME}")
@@ -128,7 +147,24 @@ class Handler(BaseHTTPRequestHandler):
 
     @route("POST", rf"/api/designs/{NAME}/delete")
     def delete_design(self, name):
-        self._json(store.delete_design(name))
+        out = store.delete_design(name)
+        threading.Thread(target=magpie.mark_deleted, args=(name,), daemon=True).start()
+        self._json(out)
+
+    @route("GET", rf"/api/designs/{NAME}/page")
+    def design_page(self, name):
+        self._json(magpie.info(name))
+
+    @route("POST", rf"/api/designs/{NAME}/publish")
+    def publish(self, name):
+        self._json(magpie.publish(name, by=self._user(), force=bool(self._body().get("force"))))
+
+    @route("GET", rf"/api/designs/{NAME}/render/([a-z0-9-]+)")
+    def render_png(self, name, view):
+        from . import render
+        if view not in render.VIEWS:
+            raise DesignError(f"view must be one of {', '.join(render.VIEWS)}")
+        self._send(HTTPStatus.OK, render.render(store.load(name), view), "image/png")
 
     @route("POST", rf"/api/designs/{NAME}/undo")
     def undo(self, name):
@@ -222,8 +258,22 @@ class Handler(BaseHTTPRequestHandler):
         self.close_connection = True
 
 
+def _publish_soon(name: str, by: str | None) -> None:
+    if not magpie.enabled():
+        return
+
+    def run():
+        try:
+            magpie.publish(name, by=by)
+        except DesignError as e:
+            print(f"magpie: {name}: {e}", flush=True)
+    threading.Thread(target=run, daemon=True).start()
+
+
 def serve(host="127.0.0.1", port=8790):
     httpd = ThreadingHTTPServer((host, port), Handler)
+    if magpie.watch():
+        print("Magpie pages: on (project %s at %s)" % (magpie.project_id(), magpie._base()))
     print(f"Woodpecker on http://{host}:{port}  (designs in {store.DESIGNS})")
     try:
         httpd.serve_forever()

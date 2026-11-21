@@ -38,6 +38,9 @@ def _rgb(hexstr: str) -> np.ndarray:
 
 
 def part_color(p, design: Design) -> np.ndarray:
+    own = ((design.raw.get("materials") or {}).get(p.material) or {}).get("color")
+    if own and p.kind != "component":
+        return _rgb(own)
     if p.kind == "component":
         c = (design.components.get(p.component) or {}).get("color")
         return _rgb(c or "#e9e7e2")

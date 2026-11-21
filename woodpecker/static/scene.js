@@ -7,6 +7,8 @@ const WOOD = [0xc8b08a, 0xb89a6e, 0xd6c29b, 0xa88a62, 0xc9a77c];
 const EDGE = 0x1a1410, EDGE_REF = 0x555b63, EDGE_COMP = 0x8d8a84;
 
 export function colorFor(part, design) {
+  const own = design.materials?.[part.material]?.color;
+  if (own && part.kind !== "component") return new THREE.Color(own).getHex();
   if (part.kind === "component") {
     const c = design.components?.[part.component]?.color;
     return c ? new THREE.Color(c).getHex() : 0xe9e7e2;

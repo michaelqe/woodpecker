@@ -48,6 +48,9 @@ Model rules:
 - `cutouts`: [{"label", "at", "size"}] boxes cut from the part (local coords). A joint
   with `cut_into: [host ids]` cuts the joint's other parts out of the hosts (through-
   mortise, dado, birdsmouth notch). The viewer shows the holes; the cut list notes them.
+- Materials may carry a `color` ("#rrggbb"); reference materials (site, cars, boundaries) use
+  it to stay readable. A design with `"anchored": "<why>"` (carports, sheds, anything on
+  footings) skips the tip check and shows that text instead.
 - Every part needs a plain-English `role`: what it does structurally. That is what you
   read back when the human asks "explain this". Add `notes` for build tips.
 - Materials have a kind: sheet (plywood; thinnest side must equal thickness), lumber

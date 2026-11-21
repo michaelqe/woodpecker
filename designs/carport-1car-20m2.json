@@ -1,0 +1,814 @@
+{
+  "title": "Carport for the Multivan, under 20 m2 (3.6 x 5.45 m)",
+  "description": "Option 2 for House > Garage (Proposed). The smallest useful roof: one car (the Multivan) at the house end, roofed area 19.6 m2 (19.8 m2 measured over the roof sheet edge) and under 5 m high, which the building code exempts from notice and permit (EhS Annex 1: 0-20 m2). It must still be allowed by the detailed plan, so ask the city question (c) first. Same construction as option 1, so a second bay can be added later (but that makes it 20-60 m2). Room for 9 solar panels (about 3.9 kWp).",
+  "units": "mm",
+  "anchored": "Stands on ground screws, so there is no tip check.",
+  "params": {
+    "x0": {
+      "value": 150,
+      "label": "Gap between house wall and roof edge"
+    },
+    "W": {
+      "value": 3600,
+      "label": "Roof width (along the house wall's side, x)"
+    },
+    "D": {
+      "value": 5450,
+      "label": "Roof depth, road side to garden side (y)"
+    },
+    "y0": {
+      "value": 0,
+      "label": "Roof front edge (0 = front edge of the pad)"
+    },
+    "bays": {
+      "value": 1,
+      "label": "Bays between posts",
+      "unit": "count"
+    },
+    "h_front": {
+      "value": 2800,
+      "label": "Top of the front beam"
+    },
+    "pitch": {
+      "value": 5,
+      "label": "Roof pitch (falls toward the garden)",
+      "unit": "deg"
+    },
+    "oh_side": {
+      "value": 200,
+      "label": "Roof overhang past the end posts"
+    },
+    "oh_front": {
+      "value": 300,
+      "label": "Roof overhang in front of the front posts"
+    },
+    "oh_back": {
+      "value": 300,
+      "label": "Roof overhang behind the back posts"
+    },
+    "post": {
+      "value": 140,
+      "label": "Post size (glulam, square)"
+    },
+    "beam_h": {
+      "value": 225,
+      "label": "Beam depth (glulam)"
+    },
+    "raf_h": {
+      "value": 220,
+      "label": "Rafter depth"
+    },
+    "raf_t": {
+      "value": 45,
+      "label": "Rafter thickness"
+    },
+    "raf_max": {
+      "value": 600,
+      "label": "Max rafter spacing"
+    },
+    "batten_max": {
+      "value": 800,
+      "label": "Max batten spacing (along the slope)"
+    },
+    "brace": {
+      "value": 600,
+      "label": "Knee brace leg"
+    },
+    "post_step": "(W - 2 * oh_side - post) / bays",
+    "yf": "y0 + oh_front",
+    "yb": "y0 + D - oh_back - post",
+    "h_back": {
+      "value": "h_front - (yb - yf) * tan(pitch)",
+      "label": "Top of the back beam"
+    },
+    "raf_len": "D / cos(pitch)",
+    "raf_n": "ceil((W - raf_t) / raf_max) + 1",
+    "raf_step": "(W - raf_t) / (raf_n - 1)",
+    "raf_z": "h_front + (yf + post / 2 - y0) * tan(pitch)",
+    "top_z": "raf_z + raf_h / cos(pitch)",
+    "bat_n": "ceil((raf_len - 100) / batten_max) + 1",
+    "bat_step": "(raf_len - 100) / (bat_n - 1)",
+    "roof_area_m2": {
+      "value": "W * D / 1000000",
+      "label": "Roofed area (counts as footprint)",
+      "unit": "m2"
+    },
+    "height_max": {
+      "value": "top_z + 32 + 25",
+      "label": "Highest point (roof sheet at the front)"
+    }
+  },
+  "materials": {
+    "gl_post": {
+      "name": "Glulam GL30c 140x140 (post)",
+      "kind": "lumber",
+      "section": [
+        140,
+        140
+      ],
+      "stock_length": 6000,
+      "density": 460,
+      "notes": "Glulam is ordered cut to length; 6 m is a common stock length."
+    },
+    "gl_beam": {
+      "name": "Glulam GL30c 140x225 (beam)",
+      "kind": "lumber",
+      "section": [
+        140,
+        225
+      ],
+      "stock_length": 12000,
+      "density": 460,
+      "notes": "Ordered cut to length."
+    },
+    "c24_220": {
+      "name": "Spruce C24 45x220",
+      "kind": "lumber",
+      "section": [
+        45,
+        220
+      ],
+      "stock_length": 6000,
+      "density": 450
+    },
+    "c24_95": {
+      "name": "Spruce C24 45x95",
+      "kind": "lumber",
+      "section": [
+        45,
+        95
+      ],
+      "stock_length": 3600,
+      "density": 450
+    },
+    "batten": {
+      "name": "Roof batten 32x100, planed",
+      "kind": "lumber",
+      "section": [
+        32,
+        100
+      ],
+      "stock_length": 4800,
+      "density": 450
+    },
+    "roof_sheet": {
+      "name": "Profiled steel roof sheet (reference)",
+      "kind": "reference",
+      "color": "#59636e"
+    },
+    "solar": {
+      "name": "Solar panel about 430 W, 1722x1134 (reference)",
+      "kind": "reference",
+      "color": "#1d3557"
+    },
+    "site": {
+      "name": "Site (reference, approximate)",
+      "kind": "reference",
+      "color": "#b9b4aa"
+    },
+    "house": {
+      "name": "House (reference)",
+      "kind": "reference",
+      "color": "#c79a8f"
+    },
+    "boundary": {
+      "name": "Plot boundary (reference)",
+      "kind": "reference",
+      "color": "#e3b505"
+    },
+    "car": {
+      "name": "Car (reference)",
+      "kind": "reference",
+      "color": "#4f7cac"
+    },
+    "zone": {
+      "name": "Cable protection zone (reference, approximate)",
+      "kind": "reference",
+      "color": "#d64541"
+    }
+  },
+  "parts": [
+    {
+      "id": "post_front",
+      "name": "Post, front",
+      "group": "Frame",
+      "material": "gl_post",
+      "size": [
+        "post",
+        "post",
+        "h_front - beam_h"
+      ],
+      "at": [
+        "x0 + oh_side",
+        "yf",
+        0
+      ],
+      "repeat": {
+        "count": "bays + 1",
+        "axis": "x",
+        "spacing": "post_step"
+      },
+      "role": "Carries the front beam down to a ground screw. Sized and spaced so walls and a door can be added later."
+    },
+    {
+      "id": "post_back",
+      "name": "Post, back",
+      "group": "Frame",
+      "material": "gl_post",
+      "size": [
+        "post",
+        "post",
+        "h_back - beam_h"
+      ],
+      "at": [
+        "x0 + oh_side",
+        "yb",
+        0
+      ],
+      "repeat": {
+        "count": "bays + 1",
+        "axis": "x",
+        "spacing": "post_step"
+      },
+      "role": "Carries the back (low) beam. Shorter than the front posts because the roof falls toward the garden."
+    },
+    {
+      "id": "beam_front",
+      "name": "Beam, front",
+      "group": "Frame",
+      "material": "gl_beam",
+      "size": [
+        "W - 200",
+        "post",
+        "beam_h"
+      ],
+      "at": [
+        "x0 + 100",
+        "yf",
+        "h_front - beam_h"
+      ],
+      "role": "Front (high) beam on top of the front posts; the rafters sit on it."
+    },
+    {
+      "id": "beam_back",
+      "name": "Beam, back",
+      "group": "Frame",
+      "material": "gl_beam",
+      "size": [
+        "W - 200",
+        "post",
+        "beam_h"
+      ],
+      "at": [
+        "x0 + 100",
+        "yb",
+        "h_back - beam_h"
+      ],
+      "role": "Back (low) beam on top of the back posts."
+    },
+    {
+      "id": "brace_front",
+      "name": "Knee brace, front",
+      "group": "Frame",
+      "material": "c24_95",
+      "size": [
+        "brace / cos(45)",
+        45,
+        95
+      ],
+      "at": [
+        "x0 + oh_side + post",
+        "yf + post / 2 - 22.5",
+        "h_front - beam_h - brace - 95 * sqrt(2) + 2"
+      ],
+      "rotate": {
+        "axis": "y",
+        "deg": -45
+      },
+      "ends": {
+        "start": 45,
+        "end": -45
+      },
+      "repeat": {
+        "count": "bays",
+        "axis": "x",
+        "spacing": "post_step"
+      },
+      "mirror": {
+        "axis": "x",
+        "about": "x0 + W / 2"
+      },
+      "role": "Diagonal between post and beam. Stops the frame racking sideways along its length (wind, a nudge from a car)."
+    },
+    {
+      "id": "brace_back",
+      "name": "Knee brace, back",
+      "group": "Frame",
+      "material": "c24_95",
+      "size": [
+        "brace / cos(45)",
+        45,
+        95
+      ],
+      "at": [
+        "x0 + oh_side + post",
+        "yb + post / 2 - 22.5",
+        "h_back - beam_h - brace - 95 * sqrt(2) + 2"
+      ],
+      "rotate": {
+        "axis": "y",
+        "deg": -45
+      },
+      "ends": {
+        "start": 45,
+        "end": -45
+      },
+      "repeat": {
+        "count": "bays",
+        "axis": "x",
+        "spacing": "post_step"
+      },
+      "mirror": {
+        "axis": "x",
+        "about": "x0 + W / 2"
+      },
+      "role": "Diagonal between post and beam. Stops the frame racking sideways along its length (wind, a nudge from a car)."
+    },
+    {
+      "id": "rafter",
+      "name": "Rafter",
+      "group": "Roof",
+      "material": "c24_220",
+      "size": [
+        "raf_t",
+        "raf_len",
+        "raf_h"
+      ],
+      "at": [
+        "x0",
+        "y0",
+        "raf_z"
+      ],
+      "rotate": {
+        "axis": "x",
+        "deg": "-pitch"
+      },
+      "repeat": {
+        "count": "raf_n",
+        "axis": "x",
+        "spacing": "raf_step"
+      },
+      "role": "Spans from the front beam to the back beam, falling toward the garden so rain and snow run off away from the cars' noses. Fixed with a rafter tie at each beam.",
+      "notes": "About 5.3 m between the beams: check the span against the snow load in the design project (45x220 at 600 c/c is at the limit; 400 c/c or 45x245 if needed)."
+    },
+    {
+      "id": "batten_1",
+      "name": "Roof batten, piece 1",
+      "group": "Roof",
+      "material": "batten",
+      "size": [
+        "W / 1",
+        100,
+        32
+      ],
+      "at": [
+        "x0 + 0 * W / 1",
+        "y0 + 50 * cos(pitch)",
+        "top_z - 50 * sin(pitch)"
+      ],
+      "rotate": {
+        "axis": "x",
+        "deg": "-pitch"
+      },
+      "repeat": {
+        "count": "bat_n",
+        "step": [
+          0,
+          "bat_step * cos(pitch)",
+          "-bat_step * sin(pitch)"
+        ]
+      },
+      "role": "Across the rafters; the steel roof sheets are screwed to these. Joints fall on a rafter."
+    },
+    {
+      "id": "roof",
+      "name": "Roof sheet",
+      "group": "Roof",
+      "material": "roof_sheet",
+      "size": [
+        "W",
+        "raf_len",
+        25
+      ],
+      "at": [
+        "x0",
+        "y0",
+        "top_z + 32"
+      ],
+      "rotate": {
+        "axis": "x",
+        "deg": "-pitch"
+      },
+      "role": "Profiled steel sheet with anti-condensation felt (so it does not drip on the cars)."
+    },
+    {
+      "id": "solar_1",
+      "name": "Solar panel, row 1",
+      "group": "Solar",
+      "material": "solar",
+      "size": [
+        1134,
+        1722,
+        35
+      ],
+      "at": [
+        "x0 + (W - 3 * 1150) / 2",
+        "y0 + (150 + 0 * 1740) * cos(pitch)",
+        "top_z + 32 + 25 + 60 - (150 + 0 * 1740) * sin(pitch)"
+      ],
+      "rotate": {
+        "axis": "x",
+        "deg": "-pitch"
+      },
+      "repeat": {
+        "count": 3,
+        "axis": "x",
+        "spacing": 1150
+      },
+      "role": "Solar panels on rails over the roof sheet. The roof faces roughly south-south-east."
+    },
+    {
+      "id": "solar_2",
+      "name": "Solar panel, row 2",
+      "group": "Solar",
+      "material": "solar",
+      "size": [
+        1134,
+        1722,
+        35
+      ],
+      "at": [
+        "x0 + (W - 3 * 1150) / 2",
+        "y0 + (150 + 1 * 1740) * cos(pitch)",
+        "top_z + 32 + 25 + 60 - (150 + 1 * 1740) * sin(pitch)"
+      ],
+      "rotate": {
+        "axis": "x",
+        "deg": "-pitch"
+      },
+      "repeat": {
+        "count": 3,
+        "axis": "x",
+        "spacing": 1150
+      },
+      "role": "Solar panels on rails over the roof sheet. The roof faces roughly south-south-east."
+    },
+    {
+      "id": "solar_3",
+      "name": "Solar panel, row 3",
+      "group": "Solar",
+      "material": "solar",
+      "size": [
+        1134,
+        1722,
+        35
+      ],
+      "at": [
+        "x0 + (W - 3 * 1150) / 2",
+        "y0 + (150 + 2 * 1740) * cos(pitch)",
+        "top_z + 32 + 25 + 60 - (150 + 2 * 1740) * sin(pitch)"
+      ],
+      "rotate": {
+        "axis": "x",
+        "deg": "-pitch"
+      },
+      "repeat": {
+        "count": 3,
+        "axis": "x",
+        "spacing": 1150
+      },
+      "role": "Solar panels on rails over the roof sheet. The roof faces roughly south-south-east."
+    },
+    {
+      "id": "multivan_body",
+      "name": "VW Multivan T7, body",
+      "group": "Cars",
+      "material": "car",
+      "size": [
+        1941,
+        4973,
+        1047
+      ],
+      "at": [
+        980,
+        300,
+        180
+      ],
+      "role": "VW Multivan T7: 4973 x 1941 x 1903 mm. Reference only, to check the fit."
+    },
+    {
+      "id": "multivan_cabin",
+      "name": "VW Multivan T7, cabin",
+      "group": "Cars",
+      "material": "car",
+      "size": [
+        1821,
+        4277,
+        676
+      ],
+      "at": [
+        1040,
+        797,
+        1227
+      ],
+      "role": "VW Multivan T7, upper body."
+    },
+    {
+      "id": "multivan_wheel",
+      "name": "VW Multivan T7, wheel",
+      "group": "Cars",
+      "material": "car",
+      "size": [
+        220,
+        660,
+        660
+      ],
+      "at": [
+        1020,
+        894,
+        0
+      ],
+      "repeat": {
+        "count": 2,
+        "axis": "y",
+        "spacing": 3124
+      },
+      "mirror": {
+        "axis": "x",
+        "about": 1950
+      },
+      "role": "VW Multivan T7, wheels."
+    },
+    {
+      "id": "pad",
+      "name": "Parking pad (pavers), main part",
+      "group": "Site",
+      "material": "site",
+      "size": [
+        10290,
+        4380,
+        20
+      ],
+      "at": [
+        0,
+        0,
+        0
+      ],
+      "role": "The existing paved pad, 58 m2 (in the Top view the road is at the bottom, the garden at the top). Measured on the map: 10.29 m along the road side, 11.72 m along the garden side, 6.1 m at the house, 4.57 m at the east end."
+    },
+    {
+      "id": "pad_wedge",
+      "name": "Parking pad, garden-side wedge",
+      "group": "Site",
+      "material": "site",
+      "shape": "gusset",
+      "leg": "left",
+      "size": [
+        11593,
+        20,
+        1720
+      ],
+      "at": [
+        0,
+        4380,
+        20
+      ],
+      "rotate": {
+        "axis": "x",
+        "deg": -90
+      },
+      "role": "Part of the pad: it is deeper at the house end (6.1 m) than at the east end (4.4-4.6 m)."
+    },
+    {
+      "id": "pad_east",
+      "name": "Parking pad, east wedge",
+      "group": "Site",
+      "material": "site",
+      "shape": "gusset",
+      "leg": "left",
+      "size": [
+        1303,
+        20,
+        4380
+      ],
+      "at": [
+        10290,
+        4380,
+        0
+      ],
+      "rotate": {
+        "axis": "x",
+        "deg": 90
+      },
+      "role": "Part of the pad: the east edge slants outward toward the garden."
+    },
+    {
+      "id": "house",
+      "name": "House (footprint, east end)",
+      "group": "Site",
+      "material": "house",
+      "size": [
+        6000,
+        7000,
+        300
+      ],
+      "at": [
+        -6000,
+        0,
+        0
+      ],
+      "role": "The house. Its east gable wall is the pad's west edge (x = 0). Drawn low so it does not hide the design."
+    },
+    {
+      "id": "boundary_north",
+      "name": "Plot boundary, road side (approx.)",
+      "group": "Site",
+      "material": "boundary",
+      "size": [
+        14000,
+        60,
+        100
+      ],
+      "at": [
+        -2000,
+        -3500,
+        0
+      ],
+      "role": "Boundary with the road-side strip, about 3.5 m north of the pad (measured on the map)."
+    },
+    {
+      "id": "boundary_east",
+      "name": "Plot boundary with 0127 (approx.)",
+      "group": "Site",
+      "material": "boundary",
+      "size": [
+        9000,
+        60,
+        100
+      ],
+      "at": [
+        11209,
+        -3925,
+        0
+      ],
+      "rotate": {
+        "axis": "z",
+        "deg": 73.43
+      },
+      "role": "Boundary with plot 0127, about 2 m from the east end of the pad. Under 4 m means EI60 walls and, in Tallinn, a written agreement with the neighbour."
+    },
+    {
+      "id": "cable_zone_front",
+      "name": "Cable corridor protection zone (approx.)",
+      "group": "Site",
+      "material": "zone",
+      "size": [
+        16000,
+        2000,
+        15
+      ],
+      "at": [
+        -3000,
+        -5500,
+        0
+      ],
+      "role": "Low-voltage cables run 4-5 m north of the pad's front edge, with about 1 m protection zone each side. No digging or footings here without Elektrilevi's consent."
+    },
+    {
+      "id": "cable_zone_ne",
+      "name": "Service cables from 1239, zone (approx.)",
+      "group": "Site",
+      "material": "zone",
+      "size": [
+        2000,
+        5500,
+        15
+      ],
+      "at": [
+        11300,
+        -3500,
+        0
+      ],
+      "role": "AXPK 4x25 service cables leave distribution point 1239 heading south then east, about 2 m from the pad's NE corner. Positions on utility maps can be off by a metre; order an on-site marking."
+    },
+    {
+      "id": "dist_1239",
+      "name": "Distribution point 1239 (Haabersti)",
+      "group": "Site",
+      "material": "site",
+      "size": [
+        900,
+        500,
+        1400
+      ],
+      "at": [
+        11200,
+        -2600,
+        0
+      ],
+      "role": "Elektrilevi distribution point on the neighbouring land, just past the NE corner of the pad."
+    }
+  ],
+  "joints": [
+    {
+      "id": "post_beam",
+      "type": "bolted",
+      "parts": [
+        "post_front",
+        "beam_front",
+        "post_back",
+        "beam_back"
+      ],
+      "fasteners": "Post-to-beam steel brackets, 2x M12 bolts each, or a slotted post with 2x M12"
+    },
+    {
+      "id": "braces",
+      "type": "screwed",
+      "parts": [
+        "brace_front",
+        "brace_back",
+        "post_front",
+        "post_back",
+        "beam_front",
+        "beam_back"
+      ],
+      "fasteners": "2x 8x160 construction screws at each end"
+    },
+    {
+      "id": "rafters_on_beams",
+      "type": "screwed",
+      "parts": [
+        "rafter",
+        "beam_front",
+        "beam_back"
+      ],
+      "fasteners": "Rafter tie (hurricane clip) each side of each rafter at both beams"
+    },
+    {
+      "id": "battens",
+      "type": "screwed",
+      "parts": [
+        "rafter",
+        "roof",
+        "batten_1"
+      ],
+      "fasteners": "2x 5x90 screws per crossing"
+    },
+    {
+      "id": "solar_on_roof",
+      "type": "clamped",
+      "parts": [
+        "roof",
+        "solar_1",
+        "solar_2",
+        "solar_3"
+      ],
+      "fasteners": "Panel rails on roof hooks into the battens"
+    }
+  ],
+  "hardware": [
+    {
+      "item": "Ground screw 76x1000 with adjustable post plate",
+      "qty": 4,
+      "notes": "One per post. Lift the pavers locally, screw in, re-lay. Keep clear of cable zones."
+    },
+    {
+      "item": "Post-to-beam steel bracket + 2x M12x200 bolts",
+      "qty": 4
+    },
+    {
+      "item": "Rafter tie / hurricane clip",
+      "qty": 28
+    },
+    {
+      "item": "Profiled steel roof sheet with anti-condensation felt, about 20 m2",
+      "qty": 1
+    },
+    {
+      "item": "Gutter along the back (low) edge, with downpipe to a soakaway",
+      "qty": 1
+    },
+    {
+      "item": "8x160 construction screws (braces)",
+      "qty": 40
+    },
+    {
+      "item": "5x90 screws (battens), box of 250",
+      "qty": 2
+    },
+    {
+      "item": "Solar panel about 430 W (9 = about 3.9 kWp) + rails, inverter, small-producer connection",
+      "qty": 9
+    }
+  ]
+}

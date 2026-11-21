@@ -320,6 +320,12 @@ def stability(design: Design) -> dict:
     if total == 0:
         return {"total_mass_kg": 0, "note": "no masses known"}
     cog = [v / total for v in moment]
+    if design.raw.get("anchored"):
+        text = design.raw["anchored"] if isinstance(design.raw["anchored"], str) \
+            else "Fixed to footings, so there is no tip check."
+        return {"total_mass_kg": round(total, 1), "cog_mm": [round(v) for v in cog],
+                "mass_breakdown": breakdown, "anchored": text,
+                "note": f"About {total:.0f} kg of parts with a known weight. {text}"}
 
     pts = []
     for p in design.parts:

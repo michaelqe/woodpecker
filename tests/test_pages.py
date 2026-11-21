@@ -164,3 +164,17 @@ def test_publish_error_is_recorded(home, monkeypatch):
     with pytest.raises(Exception):
         magpie.publish("tv-cart")
     assert "unreachable" in magpie.info("tv-cart")["error"]
+
+
+def test_material_color_and_anchored(home):
+    import json
+    from woodpecker import cutlist
+    raw = json.loads((home / "designs/tv-cart.json").read_text())
+    raw["anchored"] = "On ground screws."
+    raw["materials"]["tv"]["color"] = "#ff0000"
+    (home / "designs/tv-cart.json").write_text(json.dumps(raw))
+    d = store.load("tv-cart")
+    st = cutlist.stability(d)
+    assert st["anchored"] == "On ground screws." and "tip" not in st
+    tv = next(p for p in d.parts if p.material == "tv")
+    assert list(render.part_color(tv, d)) == [255, 0, 0]

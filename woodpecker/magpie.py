@@ -160,6 +160,8 @@ def body_markdown(design, images: dict[str, str], by: str | None) -> str:
         L.append(f"Overall **{_fmt(s[0])} x {_fmt(s[1])} x {_fmt(s[2])} mm** (W x D x H).")
     if st.get("total_mass_kg") is not None:
         L.append(f"Weight about **{st['total_mass_kg']} kg** (parts with a known weight).")
+    if st.get("anchored"):
+        L.append(st["anchored"])
     tips = st.get("tip") or {}
     if tips:
         L += ["", "| Tips | at tilt | push at the top |", "|---|---|---|"]

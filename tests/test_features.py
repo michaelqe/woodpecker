@@ -148,7 +148,10 @@ def test_catalog_entries_cite_their_source(home):
 
 
 def test_component_in_design(home):
-    d = store.load("tv-cart-kallax")
+    # its own copy, so editing the example designs in the app never breaks this test
+    store.add_part("tv-cart", {"id": "kallax", "name": "KALLAX", "component": "ikea-kallax-77x41",
+                               "at": [2000, 0, 0], "role": "test"})
+    d = store.load("tv-cart")
     panels = d.expand("kallax")
     assert panels and all(p.kind == "component" for p in panels)
     assert d.issues == []

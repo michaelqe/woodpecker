@@ -1,0 +1,36 @@
+{
+  "id": "ikea-trofast-frame-80153800",
+  "brand": "IKEA",
+  "category": "open storage solutions",
+  "name": "TROFAST frame, white, 99x44x56 cm",
+  "article": "801.538.00",
+  "url": "https://www.ikea.com/ee/en/p/trofast-frame-white-80153800/",
+  "retrieved": "2026-11-21",
+  "price": {
+    "amount": 45,
+    "currency": "EUR"
+  },
+  "size": [
+    990,
+    440,
+    560
+  ],
+  "package_kg": 23.45,
+  "material": "Particleboard, Paper foil, Plastic edging; Polypropylene plastic",
+  "color": "#e9e7e2",
+  "geometry": {
+    "generator": "carcass",
+    "panel": 18,
+    "back": 0,
+    "shelves": 0,
+    "partitions": 2,
+    "plinth": 0
+  },
+  "construction": "Solid particleboard (not honeycomb), with plastic guide rails for boxes/shelves on the inside faces. Particleboard holds screws poorly under load; through-bolt with washers for anything structural.",
+  "assumed": [
+    "panel thickness 18 mm (not published; measure yours)",
+    "three bays (two partitions), as in IKEA's photos",
+    "no back panel",
+    "no load limit published"
+  ]
+}

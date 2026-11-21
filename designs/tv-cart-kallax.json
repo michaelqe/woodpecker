@@ -8,20 +8,20 @@
       "label": "Plywood thickness"
     },
     "kallax_w": {
-      "value": 765,
-      "label": "KALLAX width (from IKEA)"
+      "value": 990,
+      "label": "Cabinet width (TROFAST, from IKEA)"
     },
     "kallax_d": {
-      "value": 390,
-      "label": "KALLAX depth (from IKEA)"
+      "value": 440,
+      "label": "Cabinet depth (TROFAST, from IKEA)"
     },
     "kallax_h": {
-      "value": 410,
-      "label": "KALLAX height (from IKEA)"
+      "value": 560,
+      "label": "Cabinet height (TROFAST, from IKEA)"
     },
     "kallax_panel": {
-      "value": 38,
-      "label": "KALLAX panel thickness",
+      "value": 18,
+      "label": "Cabinet panel thickness",
       "notes": "Assumed; measure yours."
     },
     "plate_d": {
@@ -89,7 +89,10 @@
     "post_x": "(kallax_w - post_w) / 2",
     "post_y": "kallax_d",
     "post_len": "screen_center + post_above - plinth_top",
-    "cube_w": "(kallax_w - 3 * kallax_panel) / 2"
+    "cube_w": {
+      "value": "(kallax_w - 4 * kallax_panel) / 3",
+      "label": "Bay width"
+    }
   },
   "materials": {
     "ply18": {
@@ -184,16 +187,16 @@
       "role": "Plywood plate that carries everything: casters underneath, KALLAX and upright on top. It is deeper than the KALLAX so the footprint is wide enough not to tip forward."
     },
     {
-      "id": "kallax",
-      "name": "KALLAX",
+      "id": "trofast",
+      "name": "TROFAST",
       "group": "Base",
-      "component": "ikea-kallax-77x41",
+      "component": "ikea-trofast-frame-80153800",
       "at": [
         0,
         0,
         "plinth_top"
       ],
-      "role": "Bought shelf unit used as the cabinet: two cubes for ballast, Apple TV and the coiled extension cord. It also stiffens the top plate, but the TV's weight goes down the post, not through the KALLAX."
+      "role": "Bought TROFAST frame used as the cabinet: three bays with boxes for ballast, the Apple TV and the coiled extension cord. It also stiffens the top plate, but the TV's weight goes down the post, not through the frame."
     },
     {
       "id": "top_plate",
@@ -210,8 +213,8 @@
         0,
         "kallax_top"
       ],
-      "role": "Plywood lid over the KALLAX that reaches back around the upright. It holds the post at a second point 430 mm above the plinth, which is what stops the post levering forward.",
-      "notes": "Cut a 95x90 hole for the post. Bolt down through the KALLAX top with M6 bolts and big washers (honeycomb won't hold screws)."
+      "role": "Plywood lid over the TROFAST that reaches back around the upright. It holds the post at a second point 560 mm above the plinth, which is what stops the post levering forward.",
+      "notes": "Cut a 95x90 hole for the post. Bolt down through the TROFAST top with M6 bolts and washers."
     },
     {
       "id": "ballast",
@@ -359,20 +362,19 @@
       "id": "kallax_down",
       "type": "through-bolted",
       "parts": [
-        "kallax",
+        "trofast",
         "plinth"
       ],
-      "fasteners": "4x M6x70 bolts through the KALLAX bottom panel and the plinth, large washers both sides",
-      "notes": "Honeycomb panels crush under small washers; use 30 mm fender washers."
+      "fasteners": "4x M6x70 bolts through the TROFAST bottom panel and the plinth, washers both sides"
     },
     {
       "id": "top_plate_down",
       "type": "through-bolted",
       "parts": [
         "top_plate",
-        "kallax"
+        "trofast"
       ],
-      "fasteners": "4x M6x70 bolts through the top plate and KALLAX top, fender washers inside the cubes"
+      "fasteners": "4x M6x70 bolts through the top plate and TROFAST top, washers inside the bays"
     },
     {
       "id": "post_lamination",
@@ -395,14 +397,14 @@
         "top_plate"
       ],
       "fasteners": "Snug 95x90 hole; 2 screws through the plate edge into the post",
-      "notes": "Second support point for the post, 430 mm above the first."
+      "notes": "Second support point for the post, 560 mm above the first."
     },
     {
       "id": "post_against_kallax",
       "type": "butt (touching)",
       "parts": [
         "post_front",
-        "kallax"
+        "trofast"
       ],
       "fasteners": "none (the post just touches the KALLAX back edge)"
     },
@@ -441,7 +443,7 @@
       "type": "resting",
       "parts": [
         "ballast",
-        "kallax"
+        "trofast"
       ],
       "fasteners": "none; a strip of anti-slip mat under each"
     },
@@ -450,7 +452,7 @@
       "type": "resting",
       "parts": [
         "apple_tv",
-        "kallax"
+        "trofast"
       ],
       "fasteners": "none"
     }

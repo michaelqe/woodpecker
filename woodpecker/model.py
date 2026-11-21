@@ -29,7 +29,7 @@ from .model_errors import DesignError
 
 __all__ = ["DesignError", "Design", "Part", "evaluate", "resolve_params", "load", "resolve", "EPS"]
 
-SHAPES = {"box", "gusset"}
+SHAPES = {"box", "gusset", "cylinder", "sphere", "prism"}
 GUSSET_LEGS = {"front", "back", "left", "right"}
 MATERIAL_KINDS = {"sheet", "lumber", "hardware", "reference"}
 EPS = 0.01  # mm; overlaps thinner than this are treated as touching
@@ -157,6 +157,9 @@ class Part:
     subtract: list[str] = field(default_factory=list)
     cut_notes: list[str] = field(default_factory=list)
     base_name: str = ""                # the spec's name, without copy numbers
+    axis: str = ""                     # cylinder / prism axis (local)
+    color: str | None = None           # own display colour (catalog panels, e.g. tyres)
+    exact_volume: float | None = None  # true volume for curved shapes (facets run a little small)
 
     def __post_init__(self):
         self.base_name = self.base_name or self.name
@@ -176,7 +179,7 @@ class Part:
 
     @property
     def volume_mm3(self) -> float:
-        return self._volc()[0]
+        return self.exact_volume if self.exact_volume is not None else self._volc()[0]
 
     def centroid(self):
         return self._volc()[1]
@@ -192,6 +195,15 @@ class Part:
             d["axis_map"] = self.axis_map
         if self.shape == "gusset":
             d["leg"] = self.leg
+        if self.axis:
+            d["axis"] = self.axis
+        if self.shape == "cylinder":
+            k = "xyz".index(self.axis or "z")
+            cross_ = [self.size[i] for i in range(3) if i != k]
+            d["dia"] = cross_[0] if abs(cross_[0] - cross_[1]) < 0.01 else cross_
+            d["length"] = self.size[k]
+        if self.color:
+            d["color"] = self.color
         if any(self.ends):
             d["ends"] = list(self.ends)
         if self.component:
@@ -372,6 +384,62 @@ def resolve(raw: dict, path: Path | None = None) -> Design:
     return design
 
 
+def _shape_solid(sp: dict, params: dict, size=None):
+    """Local solid for a spec (or a catalog panel). Returns (solid, size, extras)."""
+    shape = sp.get("shape", "box")
+    if shape not in SHAPES:
+        raise DesignError(f"unknown shape {shape!r}; use one of {', '.join(sorted(SHAPES))}")
+    extra = {"shape": shape, "leg": "", "ends": (0.0, 0.0), "axis": "", "exact_volume": None}
+    if shape == "prism":
+        axis = sp.get("axis", "x")
+        if axis not in g.AXES:
+            raise DesignError("prism axis must be x, y or z")
+        prof = sp.get("profile") or []
+        if len(prof) < 3:
+            raise DesignError("prism needs a profile of at least 3 [u, v] points")
+        pts = [(evaluate(u, params), evaluate(v, params)) for u, v in prof]
+        length = evaluate(sp.get("length", size[g.AXES[axis]] if size else 0), params)
+        if length <= 0:
+            raise DesignError("prism needs a positive length")
+        try:
+            solid = g.prism_solid(pts, length, axis)
+        except ValueError as e:
+            raise DesignError(str(e)) from None
+        lo, hi = solid.bounds()
+        area = abs(sum(a[0] * b[1] - b[0] * a[1] for a, b in zip(pts, pts[1:] + pts[:1]))) / 2
+        extra.update(axis=axis, exact_volume=area * length)
+        return solid, tuple(h - l for l, h in zip(lo, hi)), extra
+    if size is None:
+        size = _vec(sp["size"], params, "size")
+    if min(size) <= 0:
+        raise DesignError(f"size must be positive, got {tuple(round(s, 2) for s in size)}")
+    if shape == "gusset":
+        leg = sp.get("leg", "")
+        if leg not in GUSSET_LEGS:
+            raise DesignError("gusset needs leg front/back/left/right")
+        extra["leg"] = leg
+        return g.gusset_solid(size, leg), size, extra
+    if shape == "cylinder":
+        axis = sp.get("axis", "z")
+        if axis not in g.AXES:
+            raise DesignError("cylinder axis must be x, y or z")
+        k = g.AXES[axis]
+        a, b = [size[i] for i in range(3) if i != k]
+        extra.update(axis=axis, exact_volume=math.pi * a * b / 4 * size[k])
+        return g.cylinder_solid(size, axis), size, extra
+    if shape == "sphere":
+        extra["exact_volume"] = math.pi / 6 * size[0] * size[1] * size[2]
+        return g.sphere_solid(size), size, extra
+    e = sp.get("ends") or {}
+    ends = (evaluate(e.get("start", 0), params), evaluate(e.get("end", 0), params))
+    if any(abs(a) >= 80 for a in ends):
+        raise DesignError("end cut angles must be between -80 and 80 degrees")
+    if size[2] * (math.tan(math.radians(ends[0])) + math.tan(math.radians(ends[1]))) >= size[0]:
+        raise DesignError("end cuts meet: the board is too short for those angles")
+    extra["ends"] = ends
+    return g.box_solid(size, *ends), size, extra
+
+
 def _resolve_spec(sid, sp, params, materials, components) -> list[Part]:
     rot = _rotations(sp, params)
     at = _vec(sp.get("at", [0, 0, 0]), params, "at")
@@ -391,20 +459,26 @@ def _resolve_spec(sid, sp, params, materials, components) -> list[Part]:
             "material": item.get("material", ""),
             "color": item.get("color", "#e9e7e2"),
         }
-        total_mass, _ = catalog.mass_kg(item)
-        locals_ = [(pn, g.box_solid(tuple(pn["size"])).transformed(g.translate(*pn["at"]))) for pn in panels]
-        vol = sum(s.volume_and_centroid()[0] for _, s in locals_) or 1.0
+        is_ref = bool(item.get("reference"))
+        total_mass = None if is_ref else catalog.mass_kg(item)[0]
+        locals_ = []
+        for pn in panels:
+            solid, psize, extra = _shape_solid(pn, {}, tuple(pn["size"]) if "size" in pn else None)
+            locals_.append((pn, solid.transformed(g.translate(*pn.get("at", (0, 0, 0)))), psize, extra))
+        vol = sum(s.volume_and_centroid()[0] for _, s, _, _ in locals_) or 1.0
         out = []
         for suffix, nsuffix, copy, mirrored in _copies(sp, params):
             tf = g.mul(copy, place)
             inst = sid + suffix
-            for pn, ls in locals_:
+            for pn, ls, psize, extra in locals_:
                 share = None if total_mass is None else total_mass * ls.volume_and_centroid()[0] / vol
                 out.append(Part(
                     id=f"{inst}/{pn['sub']}", source=sid, instance=inst,
-                    name=f"{name}{nsuffix}: {pn['name']}", material="@" + item["id"], kind="component",
-                    shape="box", size=tuple(pn["size"]), solid=ls.transformed(tf), mass_kg=share,
-                    component=item["id"], aligned=aligned, axis_map=axis_map, mirrored=mirrored, **common,
+                    name=f"{name}{nsuffix}: {pn['name']}", material="@" + item["id"],
+                    kind="reference" if is_ref else "component",
+                    shape=extra["shape"], size=tuple(psize), solid=ls.transformed(tf), mass_kg=share,
+                    component=item["id"], aligned=aligned, axis_map=axis_map, mirrored=mirrored,
+                    axis=extra["axis"], color=pn.get("color"), **common,
                 ))
         return out
 
@@ -412,26 +486,8 @@ def _resolve_spec(sid, sp, params, materials, components) -> list[Part]:
     if mat not in materials:
         raise DesignError(f"unknown material {mat!r}")
     kind = materials[mat].get("kind", "sheet")
-    shape = sp.get("shape", "box")
-    if shape not in SHAPES:
-        raise DesignError(f"unknown shape {shape!r}")
-    size = _vec(sp["size"], params, "size")
-    if min(size) <= 0:
-        raise DesignError(f"size must be positive, got {tuple(round(s, 2) for s in size)}")
-    leg = sp.get("leg", "")
-    ends = (0.0, 0.0)
-    if shape == "gusset":
-        if leg not in GUSSET_LEGS:
-            raise DesignError("gusset needs leg front/back/left/right")
-        local = g.gusset_solid(size, leg)
-    else:
-        e = sp.get("ends") or {}
-        ends = (evaluate(e.get("start", 0), params), evaluate(e.get("end", 0), params))
-        if any(abs(a) >= 80 for a in ends):
-            raise DesignError("end cut angles must be between -80 and 80 degrees")
-        if size[2] * (math.tan(math.radians(ends[0])) + math.tan(math.radians(ends[1]))) >= size[0]:
-            raise DesignError("end cuts meet: the board is too short for those angles")
-        local = g.box_solid(size, *ends)
+    local, size, extra = _shape_solid(sp, params)
+    shape, leg, ends = extra["shape"], extra["leg"], extra["ends"]
     mass = evaluate(sp["mass_kg"], params) if "mass_kg" in sp else None
     cut_locals = []
     for c in sp.get("cutouts", []) or []:
@@ -446,7 +502,9 @@ def _resolve_spec(sid, sp, params, materials, components) -> list[Part]:
             id=sid + suffix, source=sid, instance=sid + suffix, name=name + nsuffix, base_name=name,
             material=mat, kind=kind, shape=shape, size=tuple(round(s, 3) for s in size),
             solid=local.transformed(tf), leg=leg, ends=ends, mass_kg=mass,
-            aligned=aligned, axis_map=axis_map, mirrored=mirrored, **common,
+            aligned=aligned, axis_map=axis_map, mirrored=mirrored, axis=extra["axis"],
+            exact_volume=None if extra["exact_volume"] is None else extra["exact_volume"] * abs(_det3(tf)),
+            **common,
         )
         for label, cs, csol in cut_locals:
             p.cutouts.append(csol.transformed(tf))
@@ -491,7 +549,7 @@ def check(design: Design) -> list[dict]:
     issues = []
     materials = design.raw.get("materials", {})
     for p in design.parts:
-        if p.kind == "component":
+        if p.kind == "component" or p.component:
             continue
         m = materials[p.material]
         dims = sorted(p.size)
@@ -544,3 +602,10 @@ def check(design: Design) -> list[dict]:
                     issues.append(_issue("warning", a.id,
                         f"{a.name} and {b.name} overlap by {d:.1f} mm with no joint between them"))
     return issues
+
+
+def _det3(m) -> float:
+    """Volume scale of a transform (1 for rotations and mirrors; kept for safety)."""
+    a = [row[:3] for row in m[:3]]
+    return (a[0][0] * (a[1][1] * a[2][2] - a[1][2] * a[2][1]) - a[0][1] * (a[1][0] * a[2][2] - a[1][2] * a[2][0])
+            + a[0][2] * (a[1][0] * a[2][1] - a[1][1] * a[2][0]))

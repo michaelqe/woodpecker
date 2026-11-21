@@ -592,7 +592,7 @@ function renderCut() {
     ${c.rows.length ? `<table><tr><th>Qty</th><th>Part</th><th class="n">L × W × T</th></tr>
     ${c.rows.map((r) => `<tr class="click" data-sel="${esc(r.parts[0])}">
       <td class="n">${r.qty}</td>
-      <td>${esc(r.label)}<div class="small muted">${esc(r.material_name)}${r.shape === "triangle" ? " · triangle" : ""}${r.ends ? ` · ends ${num(r.ends[0])}° / ${num(r.ends[1])}°` : ""}</div>
+      <td>${esc(r.label)}<div class="small muted">${esc(r.material_name)}${r.shape !== "rect" ? ` · ${esc(r.shape)}` : ""}${r.ends ? ` · ends ${num(r.ends[0])}° / ${num(r.ends[1])}°` : ""}</div>
         ${(r.cut_notes || []).map((n) => `<div class="small">${esc(n)}</div>`).join("")}</td>
       <td class="n">${r.kind === "lumber" ? `${U.len(r.length, { bare: true })} × ${U.len(r.section[1], { bare: true })} × ${U.len(r.section[0], { bare: true })}` : `${U.len(r.length, { bare: true })} × ${U.len(r.width, { bare: true })} × ${U.len(r.thickness, { bare: true })}`}</td>
     </tr>`).join("")}</table>` : '<p class="muted">Nothing to cut.</p>'}

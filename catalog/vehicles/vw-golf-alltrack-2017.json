@@ -1,0 +1,43 @@
+{
+  "id": "vw-golf-alltrack-2017",
+  "brand": "VW",
+  "category": "vehicle",
+  "name": "VW Golf Alltrack (2017, Golf VII)",
+  "reference": true,
+  "url": "https://www.auto-data.net/en/volkswagen-golf-vii-alltrack-facelift-2017-generation-5285",
+  "sources": [
+    "https://www.auto-data.net/en/volkswagen-golf-vii-alltrack-facelift-2017-generation-5285",
+    "https://www.carexpert.com.au/volkswagen/golf/2017/alltrack/features-and-specs",
+    "https://www.carsguide.com.au/volkswagen/golf/car-dimensions/2017"
+  ],
+  "retrieved": "2026-11-21",
+  "size": [1799, 4567, 1515],
+  "published": {
+    "length_mm": 4567, "length_au_mm": 4578, "width_mm": 1799, "height_mm": 1515,
+    "wheelbase_mm": 2629, "ground_clearance_mm": 175
+  },
+  "geometry": {
+    "generator": "vehicle",
+    "wheelbase": 2629,
+    "front_overhang": 880,
+    "wheel_dia": 657,
+    "tyre_w": 205,
+    "clearance": 175,
+    "bonnet_h": 760,
+    "belt_h": 980,
+    "windscreen_base": 1320,
+    "windscreen_top": 2180,
+    "roof_end": 4150,
+    "tail_h": 1220,
+    "tumblehome": 85,
+    "mirror_w": 2027,
+    "nose": 160,
+    "body_color": "#6e7a85"
+  },
+  "assumed": [
+    "length (European spec), width, height, wheelbase and ground clearance are published; mirror width, overhangs, bonnet, window line and windscreen positions are estimated from side photos",
+    "wheels 205/55 R17 (about 657 mm)",
+    "colour is a placeholder"
+  ],
+  "color": "#6e7a85"
+}

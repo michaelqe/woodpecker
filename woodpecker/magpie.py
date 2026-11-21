@@ -202,8 +202,8 @@ def body_markdown(design, images: dict[str, str], by: str | None) -> str:
             else:
                 dims = f"{r['length']:g} x {r['width']:g} x {r['thickness']:g}"
             notes = []
-            if r["shape"] == "triangle":
-                notes.append("triangle")
+            if r["shape"] != "rect":
+                notes.append(r["shape"])
             if r.get("ends"):
                 notes.append(f"ends cut at {r['ends'][0]:g}° / {r['ends'][1]:g}°")
             notes += r.get("cut_notes", [])

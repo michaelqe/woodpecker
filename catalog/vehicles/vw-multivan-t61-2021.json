@@ -1,0 +1,44 @@
+{
+  "id": "vw-multivan-t61-2021",
+  "brand": "VW",
+  "category": "vehicle",
+  "name": "VW Multivan T6.1 (2021), short wheelbase, standard roof",
+  "reference": true,
+  "url": "https://www.carexpert.com.au/volkswagen/multivan/2021/dimensions",
+  "sources": [
+    "https://www.carexpert.com.au/volkswagen/multivan/2021/dimensions",
+    "https://www.carsguide.com.au/volkswagen/multivan/car-dimensions/2021",
+    "https://www.caradvice.com.au/reviews/2021-volkswagen-multivan-t6-1-launch-review/"
+  ],
+  "retrieved": "2026-11-21",
+  "size": [1904, 4904, 1970],
+  "published": {
+    "length_mm": 4904, "width_mm": 1904, "width_with_mirrors_mm": 2297, "height_mm": 1970,
+    "height_4motion_mm": 1990, "wheelbase_mm": 3000,
+    "long_wheelbase": "5304 long, 3400 wheelbase"
+  },
+  "geometry": {
+    "generator": "vehicle",
+    "wheelbase": 3000,
+    "front_overhang": 990,
+    "wheel_dia": 690,
+    "tyre_w": 215,
+    "clearance": 185,
+    "bonnet_h": 1010,
+    "belt_h": 1090,
+    "windscreen_base": 900,
+    "windscreen_top": 1640,
+    "roof_end": 4780,
+    "tail_h": 1850,
+    "tumblehome": 55,
+    "mirror_w": 2297,
+    "nose": 140,
+    "body_color": "#b9bfc5"
+  },
+  "assumed": [
+    "length, width (with mirrors), height and wheelbase are published; the overhangs, ground clearance, bonnet, window line and windscreen positions are estimated from side photos",
+    "wheels 215/60 R17 (about 690 mm); 4MOTION versions are 1990 mm high; the long wheelbase version is 400 mm longer",
+    "colour is a placeholder"
+  ],
+  "color": "#b9bfc5"
+}

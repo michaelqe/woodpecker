@@ -604,124 +604,28 @@
       "role": "Solar panels on rails over the roof sheet. The roof faces roughly south-south-east."
     },
     {
-      "id": "multivan_body",
-      "name": "VW Multivan T7, body",
+      "id": "multivan",
+      "name": "VW Multivan T6.1 (2021)",
       "group": "Cars",
-      "material": "car",
-      "size": [
-        1941,
-        4973,
-        1047
-      ],
+      "component": "vw-multivan-t61-2021",
       "at": [
-        1050,
+        1069,
         450,
-        180
-      ],
-      "role": "VW Multivan T7: 4973 x 1941 x 1903 mm. Reference only, to check the fit."
-    },
-    {
-      "id": "multivan_cabin",
-      "name": "VW Multivan T7, cabin",
-      "group": "Cars",
-      "material": "car",
-      "size": [
-        1821,
-        4277,
-        676
-      ],
-      "at": [
-        1110,
-        947,
-        1227
-      ],
-      "role": "VW Multivan T7, upper body."
-    },
-    {
-      "id": "multivan_wheel",
-      "name": "VW Multivan T7, wheel",
-      "group": "Cars",
-      "material": "car",
-      "size": [
-        220,
-        660,
-        660
-      ],
-      "at": [
-        1090,
-        1044,
         0
       ],
-      "repeat": {
-        "count": 2,
-        "axis": "y",
-        "spacing": 3124
-      },
-      "mirror": {
-        "axis": "x",
-        "about": 2021
-      },
-      "role": "VW Multivan T7, wheels."
+      "role": "VW Multivan T6.1 (2021), to check the fit. Reference only: not in the cut list."
     },
     {
-      "id": "alltrack_body",
-      "name": "VW Passat Alltrack, body",
+      "id": "alltrack",
+      "name": "VW Golf Alltrack (2017)",
       "group": "Cars",
-      "material": "car",
-      "size": [
-        1832,
-        4778,
-        840
-      ],
+      "component": "vw-golf-alltrack-2017",
       "at": [
-        4208,
+        4224,
         450,
-        180
-      ],
-      "role": "VW Passat Alltrack: 4778 x 1832 x 1527 mm. Reference only, to check the fit."
-    },
-    {
-      "id": "alltrack_cabin",
-      "name": "VW Passat Alltrack, cabin",
-      "group": "Cars",
-      "material": "car",
-      "size": [
-        1712,
-        2628,
-        507
-      ],
-      "at": [
-        4268,
-        1644,
-        1020
-      ],
-      "role": "VW Passat Alltrack, upper body."
-    },
-    {
-      "id": "alltrack_wheel",
-      "name": "VW Passat Alltrack, wheel",
-      "group": "Cars",
-      "material": "car",
-      "size": [
-        220,
-        660,
-        660
-      ],
-      "at": [
-        4248,
-        1116,
         0
       ],
-      "repeat": {
-        "count": 2,
-        "axis": "y",
-        "spacing": 2786
-      },
-      "mirror": {
-        "axis": "x",
-        "about": 5124
-      },
-      "role": "VW Passat Alltrack, wheels."
+      "role": "VW Golf Alltrack (2017), to check the fit. Reference only: not in the cut list."
     },
     {
       "id": "box_beam1",

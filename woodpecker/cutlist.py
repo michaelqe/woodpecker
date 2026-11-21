@@ -23,7 +23,7 @@ def cut_list(design: Design) -> dict:
         if p.kind not in ("sheet", "lumber"):
             continue
         d = _cut_dims(p)
-        shape = "triangle" if p.shape == "gusset" else "rect"
+        shape = {"gusset": "triangle", "cylinder": "round", "sphere": "ball", "prism": "profile"}.get(p.shape, "rect")
         ends = tuple(round(a, 1) for a in p.ends)
         notes = tuple(p.cut_notes)
         key = (p.material, shape, d["length"], d.get("width"), tuple(d.get("section", ())), ends, notes)

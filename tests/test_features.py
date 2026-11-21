@@ -125,7 +125,7 @@ def test_explicit_cutouts():
 # ---------------------------------------------------------------- catalog
 
 def test_catalog_generators_fill_the_published_size(home):
-    for item in catalog.all_items().values():
+    for item in [i for i in catalog.all_items().values() if not i.get("reference")]:  # furniture, not cars
         panels = catalog.generate(item, {})
         lo = [min(p["at"][k] for p in panels) for k in range(3)]
         hi = [max(p["at"][k] + p["size"][k] for p in panels) for k in range(3)]
@@ -134,7 +134,7 @@ def test_catalog_generators_fill_the_published_size(home):
 
 
 def test_catalog_panels_do_not_overlap(home):
-    for item in catalog.all_items().values():
+    for item in [i for i in catalog.all_items().values() if not i.get("reference")]:  # furniture, not cars
         solids = [g.box_solid(tuple(p["size"])).transformed(g.translate(*p["at"])) for p in catalog.generate(item, {})]
         for i, a in enumerate(solids):
             for b in solids[i + 1:]:
@@ -142,7 +142,7 @@ def test_catalog_panels_do_not_overlap(home):
 
 
 def test_catalog_entries_cite_their_source(home):
-    for item in catalog.all_items().values():
+    for item in [i for i in catalog.all_items().values() if not i.get("reference")]:  # furniture, not cars
         assert item["url"].startswith("https://www.ikea.com/")
         assert item["retrieved"] and item["assumed"]
 

@@ -7,9 +7,10 @@ const WOOD = [0xc8b08a, 0xb89a6e, 0xd6c29b, 0xa88a62, 0xc9a77c];
 const EDGE = 0x1a1410, EDGE_REF = 0x555b63, EDGE_COMP = 0x8d8a84;
 
 export function colorFor(part, design) {
+  if (part.color) return new THREE.Color(part.color).getHex();
   const own = design.materials?.[part.material]?.color;
-  if (own && part.kind !== "component") return new THREE.Color(own).getHex();
-  if (part.kind === "component") {
+  if (own && !part.component) return new THREE.Color(own).getHex();
+  if (part.component) {
     const c = design.components?.[part.component]?.color;
     return c ? new THREE.Color(c).getHex() : 0xe9e7e2;
   }
@@ -21,16 +22,38 @@ export function colorFor(part, design) {
 
 export const edgeColor = (part) => (part.kind === "reference" ? EDGE_REF : part.kind === "component" ? EDGE_COMP : EDGE);
 
+// Flat shading per face, except faces in a smooth group (a cylinder's side, a sphere),
+// whose vertex normals are averaged within the group so they shade round.
 function triangulate(mesh) {
-  const pos = [];
-  for (const f of mesh.faces) {
-    for (let i = 1; i < f.length - 1; i++) {
-      for (const k of [f[0], f[i], f[i + 1]]) pos.push(...mesh.verts[k]);
+  const V = mesh.verts, sm = mesh.smooth;
+  const fn = mesh.faces.map((f) => {
+    const n = [0, 0, 0];
+    for (let i = 0; i < f.length; i++) {
+      const a = V[f[i]], b = V[f[(i + 1) % f.length]];
+      n[0] += (a[1] - b[1]) * (a[2] + b[2]); n[1] += (a[2] - b[2]) * (a[0] + b[0]); n[2] += (a[0] - b[0]) * (a[1] + b[1]);
     }
-  }
+    const l = Math.hypot(...n) || 1;
+    return n.map((c) => c / l);
+  });
+  const vn = new Map();  // "group:vertex" -> summed normal
+  if (sm) mesh.faces.forEach((f, fi) => { if (sm[fi]) for (const k of f) {
+    const key = `${sm[fi]}:${k}`, s = vn.get(key) || [0, 0, 0];
+    vn.set(key, s.map((c, j) => c + fn[fi][j]));
+  } });
+  const pos = [], nor = [];
+  mesh.faces.forEach((f, fi) => {
+    for (let i = 1; i < f.length - 1; i++) {
+      for (const k of [f[0], f[i], f[i + 1]]) {
+        pos.push(...V[k]);
+        let n = fn[fi];
+        if (sm && sm[fi]) { const s = vn.get(`${sm[fi]}:${k}`); const l = Math.hypot(...s) || 1; n = s.map((c) => c / l); }
+        nor.push(...n);
+      }
+    }
+  });
   const g = new THREE.BufferGeometry();
   g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
-  g.computeVertexNormals();
+  g.setAttribute("normal", new THREE.Float32BufferAttribute(nor, 3));
   return g;
 }
 
@@ -92,7 +115,7 @@ export function buildMeshes(design, group, wasm) {
   for (const p of design.parts) {
     let geom = (wasm && (p.cutouts?.length || p.subtract?.length)) ? cutGeometry(wasm, p, byId) : null;
     geom ||= triangulate(p.mesh);
-    const ref = p.kind === "reference";
+    const ref = p.kind === "reference" && !p.component;  // cars etc. from the catalog are drawn solid
     const mat = new THREE.MeshStandardMaterial({
       color: colorFor(p, design), roughness: 0.85, metalness: p.kind === "hardware" ? 0.3 : 0,
       transparent: ref, opacity: ref ? 0.45 : 1, side: THREE.DoubleSide,

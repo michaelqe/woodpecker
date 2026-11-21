@@ -316,7 +316,7 @@ def format_cutlist(d) -> str:
             dims = f"{r['length']:g} long, {r['section'][0]:g}x{r['section'][1]:g}"
         else:
             dims = f"{r['length']:g} x {r['width']:g} x {r['thickness']:g}"
-        extra = " (triangle)" if r["shape"] == "triangle" else ""
+        extra = f" ({r['shape']})" if r["shape"] != "rect" else ""
         if r.get("ends"):
             extra += f", ends cut at {r['ends'][0]:g}° / {r['ends'][1]:g}°"
         lines.append(f"{r['qty']:>3}  {r['label']}: {dims}{extra}  [{r['material_name']}]")

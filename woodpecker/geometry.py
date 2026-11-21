@@ -94,11 +94,14 @@ def unit(a):
 # ---------------------------------------------------------------- solids
 
 class Solid:
-    __slots__ = ("verts", "faces")
+    """Convex polyhedron. `smooth` (optional, one entry per face) groups the facets of one
+    curved surface (a cylinder's side, a sphere): drawings shade and outline them as one."""
+    __slots__ = ("verts", "faces", "smooth")
 
-    def __init__(self, verts: list[Vec], faces: list[list[int]]):
+    def __init__(self, verts: list[Vec], faces: list[list[int]], smooth: list[int] | None = None):
         self.verts = verts
         self.faces = faces
+        self.smooth = smooth
         self._orient()
 
     def _orient(self):
@@ -126,7 +129,8 @@ class Solid:
         return tuple(sum(v[k] for v in self.verts) / n for k in range(3))
 
     def transformed(self, m: Mat) -> "Solid":
-        return Solid([apply(m, v) for v in self.verts], [list(f) for f in self.faces])
+        return Solid([apply(m, v) for v in self.verts], [list(f) for f in self.faces],
+                     list(self.smooth) if self.smooth else None)
 
     def triangles(self):
         for f in self.faces:
@@ -161,12 +165,15 @@ class Solid:
         for f in self.faces:
             for i in range(len(f)):
                 d = unit(sub(self.verts[f[(i + 1) % len(f)]], self.verts[f[i]]))
-                if not any(abs(abs(dot(d, s)) - 1) < 1e-9 for s in seen):
+                if not any(abs(abs(dot(d, s)) - 1) < 1e-6 for s in seen):
                     seen.append(d)
         return seen
 
     def to_json(self, nd=2):
-        return {"verts": [[round(c, nd) for c in v] for v in self.verts], "faces": self.faces}
+        out = {"verts": [[round(c, nd) for c in v] for v in self.verts], "faces": self.faces}
+        if self.smooth:
+            out["smooth"] = self.smooth
+        return out
 
 
 def box_solid(size: Vec, start_deg: float = 0.0, end_deg: float = 0.0) -> Solid:
@@ -179,6 +186,99 @@ def box_solid(size: Vec, start_deg: float = 0.0, end_deg: float = 0.0) -> Solid:
          (x0t, 0, h), (x1t, 0, h), (x1t, w, h), (x0t, w, h)]
     f = [[0, 3, 2, 1], [4, 5, 6, 7], [0, 1, 5, 4], [3, 7, 6, 2], [0, 4, 7, 3], [1, 2, 6, 5]]
     return Solid([tuple(float(c) for c in p) for p in v], f)
+
+
+# ---------------------------------------------------------------- curved shapes (faceted)
+
+AXES = {"x": 0, "y": 1, "z": 2}
+
+
+def segments_for(radius: float, max_err: float = 0.5, lo: int = 12, hi: int = 48) -> int:
+    """Facets so the flat sides stray at most max_err mm from the true circle (multiple of 4,
+    so the extremes sit exactly on the bounding box)."""
+    if radius <= max_err:
+        return lo
+    n = math.ceil(math.pi / math.acos(1 - max_err / radius))
+    return max(lo, min(hi, (n + 3) // 4 * 4))
+
+
+def _place(axis: str, u: float, v: float, t: float) -> Vec:
+    """Profile coordinates (u, v) across the axis and t along it -> x, y, z."""
+    return {"x": (t, u, v), "y": (u, t, v), "z": (u, v, t)}[axis]
+
+
+def is_convex(profile) -> bool:
+    n = len(profile)
+    if n < 3:
+        return False
+    sign = 0
+    for i in range(n):
+        (ax, ay), (bx, by), (cx, cy) = profile[i], profile[(i + 1) % n], profile[(i + 2) % n]
+        z = (bx - ax) * (cy - by) - (by - ay) * (cx - bx)
+        if abs(z) < 1e-9:
+            continue
+        if sign == 0:
+            sign = 1 if z > 0 else -1
+        elif (z > 0) != (sign > 0):
+            return False
+    return sign != 0
+
+
+def prism_solid(profile, length: float, axis: str = "x", smooth_sides: bool = False) -> Solid:
+    """Convex 2D profile extruded from 0 to `length` along `axis`. Profile points are
+    (u, v) in the other two axes in order: axis x -> (y, z), y -> (x, z), z -> (x, y)."""
+    pts = [(float(u), float(v)) for u, v in profile]
+    if not is_convex(pts):
+        raise ValueError("profile must be a convex polygon (split the shape into convex pieces)")
+    n = len(pts)
+    verts = [_place(axis, u, v, 0.0) for u, v in pts] + [_place(axis, u, v, float(length)) for u, v in pts]
+    faces = [list(range(n)), list(range(n, 2 * n))]
+    smooth = [0, 0] if smooth_sides else None
+    for i in range(n):
+        j = (i + 1) % n
+        faces.append([i, j, n + j, n + i])
+        if smooth is not None:
+            smooth.append(1)
+    return Solid(verts, faces, smooth)
+
+
+def cylinder_solid(size: Vec, axis: str = "z") -> Solid:
+    """Cylinder (elliptic if the two cross sizes differ) filling the box [0, size] along axis."""
+    k = AXES[axis]
+    cross_ = [size[i] for i in range(3) if i != k]
+    ru, rv = cross_[0] / 2, cross_[1] / 2
+    n = segments_for(max(ru, rv))
+    prof = [(ru + ru * math.cos(2 * math.pi * i / n), rv + rv * math.sin(2 * math.pi * i / n)) for i in range(n)]
+    return prism_solid(prof, size[k], axis, smooth_sides=True)
+
+
+def sphere_solid(size: Vec) -> Solid:
+    """Sphere (ellipsoid if sizes differ) filling the box [0, size]. Fewer facets than a
+    cylinder: spheres make the overlap check slow, and 24 around reads as round."""
+    rx, ry, rz = size[0] / 2, size[1] / 2, size[2] / 2
+    n_lon = min(24, segments_for(max(rx, ry), max_err=1.5))
+    n_lat = max(6, n_lon // 2)
+    verts = [(rx, ry, 0.0)]
+    for i in range(1, n_lat):
+        th = math.pi * i / n_lat
+        for j in range(n_lon):
+            ph = 2 * math.pi * j / n_lon
+            verts.append((rx + rx * math.sin(th) * math.cos(ph), ry + ry * math.sin(th) * math.sin(ph),
+                          rz - rz * math.cos(th)))
+    verts.append((rx, ry, 2 * rz))
+    top = len(verts) - 1
+    faces = []
+
+    def ring(i, j):
+        return 1 + (i - 1) * n_lon + (j % n_lon)
+    for j in range(n_lon):
+        faces.append([0, ring(1, j + 1), ring(1, j)])
+    for i in range(1, n_lat - 1):
+        for j in range(n_lon):
+            faces.append([ring(i, j), ring(i, j + 1), ring(i + 1, j + 1), ring(i + 1, j)])
+    for j in range(n_lon):
+        faces.append([top, ring(n_lat - 1, j), ring(n_lat - 1, j + 1)])
+    return Solid(verts, faces, [1] * len(faces))
 
 
 def gusset_solid(size: Vec, leg: str) -> Solid:

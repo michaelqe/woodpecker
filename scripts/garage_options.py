@@ -90,27 +90,16 @@ def site_parts():
     return P
 
 
-def car(prefix, label, L, Wd, H, wheelbase, cx, y0):
-    """Car backed in: nose toward the road (small y)."""
-    body_z = 180
-    return [
-        {"id": f"{prefix}_body", "name": f"{label}, body", "group": "Cars", "material": "car",
-         "size": [Wd, L, round(H * 0.55)], "at": [round(cx - Wd / 2), y0, body_z],
-         "role": f"{label}: {L} x {Wd} x {H} mm. Reference only, to check the fit."},
-        {"id": f"{prefix}_cabin", "name": f"{label}, cabin", "group": "Cars", "material": "car",
-         "size": [Wd - 120, round(L * (0.86 if H > 1800 else 0.55)), H - body_z - round(H * 0.55)],
-         "at": [round(cx - Wd / 2 + 60), y0 + round(L * (0.1 if H > 1800 else 0.25)), body_z + round(H * 0.55)],
-         "role": f"{label}, upper body."},
-        {"id": f"{prefix}_wheel", "name": f"{label}, wheel", "group": "Cars", "material": "car",
-         "size": [220, 660, 660], "at": [round(cx - Wd / 2 + 40), y0 + round((L - wheelbase) / 2) - 330, 0],
-         "repeat": {"count": 2, "axis": "y", "spacing": wheelbase},
-         "mirror": {"axis": "x", "about": cx},
-         "role": f"{label}, wheels."},
-    ]
+def car(prefix, label, item, width, cx, y0, z=0):
+    """A car from the catalog (published size, drawn with wheels and glass), backed in:
+    nose toward the road (small y)."""
+    return [{"id": prefix, "name": label, "group": "Cars", "component": item,
+             "at": [round(cx - width / 2), y0, z],
+             "role": f"{label}, to check the fit. Reference only: not in the cut list."}]
 
 
-MULTIVAN = ("VW Multivan T7", 4973, 1941, 1903, 3124)
-ALLTRACK = ("VW Passat Alltrack", 4778, 1832, 1527, 2786)
+MULTIVAN = ("VW Multivan T6.1 (2021)", "vw-multivan-t61-2021", 1904)
+ALLTRACK = ("VW Golf Alltrack (2017)", "vw-golf-alltrack-2017", 1799)
 
 
 # ---------------------------------------------------------------- carport roof frame (parametric)
@@ -319,8 +308,8 @@ def main():
     # ---------- 1. two-car carport with solar
     p = carport_params(W=6600, D=5950, bays=2, h_front=2900)
     parts = carport_parts(batten_pieces=2, solar_rows=3, solar_cols=5)
-    parts += car("multivan", *MULTIVAN[:1], *MULTIVAN[1:], cx=150 + 250 + 140 + 1450 - 140, y0=450)
-    parts += car("alltrack", *ALLTRACK[:1], *ALLTRACK[1:], cx=150 + 250 + 1585 + 3110 - 70 - 140, y0=450)
+    parts += car("multivan", *MULTIVAN, cx=150 + 250 + 140 + 1450 - 140, y0=450)
+    parts += car("alltrack", *ALLTRACK, cx=150 + 250 + 1585 + 3110 - 70 - 140, y0=450)
     parts.append({"id": "cargo_bike", "name": "Cargo bike", "group": "Cars", "material": "car", "size": [2700, 650, 1100],
                   "at": [3900, 5320, 0], "role": "Cargo bike, about 2.7 m long, behind the Alltrack (which is shorter than the Multivan)."})
     parts += site_parts()
@@ -342,7 +331,7 @@ def main():
     p = carport_params(W=3600, D=5450, bays=1, h_front=2800)
     p["oh_side"]["value"] = 200
     parts = carport_parts(batten_pieces=1, solar_rows=3, solar_cols=3)
-    parts += car("multivan", *MULTIVAN[:1], *MULTIVAN[1:], cx=150 + 1800, y0=300)
+    parts += car("multivan", *MULTIVAN, cx=150 + 1800, y0=300)
     parts += site_parts()
     j = carport_joints(1)
     designs["carport-1car-20m2"] = {
@@ -361,8 +350,8 @@ def main():
     # ---------- 3. carport + office and bike box, just under 60 m2
     p = carport_params(W=9950, D=5950, bays=3, h_front=3500)
     parts = carport_parts(batten_pieces=3, solar_rows=3, solar_cols=8)
-    parts += car("multivan", *MULTIVAN[:1], *MULTIVAN[1:], cx=150 + 250 + 70 + 1551, y0=450)
-    parts += car("alltrack", *ALLTRACK[:1], *ALLTRACK[1:], cx=150 + 250 + 70 + 3103 + 1551, y0=450)
+    parts += car("multivan", *MULTIVAN, cx=150 + 250 + 70 + 1551, y0=450)
+    parts += car("alltrack", *ALLTRACK, cx=150 + 250 + 70 + 3103 + 1551, y0=450)
     # the box: x 6780..9950, y 520..4400; timber floor on ground screws
     bx0, bx1, by0, by1 = 6780, 9950, 520, 4400
     bw, bd = bx1 - bx0, by1 - by0
@@ -516,11 +505,11 @@ def main():
                   "at": [gx0 - 200, -300, round(raf_z + 195 / math.cos(math.radians(pitch)) + 50, 1)],
                   "rotate": {"axis": "x", "deg": -pitch},
                   "role": "Profiled steel roof on counter-battens (ventilated)."})
-    parts += car("multivan", *MULTIVAN[:1], *MULTIVAN[1:], cx=gx0 + 300 + 1250, y0=400)
-    parts += car("alltrack", *ALLTRACK[:1], *ALLTRACK[1:], cx=gx0 + 3800 + 1250, y0=400)
+    parts += car("multivan", *MULTIVAN, cx=gx0 + 300 + 1250, y0=400)
+    parts += car("alltrack", *ALLTRACK, cx=gx0 + 3800 + 1250, y0=400)
     for q in parts:
-        if q["group"] == "Cars":
-            q["at"][2] = q["at"][2] + 100
+        if q.get("group") == "Cars":
+            q["at"][2] = 100
     parts += site_parts()
     designs["garage-2car"] = {
         "title": "Insulated garage for 2 cars (6.6 x 6.2 m)",

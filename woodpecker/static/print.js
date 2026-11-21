@@ -46,7 +46,7 @@ async function render() {
     <h2>Cut list (${esc(U.unitLabel())})</h2>
     <table><tr><th></th><th>Qty</th><th>Part</th><th>Material</th><th class="n">Length</th><th class="n">Width</th><th class="n">Thick</th></tr>
     ${c.rows.map((r) => `<tr><td class="box"></td><td class="n">${r.qty}</td>
-      <td>${esc(r.label)}${r.shape === "triangle" ? " (triangle)" : ""}${r.ends ? `<div class="muted">ends ${num(r.ends[0])}° / ${num(r.ends[1])}°</div>` : ""}${(r.cut_notes || []).map((n) => `<div class="muted">${esc(n)}</div>`).join("")}</td>
+      <td>${esc(r.label)}${r.shape !== "rect" ? ` (${esc(r.shape)})` : ""}${r.ends ? `<div class="muted">ends ${num(r.ends[0])}° / ${num(r.ends[1])}°</div>` : ""}${(r.cut_notes || []).map((n) => `<div class="muted">${esc(n)}</div>`).join("")}</td>
       <td>${esc(r.material_name)}</td>
       <td class="n">${U.len(r.length, { bare: true })}</td>
       <td class="n">${U.len(r.kind === "lumber" ? r.section[1] : r.width, { bare: true })}</td>

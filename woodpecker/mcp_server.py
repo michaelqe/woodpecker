@@ -27,6 +27,14 @@ Model rules:
   take degrees). Put anything the human might resize in a param.
 - `shape: "gusset"` is a right-triangle knee brace; `leg` = side of the vertical leg
   (front/back/left/right), the horizontal leg is at the bottom.
+- Round and shaped parts: `shape: "cylinder"` + `axis` (x|y|z, default z) fills `size` (round
+  legs, dowels, posts, round tabletops: [d, d, length] along z); `shape: "sphere"` fills
+  `size` (balls, finials); `shape: "prism"` + `axis` + `profile` [[u, v], ...] (a CONVEX
+  outline in the other two axes, in order: x -> (y, z), y -> (x, z), z -> (x, y)) + `length`
+  (brackets, chamfered blocks; split concave outlines into convex pieces). Volumes and
+  weights use the true shape; the cut list marks them round / ball / profile.
+- Cars and other things to check fit against are catalog items with `"reference": true`
+  (vw-multivan-t61-2021, vw-golf-alltrack-2017): drawn solid, never in the cut list.
 - `rotate`: {"axis": "x|y|z", "deg": ...} or a list of them, about world-aligned axes
   through the local origin (`at`), applied in order. Rotation about y by -30 tilts a
   board lying along +x up by 30 degrees. `at` is then NOT the bounding-box minimum.

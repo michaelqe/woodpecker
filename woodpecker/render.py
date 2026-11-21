@@ -38,10 +38,12 @@ def _rgb(hexstr: str) -> np.ndarray:
 
 
 def part_color(p, design: Design) -> np.ndarray:
+    if p.color:
+        return _rgb(p.color)
     own = ((design.raw.get("materials") or {}).get(p.material) or {}).get("color")
-    if own and p.kind != "component":
+    if own and not p.component:
         return _rgb(own)
-    if p.kind == "component":
+    if p.component:
         c = (design.components.get(p.component) or {}).get("color")
         return _rgb(c or "#e9e7e2")
     if p.kind == "hardware":
@@ -103,19 +105,27 @@ def render(design: Design, view: str = "3d", size=(1200, 900), title: str | None
             base = part_color(p, design)
             verts = np.asarray(p.solid.verts, float)
             sv = project(verts)
-            for face, n in zip(p.solid.faces, p.solid.normals()):
+            sm = p.solid.smooth or [0] * len(p.solid.faces)
+            groups = {}
+            for face, n, grp in zip(p.solid.faces, p.solid.normals(), sm):
                 n = np.asarray(n, float)
                 fid += 1
+                if grp:  # facets of one curved surface share an id: no outline between them
+                    fid -= 1
+                    face_id = groups.setdefault(grp, fid + 1000000)
+                else:
+                    face_id = fid
                 if np.dot(n, f) >= -1e-9:  # back face (convex solids)
                     continue
                 shade = 0.55 + 0.45 * max(0.0, float(np.dot(n, light)))
                 c = np.clip(base * shade, 0, 255)
                 for i in range(1, len(face) - 1):
-                    _tri(sv[[face[0], face[i], face[i + 1]]], z, col, ids, c, fid)
+                    _tri(sv[[face[0], face[i], face[i + 1]]], z, col, ids, c, face_id)
         return z, col, ids
 
-    solids = [p for p in parts if p.kind != "reference"]
-    refs = [p for p in parts if p.kind == "reference"]
+    # catalog references (cars) are solid objects; drawn references (a TV, glazing, zones) see-through
+    solids = [p for p in parts if p.kind != "reference" or p.component]
+    refs = [p for p in parts if p.kind == "reference" and not p.component]
     z, col, ids = pass_(solids)
     img = np.where(np.isinf(z)[..., None], np.array(BG, np.float32), col)
     img = _edges(img, ids, EDGE)
@@ -128,6 +138,8 @@ def render(design: Design, view: str = "3d", size=(1200, 900), title: str | None
     out = Image.fromarray(img.astype(np.uint8)).resize(size, Image.LANCZOS)
     d = ImageDraw.Draw(out)
     b = design.bounds(include_reference=False)
+    if not any(b["size"]):
+        b = design.bounds(include_reference=True)
     d.text((20, 16), f"{title or design.title} - {label}", fill=INK, font=_font(22))
     sz = b.get("size")
     if sz:
@@ -178,6 +190,8 @@ def _edges(img, ids, color):
 def _dims(d, design, view, proj):
     """Overall width/depth and height lines outside the drawing."""
     b = design.bounds(include_reference=False)
+    if not any(b["size"]):
+        b = design.bounds(include_reference=True)
     lo, hi = b["min"], b["max"]
     font = _font(17)
     ax_h = {"front": 0, "side": 1, "top": 0}[view]  # horizontal extent axis

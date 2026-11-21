@@ -27,7 +27,7 @@ def home(tmp_path, monkeypatch):
 
 class FakeMagpie:
     def __init__(self):
-        self.pages, self.files, self.calls = {}, [], []
+        self.pages, self.files, self.calls, self.projects = {}, [], [], []
         fake = self
 
         class H(BaseHTTPRequestHandler):
@@ -56,7 +56,9 @@ class FakeMagpie:
                 fake.calls.append(("POST", self.path))
                 assert self.headers["Authorization"] == "Bearer t0ken"
                 body = self._in()
-                if re.match(r"/api/projects/37/pages$", self.path):
+                pm = re.match(r"/api/projects/(\d+)/pages$", self.path)
+                if pm:
+                    fake.projects.append(int(pm.group(1)))
                     b = json.loads(body)
                     pid = len(fake.pages) + 1
                     fake.pages[pid] = {"id": pid, "title": b["title"], "markdown": b["markdown"], "version": 1}
@@ -178,3 +180,14 @@ def test_material_color_and_anchored(home):
     assert st["anchored"] == "On ground screws." and "tip" not in st
     tv = next(p for p in d.parts if p.material == "tv")
     assert list(render.part_color(tv, d)) == [255, 0, 0]
+
+
+def test_design_can_choose_its_magpie_project(home, fake_magpie):
+    magpie.publish("tv-cart")
+    path = home / "designs" / "greenhouse.json"
+    raw = json.loads(path.read_text())
+    raw["magpie_project"] = 38
+    path.write_text(json.dumps(raw))
+    info = magpie.publish("greenhouse")
+    assert fake_magpie.projects == [37, 38]
+    assert "/#/pages/38/" in info["url"]

@@ -238,6 +238,12 @@ class Design:
     def title(self) -> str:
         return self.raw.get("title", self.name)
 
+    @property
+    def magpie_project(self) -> int | None:
+        """Magpie project id for this design's page, when it is not the default Woodpecker one."""
+        v = self.raw.get("magpie_project")
+        return v if isinstance(v, int) and not isinstance(v, bool) and v > 0 else None
+
     def part(self, part_id: str) -> Part:
         for p in self.parts:
             if p.id == part_id:

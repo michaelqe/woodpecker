@@ -34,6 +34,7 @@ the human is looking; the tools validate and keep undo history.
 - `woodpecker/mcp_server.py` — MCP tools (mcp 2.x `MCPServer`)
 - `woodpecker/static/` — viewer: `app.js` (views, tools, panels, chat), `scene.js` (meshes, Manifold holes), `dims.js` (dimension lines), `units.js`, `layouts.js` (cut diagrams), `print.html/js` (build sheet). Vendored, no npm: three.js 0.170.0 (+ OrbitControls, TransformControls), manifold-3d 3.5.4 (WASM)
 - `designs/` — design files (committed; they are the user's work)
+- `scripts/house_model.py` → `designs/house.json` — our house (Magpie: House > Digital Twin, project 38), traced from the floor-plan photos. Generated: change the script and re-run it (`python3 scripts/house_model.py designs/`), never edit the design with the tools. `tests/test_house.py` checks the file is current and every room matches the plan's area. A design's `magpie_project` sends its page to that project instead of Woodpecker's
 
 ## Rules
 

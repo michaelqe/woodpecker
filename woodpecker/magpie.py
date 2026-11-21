@@ -8,7 +8,8 @@ Off unless MAGPIE_API_TOKEN is set (so a dev copy on the laptop never makes page
 Env:
   MAGPIE_API_BASE           default http://127.0.0.1:8509 (Magpie on the same droplet)
   MAGPIE_API_TOKEN          an agent token from Magpie's MAGPIE_API_TOKENS
-  WOODPECKER_MAGPIE_PROJECT Magpie project id for the pages (default 37, "Woodpecker")
+  WOODPECKER_MAGPIE_PROJECT Magpie project id for the pages (default 37, "Woodpecker");
+                            a design's own "magpie_project" wins (the house model lives in House > Digital Twin)
   WOODPECKER_PUBLIC_URL     link back to the viewer (default https://woodpecker.app.kennedy.ee)
   MAGPIE_PUBLIC_URL         link to the page (default https://magpie.app.kennedy.ee)
 """
@@ -50,8 +51,8 @@ def viewer_url(name: str) -> str:
     return f"{os.environ.get('WOODPECKER_PUBLIC_URL', 'https://woodpecker.app.kennedy.ee').rstrip('/')}/?design={name}"
 
 
-def page_url(page_id: int) -> str:
-    return f"{os.environ.get('MAGPIE_PUBLIC_URL', 'https://magpie.app.kennedy.ee').rstrip('/')}/#/pages/{project_id()}/{page_id}"
+def page_url(page_id: int, project: int | None = None) -> str:
+    return f"{os.environ.get('MAGPIE_PUBLIC_URL', 'https://magpie.app.kennedy.ee').rstrip('/')}/#/pages/{project or project_id()}/{page_id}"
 
 
 # ---------------------------------------------------------------- HTTP
@@ -122,7 +123,7 @@ def info(name: str) -> dict:
     s = _load_state().get(name) or {}
     out = {"enabled": enabled(), **{k: s.get(k) for k in ("page_id", "published_at", "error", "by")}}
     if s.get("page_id"):
-        out["url"] = page_url(s["page_id"])
+        out["url"] = page_url(s["page_id"], s.get("project_id"))
     return out
 
 
@@ -257,9 +258,11 @@ def publish(name: str, by: str | None = None, force: bool = False) -> dict:
                         raise
                     pid = None  # someone deleted the page in Magpie: make a new one
             if not pid:
-                _, page = _req("POST", f"/api/projects/{project_id()}/pages",
+                proj = design.magpie_project or project_id()
+                _, page = _req("POST", f"/api/projects/{proj}/pages",
                                {"title": design.title, "markdown": f"Drawing it…\n\n{NOTES}\n", "author": "woodpecker"})
                 pid = s["page_id"] = page["id"]
+                s["project_id"] = proj
                 s["images"] = {}
             # pictures: upload only the ones that changed
             imgs = s.setdefault("images", {})

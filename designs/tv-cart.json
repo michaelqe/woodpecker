@@ -71,11 +71,13 @@
     },
     "tv_mass": {
       "value": 9,
-      "label": "TV mass (kg)"
+      "label": "TV mass (kg)",
+      "unit": "kg"
     },
     "ballast_mass": {
       "value": 9,
-      "label": "Mass of one ballast block (kg)"
+      "label": "Mass of one ballast block (kg)",
+      "unit": "kg"
     },
     "base_top": "caster_h + base_h",
     "post_y": "base_d / 2 - post_lam",
@@ -551,7 +553,10 @@
         "base_top"
       ],
       "fasteners": "Snug 95x90 cutout; 2 screws through the top into the post",
-      "notes": "The post is held at two heights (bottom panel and top panel), which is what keeps it from levering out."
+      "notes": "The post is held at two heights (bottom panel and top panel), which is what keeps it from levering out.",
+      "cut_into": [
+        "base_top"
+      ]
     },
     {
       "id": "post_foot",

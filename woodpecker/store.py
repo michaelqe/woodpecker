@@ -173,6 +173,41 @@ def add_part(name: str, part: dict, after: str | None = None) -> Design:
     return _edit(name, fn)
 
 
+def offset_expr(expr, delta: float):
+    """expr + delta, keeping expressions readable: "post_x" -> "post_x + 40"."""
+    if abs(delta) < 1e-9:
+        return expr
+    if isinstance(expr, (int, float)) and not isinstance(expr, bool):
+        return round(expr + delta, 2)
+    m = re.match(r"^(.*\S)\s*([+-])\s*(\d+(?:\.\d+)?)$", str(expr))
+    if m and "(" not in m.group(1)[-1:]:
+        base, sign, num = m.group(1), m.group(2), float(m.group(3))
+        val = round((num if sign == "+" else -num) + delta, 2)
+        if abs(val) < 1e-9:
+            return base
+        return f"{base} {'+' if val > 0 else '-'} {abs(val):g}"
+    return f"{expr} {'+' if delta > 0 else '-'} {abs(round(delta, 2)):g}"
+
+
+def move_part(name: str, part_id: str, delta: list[float]) -> Design:
+    """Move a part spec by delta (mm, world axes). Copies and panels move with it."""
+    def fn(raw):
+        _, p = _find(raw, part_id)
+        at = p.get("at", [0, 0, 0])
+        p["at"] = [offset_expr(a, d) for a, d in zip(at, delta)]
+    return _edit(name, fn)
+
+
+def resize_part(name: str, part_id: str, delta: list[float]) -> Design:
+    """Grow or shrink a part's local size by delta (mm per local axis)."""
+    def fn(raw):
+        _, p = _find(raw, part_id)
+        if "size" not in p:
+            raise DesignError("this part has no size to change (catalog components have fixed sizes)")
+        p["size"] = [offset_expr(a, d) for a, d in zip(p["size"], delta)]
+    return _edit(name, fn)
+
+
 def remove_part(name: str, part_id: str) -> Design:
     def fn(raw):
         i, _ = _find(raw, part_id)
@@ -241,6 +276,16 @@ def create(name: str, title: str, description: str = "", copy_from: str | None =
             "params": {}, "materials": {}, "parts": [], "joints": [], "hardware": [],
         }
     return write(name, raw)
+
+
+def delete_design(name: str) -> dict:
+    """Remove a design file. A snapshot stays in .woodpecker/history/<name>/ to recover it."""
+    path = design_path(name)
+    if not path.exists():
+        raise DesignError(f"no design {name!r}")
+    _snapshot(name, path.read_text())
+    path.unlink()
+    return {"deleted": name}
 
 
 # ---------------------------------------------------------------- selection

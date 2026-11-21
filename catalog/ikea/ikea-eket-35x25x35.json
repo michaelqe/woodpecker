@@ -1,0 +1,35 @@
+{
+  "id": "ikea-eket-35x25x35",
+  "brand": "IKEA",
+  "category": "cabinet",
+  "name": "EKET cabinet, white, 35x25x35 cm",
+  "article": "703.321.24",
+  "url": "https://www.ikea.com/ee/en/p/eket-cabinet-white-70332124/",
+  "retrieved": "2026-11-21",
+  "price": {
+    "amount": 15,
+    "currency": "EUR"
+  },
+  "size": [
+    350,
+    250,
+    350
+  ],
+  "load": {
+    "per_shelf_kg": 5
+  },
+  "package_kg": 3.1,
+  "material": "Panel: particleboard, honeycomb structure paper filling (100% recycled), fibreboard, paper foil, plastic edging. Back: fibreboard, paper foil",
+  "geometry": {
+    "generator": "carcass",
+    "panel": 18,
+    "back": 3,
+    "shelves": 0
+  },
+  "assumed": [
+    "panel 18 mm and back 3 mm (not published)",
+    "no inner shelf"
+  ],
+  "construction": "Panels are particleboard/fibreboard skins over a paper honeycomb core. Screws into the panel faces barely hold. To mount anything (casters, a post, a top), bolt right through with large washers, or sandwich the unit between plywood plates and fasten to those.",
+  "color": "#e9e7e2"
+}

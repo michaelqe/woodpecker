@@ -1,0 +1,36 @@
+{
+  "id": "ikea-besta-tv-bench-120x40x38",
+  "brand": "IKEA",
+  "category": "tv bench",
+  "name": "BESTÅ TV bench, white, 120x40x38 cm",
+  "article": "802.945.03",
+  "url": "https://www.ikea.com/ee/en/p/besta-tv-bench-white-80294503/",
+  "retrieved": "2026-11-21",
+  "price": {
+    "amount": 45,
+    "currency": "EUR"
+  },
+  "size": [
+    1200,
+    400,
+    380
+  ],
+  "load": {
+    "top_tv_kg": 16
+  },
+  "package_kg": 16.51,
+  "material": "Top/bottom/side/partition: particle- and fibreboard with honeycomb paper filling (100% recycled paper), paper foil, plastic edging. Back: fibreboard",
+  "geometry": {
+    "generator": "carcass",
+    "panel": 16,
+    "back": 3,
+    "shelves": 0,
+    "partitions": 1
+  },
+  "assumed": [
+    "panel 16 mm and back 3 mm (not published)"
+  ],
+  "notes": "Doors, hinges and interiors are sold separately.",
+  "construction": "Panels are particleboard/fibreboard skins over a paper honeycomb core. Screws into the panel faces barely hold. To mount anything (casters, a post, a top), bolt right through with large washers, or sandwich the unit between plywood plates and fasten to those.",
+  "color": "#e9e7e2"
+}

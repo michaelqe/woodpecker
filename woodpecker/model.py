@@ -1,11 +1,18 @@
-"""Load a design file and resolve it into plain numbers.
+"""Load a design file and resolve it into solids.
 
-A design is JSON (see designs/tv-cart.json). Every length is in millimetres.
-Sizes and positions may be numbers or expressions over `params`, so changing
-one param moves every part that depends on it.
+A design is JSON (see designs/*.json). Every length is in millimetres and every
+angle in degrees. Sizes and positions may be numbers or expressions over `params`.
 
-Axes: x = width (left -> right), y = depth (front -> back), z = up. `at` is the
-part's minimum corner; `size` is its extent along x, y, z.
+Axes: x = width (left -> right), y = depth (front -> back), z = up.
+
+A part spec is resolved like this:
+  local solid   box `size` from the origin (optional angled `ends`), or a gusset,
+                or every panel of a catalog `component`
+  rotate        about world-aligned axes through the local origin, in listed order
+  at            then moved so the local origin sits at `at`
+  repeat        copies offset by i * step   (ids  stud[0], stud[1], ...)
+  mirror        plus mirrored copies        (ids  rafter~m, rafter[2]~m, ...)
+Python is the single source of geometry: the viewer draws the solids sent to it.
 """
 from __future__ import annotations
 
@@ -16,25 +23,24 @@ import operator
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from . import catalog
+from . import geometry as g
+from .model_errors import DesignError
+
+__all__ = ["DesignError", "Design", "Part", "evaluate", "resolve_params", "load", "resolve", "EPS"]
+
 SHAPES = {"box", "gusset"}
 GUSSET_LEGS = {"front", "back", "left", "right"}
 MATERIAL_KINDS = {"sheet", "lumber", "hardware", "reference"}
 EPS = 0.01  # mm; overlaps thinner than this are treated as touching
-
-
-class DesignError(ValueError):
-    pass
+MAX_COPIES = 500
 
 
 # ---------------------------------------------------------------- expressions
 
 _BINOPS = {
-    ast.Add: operator.add,
-    ast.Sub: operator.sub,
-    ast.Mult: operator.mul,
-    ast.Div: operator.truediv,
-    ast.FloorDiv: operator.floordiv,
-    ast.Mod: operator.mod,
+    ast.Add: operator.add, ast.Sub: operator.sub, ast.Mult: operator.mul,
+    ast.Div: operator.truediv, ast.FloorDiv: operator.floordiv, ast.Mod: operator.mod,
     ast.Pow: operator.pow,
 }
 _FUNCS = {
@@ -43,6 +49,8 @@ _FUNCS = {
     "sin": lambda d: math.sin(math.radians(d)),
     "cos": lambda d: math.cos(math.radians(d)),
     "tan": lambda d: math.tan(math.radians(d)),
+    "atan": lambda x: math.degrees(math.atan(x)),
+    "atan2": lambda y, x: math.degrees(math.atan2(y, x)),
 }
 
 
@@ -81,8 +89,8 @@ def evaluate(expr, names: dict[str, float]) -> float:
 
     try:
         return ev(tree)
-    except ZeroDivisionError:
-        raise DesignError(f"division by zero in {expr!r}") from None
+    except (ZeroDivisionError, ValueError, OverflowError) as e:
+        raise DesignError(f"cannot evaluate {expr!r}: {e}") from None
 
 
 def _param_names(expr) -> set[str]:
@@ -127,54 +135,77 @@ def resolve_params(raw: dict) -> dict[str, float]:
 @dataclass
 class Part:
     id: str
+    source: str          # the spec id this came from (joints may name it)
+    instance: str        # copy id (e.g. "stud[2]"); equals id except for component panels
     name: str
     material: str
-    kind: str          # material kind
+    kind: str            # sheet | lumber | hardware | reference | component
     shape: str
-    size: tuple[float, float, float]
-    at: tuple[float, float, float]
+    size: tuple[float, float, float]   # local size, before rotation
+    solid: g.Solid                     # world geometry
     group: str = ""
     role: str = ""
     notes: str = ""
     leg: str = ""
+    ends: tuple[float, float] = (0.0, 0.0)
     mass_kg: float | None = None
+    component: str | None = None
+    aligned: bool = True               # no tilt (drag handles allowed)
+    axis_map: list[int] | None = None  # world axis of each local axis (aligned parts)
+    mirrored: bool = False
+    cutouts: list[g.Solid] = field(default_factory=list)
+    subtract: list[str] = field(default_factory=list)
+    cut_notes: list[str] = field(default_factory=list)
+    base_name: str = ""                # the spec's name, without copy numbers
+
+    def __post_init__(self):
+        self.base_name = self.base_name or self.name
+        lo, hi = self.solid.bounds()
+        self.at = tuple(round(v, 3) + 0.0 for v in lo)
+        self.max = tuple(round(v, 3) + 0.0 for v in hi)
+        self._vc = None
 
     @property
-    def max(self) -> tuple[float, float, float]:
-        return tuple(a + s for a, s in zip(self.at, self.size))
+    def bsize(self):
+        return tuple(h - l for l, h in zip(self.at, self.max))
+
+    def _volc(self):
+        if self._vc is None:
+            self._vc = self.solid.volume_and_centroid()
+        return self._vc
 
     @property
     def volume_mm3(self) -> float:
-        v = self.size[0] * self.size[1] * self.size[2]
-        return v / 2 if self.shape == "gusset" else v
+        return self._volc()[0]
 
-    def centroid(self) -> tuple[float, float, float]:
-        cx, cy, cz = (a + s / 2 for a, s in zip(self.at, self.size))
-        if self.shape != "gusset":
-            return (cx, cy, cz)
-        # right-triangle profile: centroid sits 1/3 in from the right-angle corner
-        x0, y0, z0 = self.at
-        sx, sy, sz = self.size
-        cz = z0 + sz / 3
-        if self.leg == "back":
-            cy = y0 + sy * 2 / 3
-        elif self.leg == "front":
-            cy = y0 + sy / 3
-        elif self.leg == "right":
-            cx = x0 + sx * 2 / 3
-        elif self.leg == "left":
-            cx = x0 + sx / 3
-        return (cx, cy, cz)
+    def centroid(self):
+        return self._volc()[1]
 
-    def to_dict(self) -> dict:
+    def to_dict(self, geometry: bool = True) -> dict:
         d = {
-            "id": self.id, "name": self.name, "group": self.group,
+            "id": self.id, "source": self.source, "name": self.name, "group": self.group,
             "material": self.material, "kind": self.kind, "shape": self.shape,
-            "size": list(self.size), "at": list(self.at),
-            "role": self.role, "notes": self.notes,
+            "size": list(self.size), "at": list(self.at), "max": list(self.max),
+            "role": self.role, "notes": self.notes, "aligned": self.aligned,
         }
+        if self.axis_map:
+            d["axis_map"] = self.axis_map
         if self.shape == "gusset":
             d["leg"] = self.leg
+        if any(self.ends):
+            d["ends"] = list(self.ends)
+        if self.component:
+            d["component"] = self.component
+        if self.mirrored:
+            d["mirrored"] = True
+        if self.cut_notes:
+            d["cut_notes"] = self.cut_notes
+        if geometry:
+            d["mesh"] = self.solid.to_json()
+            if self.cutouts:
+                d["cutouts"] = [c.to_json() for c in self.cutouts]
+            if self.subtract:
+                d["subtract"] = self.subtract
         return d
 
 
@@ -185,6 +216,7 @@ class Design:
     params: dict[str, float]
     parts: list[Part]
     issues: list[dict] = field(default_factory=list)
+    components: dict[str, dict] = field(default_factory=dict)
 
     @property
     def name(self) -> str:
@@ -200,8 +232,16 @@ class Design:
                 return p
         raise DesignError(f"no part {part_id!r}")
 
+    def expand(self, ref: str) -> list[Part]:
+        """A joint/selection reference: an exact part id, a spec id (all its copies),
+        or a component instance (all its panels)."""
+        return [p for p in self.parts if p.id == ref or p.source == ref or p.instance == ref
+                or p.id.startswith(ref + "/")]
+
     def joints_for(self, part_id: str) -> list[dict]:
-        return [j for j in self.raw.get("joints", []) if part_id in j.get("parts", [])]
+        p = self.part(part_id)
+        keys = {p.id, p.source, p.instance}
+        return [j for j in self.raw.get("joints", []) if keys & set(j.get("parts", []))]
 
     def bounds(self, include_reference: bool = True) -> dict:
         ps = [p for p in self.parts if include_reference or p.kind != "reference"]
@@ -209,9 +249,9 @@ class Design:
             return {"min": [0, 0, 0], "max": [0, 0, 0], "size": [0, 0, 0]}
         lo = [min(p.at[i] for p in ps) for i in range(3)]
         hi = [max(p.max[i] for p in ps) for i in range(3)]
-        return {"min": lo, "max": hi, "size": [h - l for l, h in zip(lo, hi)]}
+        return {"min": lo, "max": hi, "size": [round(h - l, 3) for l, h in zip(lo, hi)]}
 
-    def to_dict(self) -> dict:
+    def to_dict(self, geometry: bool = True) -> dict:
         return {
             "name": self.name,
             "title": self.title,
@@ -220,11 +260,13 @@ class Design:
             "params": [
                 {"name": k, "value": v, "expr": _param_expr(self.raw["params"][k]),
                  "label": _param_meta(self.raw["params"][k], "label"),
-                 "notes": _param_meta(self.raw["params"][k], "notes")}
+                 "notes": _param_meta(self.raw["params"][k], "notes"),
+                 "unit": _param_meta(self.raw["params"][k], "unit") or "mm"}
                 for k, v in self.params.items()
             ],
             "materials": self.raw.get("materials", {}),
-            "parts": [p.to_dict() for p in self.parts],
+            "components": self.components,
+            "parts": [p.to_dict(geometry) for p in self.parts],
             "joints": self.raw.get("joints", []),
             "hardware": self.raw.get("hardware", []),
             "bounds": self.bounds(include_reference=False),
@@ -249,6 +291,54 @@ def load(path: str | Path) -> Design:
     return resolve(raw, path)
 
 
+# ---------------------------------------------------------------- resolving
+
+def _vec(v, params, what):
+    if not isinstance(v, (list, tuple)) or len(v) != 3:
+        raise DesignError(f"{what} needs 3 values")
+    return tuple(evaluate(e, params) for e in v)
+
+
+def _rotations(spec, params) -> g.Mat:
+    rots = spec.get("rotate") or []
+    if isinstance(rots, dict):
+        rots = [rots]
+    m = g.identity()
+    for r in rots:
+        if not isinstance(r, dict) or r.get("axis") not in ("x", "y", "z"):
+            raise DesignError('rotate needs {"axis": "x|y|z", "deg": ...}')
+        m = g.mul(g.rotate(r["axis"], evaluate(r.get("deg", 0), params)), m)
+    return m
+
+
+def _copies(spec, params) -> list[tuple[str, str, g.Mat, bool]]:
+    """(suffix, name suffix, world transform applied after placement, mirrored)."""
+    out = [("", "", g.identity(), False)]
+    rep = spec.get("repeat")
+    if rep:
+        count = int(round(evaluate(rep.get("count", 1), params)))
+        if count < 1 or count > MAX_COPIES:
+            raise DesignError(f"repeat count must be 1..{MAX_COPIES}, got {count}")
+        if "step" in rep:
+            step = _vec(rep["step"], params, "repeat.step")
+        else:
+            axis = rep.get("axis", "x")
+            if axis not in ("x", "y", "z"):
+                raise DesignError("repeat.axis must be x, y or z")
+            s = evaluate(rep.get("spacing", 0), params)
+            step = tuple(s if a == axis else 0.0 for a in "xyz")
+        out = [(f"[{i}]", f" {i + 1}", g.translate(*(i * s for s in step)), False) for i in range(count)]
+    mir = spec.get("mirror")
+    if mir:
+        axis = mir.get("axis")
+        if axis not in ("x", "y", "z"):
+            raise DesignError("mirror.axis must be x, y or z")
+        about = evaluate(mir.get("about", 0), params)
+        mm = g.mirror(axis, about)
+        out += [(s + "~m", n + " (mirrored)", g.mul(mm, t), True) for s, n, t, _ in out]
+    return out
+
+
 def resolve(raw: dict, path: Path | None = None) -> Design:
     path = path or Path("untitled.json")
     params = resolve_params(raw.get("params", {}))
@@ -256,53 +346,139 @@ def resolve(raw: dict, path: Path | None = None) -> Design:
     parts: list[Part] = []
     issues: list[dict] = []
     seen: set[str] = set()
+    components: dict[str, dict] = {}
 
     for i, sp in enumerate(raw.get("parts", [])):
-        pid = sp.get("id") or f"part_{i}"
-        where = f"part {pid!r}"
-        if pid in seen:
-            issues.append(_issue("error", pid, f"duplicate part id {pid!r}"))
+        sid = sp.get("id") or f"part_{i}"
+        where = f"part {sid!r}"
+        if sid in seen:
+            issues.append(_issue("error", sid, f"duplicate part id {sid!r}"))
             continue
-        seen.add(pid)
-        mat = sp.get("material", "")
-        if mat not in materials:
-            issues.append(_issue("error", pid, f"{where}: unknown material {mat!r}"))
-            continue
-        kind = materials[mat].get("kind", "sheet")
-        shape = sp.get("shape", "box")
-        if shape not in SHAPES:
-            issues.append(_issue("error", pid, f"{where}: unknown shape {shape!r}"))
-            continue
+        seen.add(sid)
         try:
-            size = tuple(evaluate(e, params) for e in sp["size"])
-            at = tuple(evaluate(e, params) for e in sp.get("at", [0, 0, 0]))
-            mass = evaluate(sp["mass_kg"], params) if "mass_kg" in sp else None
-        except (DesignError, KeyError, TypeError) as e:
-            issues.append(_issue("error", pid, f"{where}: {e}"))
-            continue
-        if len(size) != 3 or len(at) != 3:
-            issues.append(_issue("error", pid, f"{where}: size and at need 3 values"))
-            continue
-        if min(size) <= 0:
-            issues.append(_issue("error", pid, f"{where}: size must be positive, got {size}"))
-            continue
-        leg = sp.get("leg", "")
-        if shape == "gusset" and leg not in GUSSET_LEGS:
-            issues.append(_issue("error", pid, f"{where}: gusset needs leg front/back/left/right"))
-            continue
-        parts.append(Part(
-            id=pid, name=sp.get("name", pid), material=mat, kind=kind, shape=shape,
-            size=_r(size), at=_r(at), group=sp.get("group", ""), role=sp.get("role", ""),
-            notes=sp.get("notes", ""), leg=leg, mass_kg=mass,
-        ))
+            parts.extend(_resolve_spec(sid, sp, params, materials, components))
+        except (DesignError, KeyError, TypeError, ValueError) as e:
+            msg = str(e) if isinstance(e, DesignError) else f"{type(e).__name__}: {e}"
+            issues.append(_issue("error", sid, f"{where}: {msg}"))
 
-    design = Design(path=path, raw=raw, params=params, parts=parts, issues=issues)
+    ids = [p.id for p in parts]
+    if len(ids) != len(set(ids)):
+        dup = sorted({x for x in ids if ids.count(x) > 1})
+        issues.append(_issue("error", dup[0], f"copies produce duplicate ids: {', '.join(dup[:5])}"))
+
+    design = Design(path=path, raw=raw, params=params, parts=parts, issues=issues, components=components)
+    _apply_joint_cuts(design)
     design.issues.extend(check(design))
     return design
 
 
-def _r(v):
-    return tuple(round(x, 3) + 0.0 for x in v)
+def _resolve_spec(sid, sp, params, materials, components) -> list[Part]:
+    rot = _rotations(sp, params)
+    at = _vec(sp.get("at", [0, 0, 0]), params, "at")
+    place = g.mul(g.translate(*at), rot)
+    aligned = g.is_axis_aligned(rot)
+    axis_map = [max(range(3), key=lambda r: abs(rot[r][c])) for c in range(3)] if aligned else None
+    name = sp.get("name", sid)
+    common = dict(group=sp.get("group", ""), role=sp.get("role", ""), notes=sp.get("notes", ""))
+
+    if "component" in sp:
+        item = catalog.get(sp["component"])
+        panels = catalog.generate(item, sp.get("options", {}))
+        components[item["id"]] = {
+            **catalog.summary(item),
+            "assumed": item.get("assumed", []),
+            "construction": item.get("construction", ""),
+            "material": item.get("material", ""),
+            "color": item.get("color", "#e9e7e2"),
+        }
+        total_mass, _ = catalog.mass_kg(item)
+        locals_ = [(pn, g.box_solid(tuple(pn["size"])).transformed(g.translate(*pn["at"]))) for pn in panels]
+        vol = sum(s.volume_and_centroid()[0] for _, s in locals_) or 1.0
+        out = []
+        for suffix, nsuffix, copy, mirrored in _copies(sp, params):
+            tf = g.mul(copy, place)
+            inst = sid + suffix
+            for pn, ls in locals_:
+                share = None if total_mass is None else total_mass * ls.volume_and_centroid()[0] / vol
+                out.append(Part(
+                    id=f"{inst}/{pn['sub']}", source=sid, instance=inst,
+                    name=f"{name}{nsuffix}: {pn['name']}", material="@" + item["id"], kind="component",
+                    shape="box", size=tuple(pn["size"]), solid=ls.transformed(tf), mass_kg=share,
+                    component=item["id"], aligned=aligned, axis_map=axis_map, mirrored=mirrored, **common,
+                ))
+        return out
+
+    mat = sp.get("material", "")
+    if mat not in materials:
+        raise DesignError(f"unknown material {mat!r}")
+    kind = materials[mat].get("kind", "sheet")
+    shape = sp.get("shape", "box")
+    if shape not in SHAPES:
+        raise DesignError(f"unknown shape {shape!r}")
+    size = _vec(sp["size"], params, "size")
+    if min(size) <= 0:
+        raise DesignError(f"size must be positive, got {tuple(round(s, 2) for s in size)}")
+    leg = sp.get("leg", "")
+    ends = (0.0, 0.0)
+    if shape == "gusset":
+        if leg not in GUSSET_LEGS:
+            raise DesignError("gusset needs leg front/back/left/right")
+        local = g.gusset_solid(size, leg)
+    else:
+        e = sp.get("ends") or {}
+        ends = (evaluate(e.get("start", 0), params), evaluate(e.get("end", 0), params))
+        if any(abs(a) >= 80 for a in ends):
+            raise DesignError("end cut angles must be between -80 and 80 degrees")
+        if size[2] * (math.tan(math.radians(ends[0])) + math.tan(math.radians(ends[1]))) >= size[0]:
+            raise DesignError("end cuts meet: the board is too short for those angles")
+        local = g.box_solid(size, *ends)
+    mass = evaluate(sp["mass_kg"], params) if "mass_kg" in sp else None
+    cut_locals = []
+    for c in sp.get("cutouts", []) or []:
+        cs = _vec(c["size"], params, "cutout size")
+        ca = _vec(c.get("at", [0, 0, 0]), params, "cutout at")
+        cut_locals.append((c.get("label", "cutout"), cs, g.box_solid(cs).transformed(g.translate(*ca))))
+
+    out = []
+    for suffix, nsuffix, copy, mirrored in _copies(sp, params):
+        tf = g.mul(copy, place)
+        p = Part(
+            id=sid + suffix, source=sid, instance=sid + suffix, name=name + nsuffix, base_name=name,
+            material=mat, kind=kind, shape=shape, size=tuple(round(s, 3) for s in size),
+            solid=local.transformed(tf), leg=leg, ends=ends, mass_kg=mass,
+            aligned=aligned, axis_map=axis_map, mirrored=mirrored, **common,
+        )
+        for label, cs, csol in cut_locals:
+            p.cutouts.append(csol.transformed(tf))
+            p.cut_notes.append(f"{label}: {cs[0]:g} x {cs[1]:g} x {cs[2]:g}")
+        out.append(p)
+    return out
+
+
+def _apply_joint_cuts(design: Design) -> None:
+    """A joint with `cut_into: [hosts]` cuts the other joint parts out of the hosts
+    (a through-mortise, a dado, a birdsmouth notch)."""
+    for j in design.raw.get("joints", []):
+        hosts_ref = j.get("cut_into") or []
+        if not hosts_ref:
+            continue
+        hosts = [p for r in hosts_ref for p in design.expand(r)]
+        host_ids = {p.id for p in hosts}
+        guests = [p for r in j.get("parts", []) if r not in hosts_ref for p in design.expand(r)
+                  if p.id not in host_ids]
+        for h in hosts:
+            cut = [gp for gp in guests if g.aabb_overlap(h.solid.bounds(), gp.solid.bounds(), EPS)
+                   and g.penetration(h.solid, gp.solid) > EPS]
+            if not cut:
+                continue
+            h.subtract.extend(gp.id for gp in cut)
+            lo = [max(h.at[k], min(gp.at[k] for gp in cut)) for k in range(3)]
+            hi = [min(h.max[k], max(gp.max[k] for gp in cut)) for k in range(3)]
+            dims = " x ".join(f"{v:g}" for v in sorted((round(b - a, 1) for a, b in zip(lo, hi)), reverse=True))
+            names = sorted({gp.name.split(",")[0].split(" (mirrored)")[0] for gp in cut})
+            exact = h.aligned and all(gp.aligned for gp in cut)
+            h.cut_notes.append(f"{j.get('type', 'cut')} for {', '.join(names)}"
+                               + (f" ({dims})" if exact else " (angled: mark it from the drawing or the mating part)"))
 
 
 def _issue(level, part, message):
@@ -315,6 +491,8 @@ def check(design: Design) -> list[dict]:
     issues = []
     materials = design.raw.get("materials", {})
     for p in design.parts:
+        if p.kind == "component":
+            continue
         m = materials[p.material]
         dims = sorted(p.size)
         if p.kind == "sheet" and "thickness" in m and abs(dims[0] - m["thickness"]) > EPS:
@@ -326,27 +504,43 @@ def check(design: Design) -> list[dict]:
                 issues.append(_issue("warning", p.id,
                     f"{p.name}: section {dims[0]:g}x{dims[1]:g} does not match "
                     f"{p.material} {sec[0]:g}x{sec[1]:g}"))
-        if p.at[2] < -EPS:
+    for p in design.parts:
+        if p.at[2] < -0.5:
             issues.append(_issue("warning", p.id, f"{p.name}: goes below the floor (z={p.at[2]:g})"))
 
-    joined = set()
+    all_ids = {p.id for p in design.parts}
+    joined: set[frozenset] = set()
     for j in design.raw.get("joints", []):
-        ps = j.get("parts", [])
-        for a in ps:
-            for b in ps:
-                joined.add((a, b))
-        for pid in ps:
-            if pid not in {p.id for p in design.parts}:
-                issues.append(_issue("warning", pid, f"joint {j.get('id', '?')!r} names unknown part {pid!r}"))
+        members = []
+        for ref in j.get("parts", []):
+            ex = design.expand(ref)
+            if not ex and ref not in all_ids:
+                issues.append(_issue("warning", ref, f"joint {j.get('id', '?')!r} names unknown part {ref!r}"))
+            members.extend(p.id for p in ex)
+        for a in members:
+            for b in members:
+                if a != b:
+                    joined.add(frozenset((a, b)))
 
     solid = [p for p in design.parts if p.kind != "reference"]
-    for i, a in enumerate(solid):
-        for b in solid[i + 1:]:
-            if (a.id, b.id) in joined:
+    boxes = [(p, p.solid.bounds()) for p in solid]
+    for i, (a, ab) in enumerate(boxes):
+        for b, bb in boxes[i + 1:]:
+            if not g.aabb_overlap(ab, bb, EPS):
                 continue
-            ov = [min(a.max[k], b.max[k]) - max(a.at[k], b.at[k]) for k in range(3)]
-            if all(o > EPS for o in ov):
+            if frozenset((a.id, b.id)) in joined:
+                continue
+            if a.kind == "component" and a.instance == b.instance:
+                continue
+            simple = a.aligned and b.aligned and a.shape == b.shape == "box" and not any(a.ends + b.ends)
+            if simple:
+                ov = [min(a.max[k], b.max[k]) - max(a.at[k], b.at[k]) for k in range(3)]
                 issues.append(_issue("warning", a.id,
                     f"{a.name} and {b.name} overlap by {ov[0]:g}x{ov[1]:g}x{ov[2]:g} mm "
                     f"with no joint between them"))
+            else:
+                d = g.penetration(a.solid, b.solid)
+                if d > 0.5:
+                    issues.append(_issue("warning", a.id,
+                        f"{a.name} and {b.name} overlap by {d:.1f} mm with no joint between them"))
     return issues

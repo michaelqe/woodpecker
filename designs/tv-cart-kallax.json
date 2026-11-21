@@ -1,0 +1,499 @@
+{
+  "title": "Rolling TV cart on a KALLAX (43\")",
+  "description": "Variant of the TV cart that uses an IKEA KALLAX 77x41 as the base, so the two cubes hold the ballast, the Apple TV and the coiled cord. KALLAX panels are honeycomb, so nothing load-bearing is screwed into them: the upright stands on a plywood plinth behind the KALLAX, and a plywood top plate, bolted through the KALLAX top, holds the post at a second height 430 mm up.",
+  "units": "mm",
+  "params": {
+    "ply": {
+      "value": 18,
+      "label": "Plywood thickness"
+    },
+    "kallax_w": {
+      "value": 765,
+      "label": "KALLAX width (from IKEA)"
+    },
+    "kallax_d": {
+      "value": 390,
+      "label": "KALLAX depth (from IKEA)"
+    },
+    "kallax_h": {
+      "value": 410,
+      "label": "KALLAX height (from IKEA)"
+    },
+    "kallax_panel": {
+      "value": 38,
+      "label": "KALLAX panel thickness",
+      "notes": "Assumed; measure yours."
+    },
+    "plate_d": {
+      "value": 600,
+      "label": "Plinth depth (front to back)",
+      "notes": "The plinth, not the KALLAX, sets the footprint."
+    },
+    "caster_h": {
+      "value": 75,
+      "label": "Caster height"
+    },
+    "caster_plate": {
+      "value": 50,
+      "label": "Caster plate size"
+    },
+    "post_w": {
+      "value": 95,
+      "label": "Upright width"
+    },
+    "post_lam": {
+      "value": 45,
+      "label": "One lamination of the upright"
+    },
+    "screen_center": {
+      "value": 1000,
+      "label": "Screen centre height"
+    },
+    "post_above": {
+      "value": 150,
+      "label": "Upright above screen centre"
+    },
+    "brace_side": {
+      "value": 160,
+      "label": "Side knee brace leg"
+    },
+    "bracket_gap": {
+      "value": 25,
+      "label": "VESA bracket depth"
+    },
+    "tv_w": {
+      "value": 965,
+      "label": "TV width"
+    },
+    "tv_h": {
+      "value": 560,
+      "label": "TV height"
+    },
+    "tv_d": {
+      "value": 60,
+      "label": "TV depth"
+    },
+    "tv_mass": {
+      "value": 9,
+      "label": "TV mass (kg)",
+      "unit": "kg"
+    },
+    "ballast_mass": {
+      "value": 8,
+      "label": "Mass of one ballast block (kg)",
+      "unit": "kg"
+    },
+    "plinth_top": "caster_h + ply",
+    "kallax_top": "plinth_top + kallax_h",
+    "post_d": "2 * post_lam",
+    "post_x": "(kallax_w - post_w) / 2",
+    "post_y": "kallax_d",
+    "post_len": "screen_center + post_above - plinth_top",
+    "cube_w": "(kallax_w - 3 * kallax_panel) / 2"
+  },
+  "materials": {
+    "ply18": {
+      "name": "Birch plywood 18 mm",
+      "kind": "sheet",
+      "thickness": 18,
+      "stock": [
+        2500,
+        1250
+      ],
+      "density": 680
+    },
+    "spruce45x95": {
+      "name": "Spruce 45x95, planed",
+      "kind": "lumber",
+      "section": [
+        45,
+        95
+      ],
+      "stock_length": 3000,
+      "density": 450
+    },
+    "caster": {
+      "name": "Braked swivel caster, 75 mm, soft rubber wheel",
+      "kind": "hardware",
+      "mass_kg": 0.3
+    },
+    "vesa_bracket": {
+      "name": "Fixed or tilting VESA 200x200 wall bracket",
+      "kind": "hardware",
+      "mass_kg": 1.5
+    },
+    "ballast": {
+      "name": "Ballast block (paving slab or sandbag)",
+      "kind": "hardware"
+    },
+    "tv": {
+      "name": "43\" TV",
+      "kind": "reference"
+    },
+    "appletv": {
+      "name": "Apple TV",
+      "kind": "reference",
+      "mass_kg": 0.2
+    }
+  },
+  "parts": [
+    {
+      "id": "caster",
+      "name": "Caster",
+      "group": "Casters",
+      "material": "caster",
+      "size": [
+        "caster_plate",
+        "caster_plate",
+        "caster_h"
+      ],
+      "at": [
+        0,
+        0,
+        0
+      ],
+      "repeat": {
+        "count": 2,
+        "step": [
+          0,
+          "plate_d - caster_plate",
+          0
+        ]
+      },
+      "mirror": {
+        "axis": "x",
+        "about": "kallax_w / 2"
+      },
+      "role": "Rolls the cart. Screwed to the plywood plinth, never to the KALLAX."
+    },
+    {
+      "id": "plinth",
+      "name": "Plinth",
+      "group": "Base",
+      "material": "ply18",
+      "size": [
+        "kallax_w",
+        "plate_d",
+        "ply"
+      ],
+      "at": [
+        0,
+        0,
+        "caster_h"
+      ],
+      "role": "Plywood plate that carries everything: casters underneath, KALLAX and upright on top. It is deeper than the KALLAX so the footprint is wide enough not to tip forward."
+    },
+    {
+      "id": "kallax",
+      "name": "KALLAX",
+      "group": "Base",
+      "component": "ikea-kallax-77x41",
+      "at": [
+        0,
+        0,
+        "plinth_top"
+      ],
+      "role": "Bought shelf unit used as the cabinet: two cubes for ballast, Apple TV and the coiled extension cord. It also stiffens the top plate, but the TV's weight goes down the post, not through the KALLAX."
+    },
+    {
+      "id": "top_plate",
+      "name": "Top plate",
+      "group": "Base",
+      "material": "ply18",
+      "size": [
+        "kallax_w",
+        "kallax_d + post_d",
+        "ply"
+      ],
+      "at": [
+        0,
+        0,
+        "kallax_top"
+      ],
+      "role": "Plywood lid over the KALLAX that reaches back around the upright. It holds the post at a second point 430 mm above the plinth, which is what stops the post levering forward.",
+      "notes": "Cut a 95x90 hole for the post. Bolt down through the KALLAX top with M6 bolts and big washers (honeycomb won't hold screws)."
+    },
+    {
+      "id": "ballast",
+      "name": "Ballast",
+      "group": "Ballast",
+      "material": "ballast",
+      "mass_kg": "ballast_mass",
+      "size": [
+        250,
+        300,
+        50
+      ],
+      "at": [
+        "kallax_panel + (cube_w - 250) / 2",
+        "(kallax_d - 300) / 2",
+        "plinth_top + kallax_panel"
+      ],
+      "mirror": {
+        "axis": "x",
+        "about": "kallax_w / 2"
+      },
+      "role": "Dead weight in the bottom of each cube. Keeps the centre of gravity low."
+    },
+    {
+      "id": "post_front",
+      "name": "Upright, front lamination",
+      "group": "Upright",
+      "material": "spruce45x95",
+      "size": [
+        "post_w",
+        "post_lam",
+        "post_len"
+      ],
+      "at": [
+        "post_x",
+        "post_y",
+        "plinth_top"
+      ],
+      "role": "Carries the TV bracket. Stands on the plinth right behind the KALLAX."
+    },
+    {
+      "id": "post_back",
+      "name": "Upright, back lamination",
+      "group": "Upright",
+      "material": "spruce45x95",
+      "size": [
+        "post_w",
+        "post_lam",
+        "post_len"
+      ],
+      "at": [
+        "post_x",
+        "post_y + post_lam",
+        "plinth_top"
+      ],
+      "role": "Second half of the laminated post."
+    },
+    {
+      "id": "brace_side",
+      "name": "Knee brace, side",
+      "group": "Braces",
+      "material": "ply18",
+      "shape": "gusset",
+      "leg": "right",
+      "size": [
+        "brace_side",
+        "ply",
+        "brace_side"
+      ],
+      "at": [
+        "post_x - brace_side",
+        "post_y + post_lam - ply / 2",
+        "plinth_top"
+      ],
+      "mirror": {
+        "axis": "x",
+        "about": "kallax_w / 2"
+      },
+      "role": "Stops the post racking side to side at its foot. Bolted through the post to its twin on the other side."
+    },
+    {
+      "id": "bracket",
+      "name": "VESA bracket",
+      "group": "TV",
+      "material": "vesa_bracket",
+      "size": [
+        250,
+        "bracket_gap",
+        250
+      ],
+      "at": [
+        "kallax_w / 2 - 125",
+        "post_y - bracket_gap",
+        "screen_center - 125"
+      ],
+      "role": "Store-bought wall bracket, lag-screwed to the front of the upright."
+    },
+    {
+      "id": "tv",
+      "name": "TV (43\")",
+      "group": "TV",
+      "material": "tv",
+      "mass_kg": "tv_mass",
+      "size": [
+        "tv_w",
+        "tv_d",
+        "tv_h"
+      ],
+      "at": [
+        "(kallax_w - tv_w) / 2",
+        "post_y - bracket_gap - tv_d",
+        "screen_center - tv_h / 2"
+      ],
+      "role": "For reference only. Its weight is counted in the tip check."
+    },
+    {
+      "id": "apple_tv",
+      "name": "Apple TV",
+      "group": "TV",
+      "material": "appletv",
+      "size": [
+        98,
+        98,
+        31
+      ],
+      "at": [
+        "kallax_panel + 40",
+        "60",
+        "plinth_top + kallax_panel"
+      ],
+      "role": "Sits in the left cube. HDMI goes up the back of the post."
+    }
+  ],
+  "joints": [
+    {
+      "id": "casters_on",
+      "type": "screwed",
+      "parts": [
+        "caster",
+        "plinth"
+      ],
+      "fasteners": "4x 5x16 screws per caster (stay inside the 18 mm plate)"
+    },
+    {
+      "id": "kallax_down",
+      "type": "through-bolted",
+      "parts": [
+        "kallax",
+        "plinth"
+      ],
+      "fasteners": "4x M6x70 bolts through the KALLAX bottom panel and the plinth, large washers both sides",
+      "notes": "Honeycomb panels crush under small washers; use 30 mm fender washers."
+    },
+    {
+      "id": "top_plate_down",
+      "type": "through-bolted",
+      "parts": [
+        "top_plate",
+        "kallax"
+      ],
+      "fasteners": "4x M6x70 bolts through the top plate and KALLAX top, fender washers inside the cubes"
+    },
+    {
+      "id": "post_lamination",
+      "type": "face lamination",
+      "parts": [
+        "post_front",
+        "post_back"
+      ],
+      "fasteners": "PVA glue, clamped"
+    },
+    {
+      "id": "post_through_plate",
+      "type": "through-mortise",
+      "parts": [
+        "post_front",
+        "post_back",
+        "top_plate"
+      ],
+      "cut_into": [
+        "top_plate"
+      ],
+      "fasteners": "Snug 95x90 hole; 2 screws through the plate edge into the post",
+      "notes": "Second support point for the post, 430 mm above the first."
+    },
+    {
+      "id": "post_against_kallax",
+      "type": "butt (touching)",
+      "parts": [
+        "post_front",
+        "kallax"
+      ],
+      "fasteners": "none (the post just touches the KALLAX back edge)"
+    },
+    {
+      "id": "post_foot",
+      "type": "screwed from below",
+      "parts": [
+        "post_front",
+        "post_back",
+        "plinth"
+      ],
+      "fasteners": "2x 8x100 coach screws up through the plinth into the post"
+    },
+    {
+      "id": "side_braces",
+      "type": "through-bolted",
+      "parts": [
+        "brace_side",
+        "post_front",
+        "post_back",
+        "plinth"
+      ],
+      "fasteners": "2x M8x150 carriage bolts through both braces and the post; glue + 4x40 screws up through the plinth"
+    },
+    {
+      "id": "bracket_on",
+      "type": "lag-screwed",
+      "parts": [
+        "bracket",
+        "post_front"
+      ],
+      "fasteners": "4x 8x60 coach screws"
+    },
+    {
+      "id": "ballast_in",
+      "type": "resting",
+      "parts": [
+        "ballast",
+        "kallax"
+      ],
+      "fasteners": "none; a strip of anti-slip mat under each"
+    },
+    {
+      "id": "appletv_in",
+      "type": "resting",
+      "parts": [
+        "apple_tv",
+        "kallax"
+      ],
+      "fasteners": "none"
+    }
+  ],
+  "hardware": [
+    {
+      "item": "M6x70 bolt + nut + 2 fender washers (30 mm)",
+      "qty": 8
+    },
+    {
+      "item": "M8x150 carriage bolt + washer + nut",
+      "qty": 2
+    },
+    {
+      "item": "8x100 coach screw",
+      "qty": 2
+    },
+    {
+      "item": "8x60 coach screw",
+      "qty": 4
+    },
+    {
+      "item": "4x40 wood screws",
+      "qty": 20
+    },
+    {
+      "item": "5x16 wood screws (casters)",
+      "qty": 16
+    },
+    {
+      "item": "PVA wood glue",
+      "qty": 1
+    },
+    {
+      "item": "3-way Schuko power strip",
+      "qty": 1
+    },
+    {
+      "item": "5 m extension cord, 1.5 mm2",
+      "qty": 1
+    }
+  ],
+  "shop": {
+    "kerf": 3
+  }
+}

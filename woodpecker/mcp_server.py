@@ -5,7 +5,7 @@ from typing import Any
 
 from mcp.server.mcpserver import MCPServer
 
-from . import cutlist, store
+from . import catalog, cutlist, store
 from .model import EPS, Design
 from .server import format_cutlist
 
@@ -15,28 +15,49 @@ parametric parts; the human watches it in a 3D viewer (http://127.0.0.1:8790) th
 reloads on every change you make.
 
 Model rules:
-- Every length is millimetres. Axes: x = width (left->right), y = depth (front->back,
-  front is y=0), z = up (floor is z=0).
-- A part is a box (or `shape: "gusset"`, a right-triangle knee brace) with `size`
-  [x, y, z] and `at` = its minimum corner. Values may be expressions over params,
-  e.g. "base_w - 2 * ply". Put anything the human might resize in a param, so
-  "make it wider" is one wp_set_param call.
+- Lengths in millimetres, angles in degrees. Axes: x = width (left->right), y = depth
+  (front->back, front is y=0), z = up (floor is z=0).
+- A part is a box with `size` [x, y, z] built from its local origin, placed so that origin
+  sits at `at`. Values may be expressions over params ("base_w - 2 * ply"; sin/cos/tan/atan
+  take degrees). Put anything the human might resize in a param.
+- `shape: "gusset"` is a right-triangle knee brace; `leg` = side of the vertical leg
+  (front/back/left/right), the horizontal leg is at the bottom.
+- `rotate`: {"axis": "x|y|z", "deg": ...} or a list of them, about world-aligned axes
+  through the local origin (`at`), applied in order. Rotation about y by -30 tilts a
+  board lying along +x up by 30 degrees. `at` is then NOT the bounding-box minimum.
+- `ends`: {"start": deg, "end": deg} angled end cuts on a board lying along local x,
+  tilting in the local x-z plane; positive = top edge shorter than the bottom at that end.
+  For a board rising along +x (rotate y by -p), vertical (plumb) cuts are start = p and
+  end = -p. The greenhouse design is a worked example (rafters, birdsmouth, ridge).
+- `repeat`: {"count": n, "step": [dx, dy, dz]} or {"count": n, "axis": "y", "spacing": s}
+  makes copies id[0]..id[n-1]. `mirror`: {"axis": "x", "about": v} adds mirrored copies
+  (id~m). Joints may name the spec id to mean every copy.
+- `component`: a catalog id (wp_catalog_search) instead of material/size: a bought product
+  (IKEA KALLAX, BILLY, ...) drawn as its panels with ids like kallax/top. Its `at` is the
+  product's min corner (x = width, y = depth, z = up) and it may be rotated about z.
+  Respect the catalog's `construction` notes (honeycomb panels do not hold screws) and
+  its published load limits. Never guess catalog numbers: add products with
+  wp_catalog_add only from the maker's page, and list anything not published in `assumed`.
+- `cutouts`: [{"label", "at", "size"}] boxes cut from the part (local coords). A joint
+  with `cut_into: [host ids]` cuts the joint's other parts out of the hosts (through-
+  mortise, dado, birdsmouth notch). The viewer shows the holes; the cut list notes them.
 - Every part needs a plain-English `role`: what it does structurally. That is what you
   read back when the human asks "explain this". Add `notes` for build tips.
 - Materials have a kind: sheet (plywood; thinnest side must equal thickness), lumber
   (two smallest sides must equal section), hardware (bought, counted in the hardware
   list), reference (shown but not built, e.g. the TV; give mass_kg for the tip check).
-- Parts may only overlap if a joint lists both of them (a through-mortise, say).
-  Joints also carry the fasteners, which is how a bracket or connection gets explained.
-- Gusset `leg` names the side the vertical leg sits on (front/back/left/right); the
-  horizontal leg is always at the bottom.
+  Optional price_eur (+ price_source) on materials and hardware feeds the cost estimate;
+  only use prices you looked up, with the source.
+- Parts may only overlap if a joint lists both of them. Joints also carry the fasteners,
+  which is how a bracket or connection gets explained.
 
 Working loop:
 1. "this" / "the selected part" means wp_get_selection. Use wp_explain_part to explain it.
 2. Edit with the smallest tool (wp_set_param before wp_update_part before rewriting).
 3. After edits, run wp_check: fix new warnings (overlaps, wrong stock sizes, floating
    parts) and report tip-stability changes when the shape or weight moved.
-4. wp_cut_list gives the parts list, the stock to buy and the hardware.
+4. wp_cut_list gives the parts list, stock to buy (with sheet layouts), bought items,
+   hardware and cost.
 5. wp_undo reverts the last write if the human does not like a change.
 Do not edit design files by hand while the viewer is open; use the tools (they validate
 and keep undo history).
@@ -80,7 +101,7 @@ def wp_get_design(name: str) -> dict:
     """The whole design: params (value + expression), materials, resolved parts, joints,
     hardware, overall bounds and issues. Also returns `raw`, the file as written."""
     d = store.load(name)
-    return {**d.to_dict(), "raw": d.raw}
+    return {**d.to_dict(geometry=False), "raw": d.raw}
 
 
 @mcp.tool()
@@ -90,7 +111,7 @@ def wp_get_selection() -> dict:
     if not sel.get("design") or not sel.get("parts"):
         return {**sel, "note": "nothing selected; ask the human to click the part"}
     d = store.load(sel["design"])
-    sel["details"] = [d.part(pid).to_dict() for pid in sel["parts"] if pid in {p.id for p in d.parts}]
+    sel["details"] = [d.part(pid).to_dict(geometry=False) for pid in sel["parts"] if pid in {p.id for p in d.parts}]
     return sel
 
 
@@ -101,9 +122,10 @@ def wp_explain_part(name: str, part_id: str) -> dict:
     d = store.load(name)
     p = d.part(part_id)
     return {
-        "part": p.to_dict(),
+        "part": p.to_dict(geometry=False),
         "material": d.raw.get("materials", {}).get(p.material, {}),
-        "raw": next(x for x in d.raw["parts"] if x.get("id") == part_id),
+        "component": d.components.get(p.component) if p.component else None,
+        "spec": next(x for x in d.raw["parts"] if x.get("id") == p.source),
         "joints": d.joints_for(part_id),
         "touching": _touching(d, part_id),
         "mass_kg": round(cutlist.part_mass(p, d.raw.get("materials", {})), 2),
@@ -134,6 +156,15 @@ def wp_update_part(name: str, part_id: str, fields: dict) -> dict:
 def wp_add_part(name: str, part: dict, after: str | None = None) -> dict:
     """Add a part: {id, name, group, material, shape?, leg?, size, at, role, notes?, mass_kg?}."""
     return _summary(store.add_part(name, part, after))
+
+
+@mcp.tool()
+def wp_move_part(name: str, part_id: str, delta: list[float]) -> dict:
+    """Move a part (and all its copies) by [dx, dy, dz] mm. Expressions are kept
+    ("post_x" becomes "post_x + 40")."""
+    d = store.load(name)
+    return _summary(store.move_part(name, d.part(part_id).source if part_id not in
+                                    {x.get("id") for x in d.raw["parts"]} else part_id, delta))
 
 
 @mcp.tool()
@@ -201,6 +232,34 @@ def wp_cut_list(name: str) -> dict:
     `text` is ready to show the human."""
     d = store.load(name)
     return {"text": format_cutlist(d), **cutlist.cut_list(d)}
+
+
+@mcp.tool()
+def wp_catalog_search(q: str = "") -> list[dict]:
+    """Search the catalog of bought products (IKEA furniture etc.) by words in the name,
+    brand, article number or category. Empty q lists everything."""
+    return catalog.search(q)
+
+
+@mcp.tool()
+def wp_catalog_get(item_id: str) -> dict:
+    """Full catalog entry: published size (mm, W x D x H), loads, price, source URL, panel
+    recipe, what is assumed, and construction notes. Also the generated panels."""
+    it = catalog.get(item_id)
+    return {**it, "panels": catalog.generate(it, {})}
+
+
+@mcp.tool()
+def wp_catalog_add(item: dict) -> dict:
+    """Add or replace a catalog product. Use only numbers published by the maker.
+    Required: id (e.g. "ikea-hemnes-..."), brand, name, size [W, D, H] mm, url, retrieved
+    (YYYY-MM-DD), geometry. Optional: article, category, price {amount, currency}, load
+    {per_shelf_kg, top_kg, ...}, package_kg / mass_kg, material, construction (how to
+    fasten to it), assumed [what is not published], color.
+    geometry: {"generator": "cube_grid", "cols", "rows", "panel"} (KALLAX-style),
+    {"generator": "carcass", "panel", "back", "shelves", "partitions", "plinth"}
+    (BILLY/BESTÅ-style), or {"generator": "block"} (a solid box)."""
+    return catalog.add(item)
 
 
 def main():

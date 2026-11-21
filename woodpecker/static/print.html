@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Build sheet</title>
+<script type="importmap">
+{ "imports": { "three": "/static/vendor/three.module.js" } }
+</script>
+<style>
+  :root { --ink: #111; --muted: #666; --line: #ccc; --accent: #1ba1e2; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #fff; color: var(--ink); font: 12px/1.4 "Segoe UI", system-ui, -apple-system, sans-serif; }
+  .page { max-width: 1000px; margin: 0 auto; padding: 24px 16px 48px; }
+  .noprint { margin-bottom: 16px; display: flex; gap: 8px; align-items: center; }
+  .noprint button, .noprint select { font: inherit; padding: 4px 10px; border: 1px solid var(--line); background: #f4f4f4; }
+  h1 { font-weight: 300; font-size: 26px; margin: 0 0 4px; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); margin: 22px 0 8px; border-bottom: 1px solid var(--line); padding-bottom: 3px; }
+  .muted { color: var(--muted); }
+  .views { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .views figure { margin: 0; border: 1px solid var(--line); }
+  .views figcaption { font-size: 11px; color: var(--muted); padding: 3px 6px; border-top: 1px solid var(--line); }
+  .views img { display: block; width: 100%; height: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: 10px; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--ink); padding: 3px 4px; }
+  td { border-bottom: 1px solid var(--line); padding: 3px 4px; vertical-align: top; }
+  td.n { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  td.box { width: 18px; }
+  td.box::before { content: ""; display: inline-block; width: 10px; height: 10px; border: 1px solid var(--ink); }
+  .layouts { display: flex; flex-wrap: wrap; gap: 12px; }
+  .layouts > div { break-inside: avoid; }
+  ol.steps li { margin: 0 0 6px; break-inside: avoid; }
+  .warn { color: #a05a00; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 700px) { .views, .cols { grid-template-columns: 1fr; } }
+  @media print {
+    .noprint { display: none; }
+    .page { padding: 0; max-width: none; }
+    h2 { break-after: avoid; }
+    table, figure { break-inside: avoid; }
+    @page { margin: 12mm; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="noprint">
+    <button onclick="print()">Print / save as PDF</button>
+    <select id="units" aria-label="Units"><option value="mm">mm</option><option value="cm">cm</option><option value="in">in</option></select>
+    <span id="msg" class="muted">Rendering drawings…</span>
+  </div>
+  <div id="sheet"></div>
+</div>
+<script type="module" src="/static/print.js"></script>
+</body>
+</html>

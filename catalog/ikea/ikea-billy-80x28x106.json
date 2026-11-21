@@ -1,0 +1,36 @@
+{
+  "id": "ikea-billy-80x28x106",
+  "brand": "IKEA",
+  "category": "bookcase",
+  "name": "BILLY bookcase, white, 80x28x106 cm",
+  "article": "302.638.44",
+  "url": "https://www.ikea.com/ee/en/p/billy-bookcase-white-30263844/",
+  "retrieved": "2026-11-21",
+  "price": {
+    "amount": 49,
+    "currency": "EUR"
+  },
+  "size": [
+    800,
+    280,
+    1060
+  ],
+  "load": {
+    "per_shelf_kg": 30
+  },
+  "package_kg": 19.8,
+  "material": "Sides and base: particleboard, paper/melamine foil, plastic edging. Back: fibreboard, paint, paper foil",
+  "geometry": {
+    "generator": "carcass",
+    "panel": 15,
+    "back": 3,
+    "shelves": 2,
+    "plinth": 60
+  },
+  "assumed": [
+    "panel 15 mm, back 3 mm and 60 mm plinth (not published)",
+    "shelf positions (adjustable; 2 included)"
+  ],
+  "construction": "Solid particleboard (no honeycomb listed), so screws hold better than in KALLAX, but particleboard strips out if screws are reset. Use particleboard screws and pre-drill.",
+  "color": "#e9e7e2"
+}

@@ -1,0 +1,371 @@
+{
+  "title": "Greenhouse frame 2.4 x 3.0 m",
+  "description": "Timber-frame greenhouse: 45x95 studs at no more than 600 mm centres on ground plates, gable roof at 30 degrees with birdsmouth-notched rafters on a ridge board. Polycarbonate glazing is shown for reference only. A frame study to test the tool on garage-scale builds; the doors and gable infill are not drawn yet.",
+  "units": "mm",
+  "params": {
+    "W": {
+      "value": 2400,
+      "label": "Width (gable span, x)"
+    },
+    "L": {
+      "value": 3000,
+      "label": "Length (y)"
+    },
+    "wall_h": {
+      "value": 1800,
+      "label": "Wall height (top of top plate)"
+    },
+    "pitch": {
+      "value": 30,
+      "label": "Roof pitch",
+      "unit": "deg"
+    },
+    "oh": {
+      "value": 150,
+      "label": "Eave overhang"
+    },
+    "spacing_max": {
+      "value": 600,
+      "label": "Max stud/rafter spacing"
+    },
+    "sec_w": {
+      "value": 95,
+      "label": "Lumber width"
+    },
+    "sec_t": {
+      "value": 45,
+      "label": "Lumber thickness"
+    },
+    "glaze_t": {
+      "value": 6,
+      "label": "Glazing thickness"
+    },
+    "stud_n": "ceil((L - sec_t) / spacing_max) + 1",
+    "stud_step": "(L - sec_t) / (stud_n - 1)",
+    "end_span": "W - 2 * sec_w - sec_t",
+    "end_n": "ceil(end_span / spacing_max) + 1",
+    "end_step": "end_span / (end_n - 1)",
+    "stud_h": "wall_h - 2 * sec_t",
+    "raf_len": "(W / 2 - sec_t / 2 + oh) / cos(pitch)",
+    "raf_z": "wall_h - heel - oh * tan(pitch)",
+    "ridge_top": "raf_z + raf_len * sin(pitch) + sec_w / cos(pitch)",
+    "heel": {
+      "value": 30,
+      "label": "Birdsmouth heel depth",
+      "notes": "No more than a third of the rafter depth."
+    }
+  },
+  "materials": {
+    "c24": {
+      "name": "Spruce C24 45x95",
+      "kind": "lumber",
+      "section": [
+        45,
+        95
+      ],
+      "stock_length": 3600,
+      "density": 450,
+      "notes": "Use pressure-treated for the ground plates."
+    },
+    "glazing": {
+      "name": "Polycarbonate twinwall (reference)",
+      "kind": "reference"
+    }
+  },
+  "parts": [
+    {
+      "id": "sole_side",
+      "name": "Ground plate, side",
+      "group": "Walls",
+      "material": "c24",
+      "size": [
+        "sec_w",
+        "L",
+        "sec_t"
+      ],
+      "at": [
+        0,
+        0,
+        0
+      ],
+      "mirror": {
+        "axis": "x",
+        "about": "W / 2"
+      },
+      "role": "Bottom plate of the long wall. Spreads the wall onto the ground anchors; pressure-treated because it sits near the soil."
+    },
+    {
+      "id": "top_side",
+      "name": "Top plate, side",
+      "group": "Walls",
+      "material": "c24",
+      "size": [
+        "sec_w",
+        "L",
+        "sec_t"
+      ],
+      "at": [
+        0,
+        0,
+        "wall_h - sec_t"
+      ],
+      "mirror": {
+        "axis": "x",
+        "about": "W / 2"
+      },
+      "role": "Ties the stud tops together and carries the rafters, which are notched (birdsmouth) over it."
+    },
+    {
+      "id": "stud_side",
+      "name": "Stud, side",
+      "group": "Walls",
+      "material": "c24",
+      "size": [
+        "sec_w",
+        "sec_t",
+        "stud_h"
+      ],
+      "at": [
+        0,
+        0,
+        "sec_t"
+      ],
+      "repeat": {
+        "count": "stud_n",
+        "axis": "y",
+        "spacing": "stud_step"
+      },
+      "mirror": {
+        "axis": "x",
+        "about": "W / 2"
+      },
+      "role": "Vertical member of the long wall, under a rafter so the roof load goes straight down."
+    },
+    {
+      "id": "sole_end",
+      "name": "Ground plate, gable",
+      "group": "Gables",
+      "material": "c24",
+      "size": [
+        "W - 2 * sec_w",
+        "sec_w",
+        "sec_t"
+      ],
+      "at": [
+        "sec_w",
+        0,
+        0
+      ],
+      "mirror": {
+        "axis": "y",
+        "about": "L / 2"
+      },
+      "role": "Bottom plate of the gable wall, between the two long-wall plates."
+    },
+    {
+      "id": "top_end",
+      "name": "Top plate, gable",
+      "group": "Gables",
+      "material": "c24",
+      "size": [
+        "W - 2 * sec_w",
+        "sec_w",
+        "sec_t"
+      ],
+      "at": [
+        "sec_w",
+        0,
+        "wall_h - sec_t"
+      ],
+      "mirror": {
+        "axis": "y",
+        "about": "L / 2"
+      },
+      "role": "Top of the gable wall; ties the corners together so the walls cannot spread."
+    },
+    {
+      "id": "stud_end",
+      "name": "Stud, gable",
+      "group": "Gables",
+      "material": "c24",
+      "size": [
+        "sec_t",
+        "sec_w",
+        "stud_h"
+      ],
+      "at": [
+        "sec_w",
+        0,
+        "sec_t"
+      ],
+      "repeat": {
+        "count": "end_n",
+        "axis": "x",
+        "spacing": "end_step"
+      },
+      "mirror": {
+        "axis": "y",
+        "about": "L / 2"
+      },
+      "role": "Vertical member of the gable wall. The door will replace the middle ones."
+    },
+    {
+      "id": "rafter",
+      "name": "Rafter",
+      "group": "Roof",
+      "material": "c24",
+      "size": [
+        "raf_len",
+        "sec_t",
+        "sec_w"
+      ],
+      "at": [
+        "-oh",
+        0,
+        "raf_z"
+      ],
+      "rotate": {
+        "axis": "y",
+        "deg": "-pitch"
+      },
+      "ends": {
+        "start": "pitch",
+        "end": "-pitch"
+      },
+      "repeat": {
+        "count": "stud_n",
+        "axis": "y",
+        "spacing": "stud_step"
+      },
+      "mirror": {
+        "axis": "x",
+        "about": "W / 2"
+      },
+      "role": "Sloping roof member from the eave to the ridge. Notched over the top plate (birdsmouth) so it sits flat on it, with plumb cuts at both ends.",
+      "notes": "Make one, check the fit, then use it as the template for the rest."
+    },
+    {
+      "id": "ridge",
+      "name": "Ridge board",
+      "group": "Roof",
+      "material": "c24",
+      "size": [
+        "sec_t",
+        "L",
+        "sec_w"
+      ],
+      "at": [
+        "W / 2 - sec_t / 2",
+        0,
+        "ridge_top - sec_w"
+      ],
+      "role": "Board on edge at the peak that the rafters nail to in pairs. It lines them up; the walls and gable plates stop them spreading."
+    },
+    {
+      "id": "roof_glazing",
+      "name": "Roof glazing",
+      "group": "Glazing",
+      "material": "glazing",
+      "size": [
+        "raf_len + sec_w * tan(pitch)",
+        "L",
+        "glaze_t"
+      ],
+      "at": [
+        "-oh - sec_w * sin(pitch)",
+        0,
+        "raf_z + sec_w * cos(pitch)"
+      ],
+      "rotate": {
+        "axis": "y",
+        "deg": "-pitch"
+      },
+      "mirror": {
+        "axis": "x",
+        "about": "W / 2"
+      },
+      "role": "Polycarbonate roof sheet, for reference only (not in the cut list)."
+    }
+  ],
+  "joints": [
+    {
+      "id": "wall_frame",
+      "type": "nailed",
+      "parts": [
+        "sole_side",
+        "top_side",
+        "stud_side"
+      ],
+      "fasteners": "2x 90 mm ring-shank nails through the plate into each stud end"
+    },
+    {
+      "id": "gable_frame",
+      "type": "nailed",
+      "parts": [
+        "sole_end",
+        "top_end",
+        "stud_end"
+      ],
+      "fasteners": "2x 90 mm nails through the plate into each stud end"
+    },
+    {
+      "id": "corners",
+      "type": "screwed",
+      "parts": [
+        "sole_side",
+        "sole_end",
+        "top_side",
+        "top_end"
+      ],
+      "fasteners": "2x 6x120 construction screws per corner"
+    },
+    {
+      "id": "birdsmouth",
+      "type": "birdsmouth notch",
+      "parts": [
+        "rafter",
+        "top_side"
+      ],
+      "cut_into": [
+        "rafter"
+      ],
+      "fasteners": "Rafter tie or 2 skew-nailed 90 mm nails each side",
+      "notes": "Seat cut no deeper than a third of the rafter depth."
+    },
+    {
+      "id": "ridge_joint",
+      "type": "nailed at the ridge",
+      "parts": [
+        "rafter",
+        "ridge"
+      ],
+      "fasteners": "3x 90 mm nails per rafter through the ridge board"
+    }
+  ],
+  "hardware": [
+    {
+      "item": "Ground screw anchors (or concrete pads)",
+      "qty": 6
+    },
+    {
+      "item": "Rafter ties / hurricane clips",
+      "qty": 12
+    },
+    {
+      "item": "90 mm ring-shank nails, 1 kg",
+      "qty": 2
+    },
+    {
+      "item": "6x120 construction screws",
+      "qty": 16
+    },
+    {
+      "item": "Polycarbonate twinwall, glazing bars and screws",
+      "qty": 1,
+      "notes": "size to suit once the frame is final"
+    }
+  ],
+  "shop": {
+    "kerf": 3
+  }
+}

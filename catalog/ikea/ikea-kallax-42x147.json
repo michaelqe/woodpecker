@@ -1,0 +1,34 @@
+{
+  "id": "ikea-kallax-42x147",
+  "brand": "IKEA",
+  "category": "shelving",
+  "name": "KALLAX shelving unit, white, 42x147 cm",
+  "article": "002.758.48",
+  "url": "https://www.ikea.com/ee/en/p/kallax-shelving-unit-white-00275848/",
+  "retrieved": "2026-11-21",
+  "price": {
+    "amount": 44.99,
+    "currency": "EUR"
+  },
+  "size": [
+    415,
+    390,
+    1465
+  ],
+  "load": {
+    "per_shelf_kg": 13
+  },
+  "package_kg": 13.4,
+  "material": "Particleboard, Fibreboard, Acrylic paint, Honeycomb structure paper filling (100% recycled), Plastic edging",
+  "geometry": {
+    "generator": "cube_grid",
+    "cols": 1,
+    "rows": 4,
+    "panel": 38
+  },
+  "assumed": [
+    "panel thickness 38 mm (not published; measure yours)"
+  ],
+  "construction": "Panels are particleboard/fibreboard skins over a paper honeycomb core. Screws into the panel faces barely hold. To mount anything (casters, a post, a top), bolt right through with large washers, or sandwich the unit between plywood plates and fasten to those.",
+  "color": "#e9e7e2"
+}

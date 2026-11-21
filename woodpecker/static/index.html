@@ -13,19 +13,43 @@
 <header class="bar">
   <span class="brand">woodpecker</span>
   <select id="design" aria-label="Design"></select>
-  <nav class="views" aria-label="View">
-    <button data-view="persp" class="on">3D</button>
-    <button data-view="front">Front</button>
-    <button data-view="side">Side</button>
-    <button data-view="top">Top</button>
+  <nav class="views seg" aria-label="View">
+    <button data-view="persp" class="on" title="3D (1)">3D</button>
+    <button data-view="front" title="Front (2)">Front</button>
+    <button data-view="side" title="Side (3)">Side</button>
+    <button data-view="top" title="Top (4)">Top</button>
   </nav>
+  <nav class="tools seg" aria-label="Tool">
+    <button data-tool="select" class="on" title="Select (V)">Select</button>
+    <button data-tool="move" title="Move (G)">Move</button>
+    <button data-tool="size" title="Resize (S)">Size</button>
+    <button data-tool="board" title="Draw a board (B)">Board</button>
+  </nav>
+  <span id="boardOpts" class="opts" hidden>
+    <select id="boardMat" aria-label="Board material"></select>
+    <select id="boardOrient" aria-label="Board orientation">
+      <option value="flat">flat</option>
+      <option value="edge">on edge</option>
+      <option value="upright">upright</option>
+    </select>
+    <label class="toggle">height <input id="boardLen" type="number" value="1000" step="10" style="width:72px"></label>
+  </span>
+  <button id="addProduct" title="Add a bought product (IKEA etc.)">+ Product</button>
+  <span class="opts">
+    <select id="snap" aria-label="Snap" title="Snap">
+      <option value="1">1 mm</option><option value="10" selected>10 mm</option><option value="50">50 mm</option>
+    </select>
+    <select id="units" aria-label="Units"><option value="mm">mm</option><option value="cm">cm</option><option value="in">in</option></select>
+  </span>
+  <label class="toggle"><input type="checkbox" id="showDims" checked> dims</label>
   <label class="toggle"><input type="checkbox" id="showRef" checked> reference</label>
-  <button id="undo" title="Undo the last change (yours or the agent's)">Undo</button>
+  <button id="undo" title="Undo the last change, yours or the agent's (⌘Z)">Undo</button>
   <span id="status" class="status"></span>
 </header>
 <main>
   <section id="viewport">
     <canvas id="canvas"></canvas>
+    <canvas id="overlay"></canvas>
     <div id="overall" class="overlay"></div>
     <div id="hover" class="hover" hidden></div>
     <div id="error" class="error" hidden></div>
@@ -36,13 +60,40 @@
       <button data-tab="params">Params</button>
       <button data-tab="cut">Cut list</button>
       <button data-tab="check">Check</button>
+      <button data-tab="ask">Ask</button>
     </nav>
     <div id="tab-part" class="tab"></div>
     <div id="tab-params" class="tab" hidden></div>
     <div id="tab-cut" class="tab" hidden></div>
     <div id="tab-check" class="tab" hidden></div>
+    <div id="tab-ask" class="tab chat" hidden>
+      <div id="chatLog" class="log"></div>
+      <div class="composer">
+        <textarea id="chatIn" rows="2" placeholder="Make the base 650 deep…  (Enter sends, Shift+Enter new line)"></textarea>
+        <div class="row2"><button id="chatReset" class="quiet">New conversation</button><button id="chatSend">Send</button></div>
+      </div>
+    </div>
   </aside>
 </main>
+
+<dialog id="catDlg">
+  <form method="dialog">
+    <h2>Add a product</h2>
+    <input id="catQ" placeholder="Search: kallax, billy, 202.758.14…" autocomplete="off">
+    <div id="catList" class="catlist"></div>
+    <div class="row2"><span class="muted small">Missing one? Ask the agent to add it from the maker’s page.</span><button value="cancel">Close</button></div>
+  </form>
+</dialog>
+
+<dialog id="boardDlg">
+  <form method="dialog">
+    <h2>New board</h2>
+    <p class="muted" id="bdSize"></p>
+    <label>Name <input id="bdName" autocomplete="off"></label>
+    <label>What does it do? <input id="bdRole" placeholder="e.g. shelf for the Apple TV" autocomplete="off"></label>
+    <div class="row2 rev"><button value="ok">Add</button><button value="cancel" class="quiet">Cancel</button></div>
+  </form>
+</dialog>
 <script type="module" src="/static/app.js"></script>
 </body>
 </html>

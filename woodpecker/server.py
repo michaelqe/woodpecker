@@ -8,13 +8,14 @@ import re
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, unquote, urlparse
 
-from . import cutlist, store
+from . import catalog, chat, cutlist, store
 from .model import DesignError
 
 STATIC = Path(__file__).resolve().parent / "static"
 mimetypes.add_type("text/javascript", ".js")
+mimetypes.add_type("application/wasm", ".wasm")
 
 
 def design_payload(name: str) -> dict:
@@ -37,8 +38,12 @@ def route(method, pattern):
     return deco
 
 
+NAME = r"([\w-]+)"
+PART = r"([^/]+)"
+
+
 class Handler(BaseHTTPRequestHandler):
-    server_version = "Woodpecker/0.1"
+    server_version = "Woodpecker/0.2"
 
     def log_message(self, fmt, *args):  # quieter: skip the 1 s mtime polls
         if "/mtime" not in self.path:
@@ -60,17 +65,22 @@ class Handler(BaseHTTPRequestHandler):
         n = int(self.headers.get("Content-Length") or 0)
         return json.loads(self.rfile.read(n) or b"{}")
 
+    def _query(self) -> dict:
+        return {k: v[0] for k, v in parse_qs(urlparse(self.path).query).items()}
+
     def _dispatch(self, method):
         path = urlparse(self.path).path
         for m, pat, fn in ROUTES:
             match = pat.match(path)
             if m == method and match:
                 try:
-                    return getattr(self, fn)(*match.groups())
+                    return getattr(self, fn)(*(unquote(g) for g in match.groups()))
                 except DesignError as e:
                     return self._json({"error": str(e)}, HTTPStatus.BAD_REQUEST)
                 except json.JSONDecodeError as e:
                     return self._json({"error": f"invalid JSON: {e}"}, HTTPStatus.BAD_REQUEST)
+                except FileNotFoundError as e:
+                    return self._json({"error": str(e)}, HTTPStatus.NOT_FOUND)
         if method == "GET":
             return self.static(path)
         self._json({"error": "not found"}, HTTPStatus.NOT_FOUND)
@@ -82,6 +92,8 @@ class Handler(BaseHTTPRequestHandler):
         self._dispatch("POST")
 
     def static(self, path):
+        if path.startswith("/print/"):
+            path = "/print.html"
         rel = "index.html" if path in ("", "/") else path.lstrip("/").removeprefix("static/")
         f = (STATIC / rel).resolve()
         if STATIC not in f.parents or not f.is_file():
@@ -89,30 +101,80 @@ class Handler(BaseHTTPRequestHandler):
         ctype = mimetypes.guess_type(f.name)[0] or "application/octet-stream"
         self._send(HTTPStatus.OK, f.read_bytes(), ctype)
 
-    # ---- API
+    # ---- designs
     @route("GET", r"/api/designs")
     def designs(self):
         self._json(store.list_designs())
 
-    @route("GET", r"/api/designs/([\w-]+)")
+    @route("POST", r"/api/designs")
+    def create_design(self):
+        b = self._body()
+        store.create(b["name"], b.get("title", b["name"]), b.get("description", ""), b.get("copy_from"))
+        self._json(design_payload(b["name"]))
+
+    @route("GET", rf"/api/designs/{NAME}")
     def design(self, name):
         self._json(design_payload(name))
 
-    @route("GET", r"/api/designs/([\w-]+)/mtime")
+    @route("GET", rf"/api/designs/{NAME}/mtime")
     def design_mtime(self, name):
         self._json({"mtime": store.mtime(name)})
 
-    @route("POST", r"/api/designs/([\w-]+)/params")
+    @route("POST", rf"/api/designs/{NAME}/params")
     def set_param(self, name):
         b = self._body()
         store.set_param(name, b["name"], b["value"])
         self._json(design_payload(name))
 
-    @route("POST", r"/api/designs/([\w-]+)/undo")
+    @route("POST", rf"/api/designs/{NAME}/delete")
+    def delete_design(self, name):
+        self._json(store.delete_design(name))
+
+    @route("POST", rf"/api/designs/{NAME}/undo")
     def undo(self, name):
         store.undo(name)
         self._json(design_payload(name))
 
+    # ---- parts (the viewer's drawing tools)
+    def _source(self, name, part_id):
+        return store.load(name).part(part_id).source
+
+    @route("POST", rf"/api/designs/{NAME}/parts")
+    def add_part(self, name):
+        b = self._body()
+        store.add_part(name, b["part"], b.get("after"))
+        self._json(design_payload(name))
+
+    @route("POST", rf"/api/designs/{NAME}/parts/{PART}/move")
+    def move_part(self, name, part_id):
+        store.move_part(name, self._source(name, part_id), self._body()["delta"])
+        self._json(design_payload(name))
+
+    @route("POST", rf"/api/designs/{NAME}/parts/{PART}/resize")
+    def resize_part(self, name, part_id):
+        store.resize_part(name, self._source(name, part_id), self._body()["delta"])
+        self._json(design_payload(name))
+
+    @route("POST", rf"/api/designs/{NAME}/parts/{PART}/update")
+    def update_part(self, name, part_id):
+        store.update_part(name, self._source(name, part_id), self._body()["fields"])
+        self._json(design_payload(name))
+
+    @route("POST", rf"/api/designs/{NAME}/parts/{PART}/delete")
+    def delete_part(self, name, part_id):
+        store.remove_part(name, self._source(name, part_id))
+        self._json(design_payload(name))
+
+    # ---- catalog
+    @route("GET", r"/api/catalog")
+    def catalog_search(self):
+        self._json(catalog.search(self._query().get("q", "")))
+
+    @route("GET", r"/api/catalog/([a-z0-9-]+)")
+    def catalog_item(self, item_id):
+        self._json(catalog.get(item_id))
+
+    # ---- selection
     @route("GET", r"/api/selection")
     def get_selection(self):
         self._json(store.get_selection())
@@ -121,6 +183,34 @@ class Handler(BaseHTTPRequestHandler):
     def post_selection(self):
         b = self._body()
         self._json(store.set_selection(b.get("design"), list(b.get("parts", []))))
+
+    # ---- chat
+    @route("GET", r"/api/chat")
+    def chat_status(self):
+        self._json(chat.status())
+
+    @route("GET", rf"/api/chat/{NAME}")
+    def chat_history(self, name):
+        self._json(chat.history(name))
+
+    @route("POST", rf"/api/chat/{NAME}/reset")
+    def chat_reset(self, name):
+        self._json(chat.reset(name))
+
+    @route("POST", rf"/api/chat/{NAME}")
+    def chat_send(self, name):
+        b = self._body()
+        self.send_response(HTTPStatus.OK)
+        self.send_header("Content-Type", "application/x-ndjson")
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        for ev in chat.stream(name, b.get("message", ""), list(b.get("selection", []))):
+            try:
+                self.wfile.write((json.dumps(ev) + "\n").encode())
+                self.wfile.flush()
+            except (BrokenPipeError, ConnectionResetError):
+                pass  # keep draining so the session and history are saved
+        self.close_connection = True
 
 
 def serve(host="127.0.0.1", port=8790):
@@ -151,7 +241,12 @@ def main(argv=None):
         d = store.load(args.name)
         for i in d.issues:
             print(f"{i['level']}: {i['message']}")
-        print(json.dumps({k: v for k, v in cutlist.stability(d).items() if k != "mass_breakdown"}, indent=2))
+        if not d.issues:
+            print("no issues")
+        st = cutlist.stability(d)
+        print(f"mass {st.get('total_mass_kg')} kg, centre of gravity {st.get('cog_mm')}")
+        for k_, t in st.get("tip", {}).items():
+            print(f"  tips {k_:<8} at {t['tip_angle_deg']:>5}°  push at top {t['push_at_top_kg']} kg")
 
 
 def format_cutlist(d) -> str:
@@ -162,17 +257,32 @@ def format_cutlist(d) -> str:
             dims = f"{r['length']:g} long, {r['section'][0]:g}x{r['section'][1]:g}"
         else:
             dims = f"{r['length']:g} x {r['width']:g} x {r['thickness']:g}"
-        tri = " (triangle)" if r["shape"] == "triangle" else ""
-        lines.append(f"{r['qty']:>3}  {r['label']}: {dims}{tri}  [{r['material_name']}]")
+        extra = " (triangle)" if r["shape"] == "triangle" else ""
+        if r.get("ends"):
+            extra += f", ends cut at {r['ends'][0]:g}° / {r['ends'][1]:g}°"
+        lines.append(f"{r['qty']:>3}  {r['label']}: {dims}{extra}  [{r['material_name']}]")
+        for n in r.get("cut_notes", []):
+            lines.append(f"       - {n}")
     lines += ["", "## Stock to buy"]
     for s in c["stock"]:
         lines.append(f"{s['count']:>3}  {s['name']} ({s['unit']}) - {s['method']}")
         for w in s.get("warnings", []):
             lines.append(f"     ! {w}")
+    if c["bought"]:
+        lines += ["", "## Bought items"]
+        for b in c["bought"]:
+            price = b.get("price") or {}
+            p = f"  {price['amount']:g} {price.get('currency', '')}" if price.get("amount") is not None else ""
+            lines.append(f"{b['qty']:>3}  {b['item']} ({b.get('article') or 'no article no.'}){p}")
     lines += ["", "## Hardware"]
     for h in c["hardware"]:
         note = f"  ({h['notes']})" if h.get("notes") else ""
         lines.append(f"{h['qty']:>3}  {h['item']}{note}")
+    cost = c["cost"]
+    if cost["lines"]:
+        lines += ["", f"## Cost: {cost['total_eur']:.2f} EUR for priced items"]
+        if cost["missing"]:
+            lines.append(f"   ({len(cost['missing'])} items have no price yet)")
     return "\n".join(lines)
 
 

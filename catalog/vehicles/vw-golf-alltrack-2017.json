@@ -11,10 +11,18 @@
     "https://www.carsguide.com.au/volkswagen/golf/car-dimensions/2017"
   ],
   "retrieved": "2026-11-21",
-  "size": [1799, 4567, 1515],
+  "size": [
+    1799,
+    4567,
+    1515
+  ],
   "published": {
-    "length_mm": 4567, "length_au_mm": 4578, "width_mm": 1799, "height_mm": 1515,
-    "wheelbase_mm": 2629, "ground_clearance_mm": 175
+    "length_mm": 4567,
+    "length_au_mm": 4578,
+    "width_mm": 1799,
+    "height_mm": 1515,
+    "wheelbase_mm": 2629,
+    "ground_clearance_mm": 175
   },
   "geometry": {
     "generator": "vehicle",
@@ -32,12 +40,20 @@
     "tumblehome": 85,
     "mirror_w": 2027,
     "nose": 160,
-    "body_color": "#6e7a85"
+    "body_color": "#232427",
+    "rim_color": "#c3c7cb",
+    "glass_color": "#3a4c5e",
+    "tyre_color": "#111214",
+    "sunroof": [
+      2330,
+      3480
+    ]
   },
   "assumed": [
     "length (European spec), width, height, wheelbase and ground clearance are published; mirror width, overhangs, bonnet, window line and windscreen positions are estimated from side photos",
     "wheels 205/55 R17 (about 657 mm)",
-    "colour is a placeholder"
+    "sunroof drawn as the panoramic glass roof over the front and rear seats; its size is estimated (change geometry.sunroof if yours is the smaller tilt/slide one)"
   ],
-  "color": "#6e7a85"
+  "color": "#232427",
+  "owner_notes": "Ours: black, sunroof, silver stock VW alloys."
 }

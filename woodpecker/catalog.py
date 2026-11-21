@@ -187,7 +187,7 @@ def _vehicle(W, L, H, v):
     profiles extruded across the width), glass, mirrors and round wheels.
 
     v: wheelbase, front_overhang, wheel_dia, tyre_w, clearance (ground clearance), and shape
-    numbers as fractions or mm: bonnet_h (top of the bonnet at the front), belt_h (window
+    numbers in mm (optional: rim_color, tyre_color, sunroof = [y_start, y_end] of a glass roof panel): bonnet_h (top of the bonnet at the front), belt_h (window
     line), windscreen_base (y where the bonnet meets the glass), windscreen_top (y where the
     glass meets the roof), roof_end (y where the roof starts to fall at the back), tail_h
     (height of the rear edge of the roof line drop), tumblehome (how much narrower the cabin is
@@ -229,6 +229,12 @@ def _vehicle(W, L, H, v):
     if is_convex(side):
         piece("window_l", "Side windows, left", side, th - 8, 10, glass_c)
         piece("window_r", "Side windows, right", side, W - th - 2, 10, glass_c)
+    # sunroof: a glass panel set into the roof (its top 1 mm proud so it shows)
+    if v.get("sunroof"):
+        s0, s1 = (float(a) for a in v["sunroof"])
+        inset = th + 140
+        parts.append({"sub": "sunroof", "name": "Sunroof", "size": [round(W - 2 * inset, 1), round(s1 - s0, 1), 11],
+                      "at": [round(inset, 1), round(s0, 1), round(H - 10, 1)], "color": glass_c})
     # mirrors
     mw = (float(v.get("mirror_w", W + 300)) - W) / 2
     if mw > 20:
@@ -240,11 +246,12 @@ def _vehicle(W, L, H, v):
         for side_, x in (("l", 0), ("r", W - tw)):
             parts.append({"sub": f"tyre_{axle}_{side_}", "name": f"Wheel, {axle}", "shape": "cylinder", "axis": "x",
                           "size": [tw, wd, wd], "at": [x - (8 if side_ == "l" else -8), round(y - wd / 2, 1), 0],
-                          "color": "#1d1f21"})
+                          "color": v.get("tyre_color", "#1d1f21")})
             hub = wd * 0.62
             hx = x - 14 if side_ == "l" else x + tw - 2
             parts.append({"sub": f"rim_{axle}_{side_}", "name": f"Rim, {axle}", "shape": "cylinder", "axis": "x",
                           "size": [16, round(hub, 1), round(hub, 1)],
-                          "at": [round(hx, 1), round(y - hub / 2, 1), round((wd - hub) / 2, 1)], "color": "#9aa0a6"})
+                          "at": [round(hx, 1), round(y - hub / 2, 1), round((wd - hub) / 2, 1)],
+                          "color": v.get("rim_color", "#9aa0a6")})
     del sill
     return parts

@@ -85,11 +85,11 @@ def test_vehicles_are_reference_parts(home):
     assert van and all(p.kind == "reference" for p in van)
     lo = [min(p.at[k] for p in van) for k in range(3)]
     hi = [max(p.max[k] for p in van) for k in range(3)]
-    # published: 4904 long, 1970 high, 2297 over the mirrors
+    # published: 4904 long, 1990 high (4MOTION), 2297 over the mirrors
     assert hi[1] - lo[1] == pytest.approx(4904, abs=1)
-    assert hi[2] - lo[2] == pytest.approx(1970, abs=1)
+    assert hi[2] - lo[2] == pytest.approx(1990, abs=1)  # 4MOTION
     assert hi[0] - lo[0] == pytest.approx(2297, abs=20)
-    assert any(p.shape == "cylinder" and p.color == "#1d1f21" for p in van)  # tyres
+    assert any(p.shape == "cylinder" and p.color == "#111214" for p in van)  # tyres
     c = cutlist.cut_list(d)
     assert c["bought"] == [] and c["rows"] == [] and d.issues == []
     assert render.render(d, "side")[:4] == b"\x89PNG"
@@ -99,4 +99,13 @@ def test_vehicle_catalog_items_cite_sources():
     for i in ("vw-multivan-t61-2021", "vw-golf-alltrack-2017"):
         it = catalog.get(i)
         assert it["reference"] and it["url"].startswith("https://") and it["assumed"]
-        assert len(catalog.generate(it, {})) == 15
+        assert len(catalog.generate(it, {})) >= 15
+
+
+def test_our_cars_colours_and_sunroof():
+    golf = {p["sub"]: p for p in catalog.generate(catalog.get("vw-golf-alltrack-2017"), {})}
+    van = {p["sub"]: p for p in catalog.generate(catalog.get("vw-multivan-t61-2021"), {})}
+    assert "sunroof" in golf and "sunroof" not in van
+    assert golf["rim_front_l"]["color"] == "#c3c7cb"      # silver alloys
+    assert van["rim_front_l"]["color"] == "#2c2d30"       # black rims
+    assert golf["body"]["color"] == van["body"]["color"] == "#232427"

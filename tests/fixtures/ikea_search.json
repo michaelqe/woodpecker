@@ -1,0 +1,115 @@
+{
+ "searchResultPage": {
+  "products": {
+   "main": {
+    "items": [
+     {
+      "product": {
+       "id": "s99552177",
+       "itemNo": "99552177",
+       "itemType": "SPR",
+       "name": "KALLAX",
+       "typeName": "Tv bench with underframe",
+       "validDesignText": "white",
+       "itemMeasureReferenceText": "147x39x78 cm",
+       "salesPrice": {
+        "currencyCode": "EUR",
+        "numeral": 84.99,
+        "current": {
+         "prefix": "",
+         "wholeNumber": "84",
+         "separator": ",",
+         "decimals": "99",
+         "suffix": "€",
+         "isRegularCurrency": false,
+         "style": "SUPER"
+        },
+        "isBreathTaking": false,
+        "discount": "",
+        "tag": "NONE",
+        "priceText": "Price",
+        "tags": [],
+        "tagWithText": {
+         "tag": "NONE"
+        }
+       },
+       "pipUrl": "https://www.ikea.com/ee/en/p/kallax-tv-bench-with-underframe-white-s99552177/",
+       "mainImageUrl": "https://www.ikea.com/ee/en/images/products/kallax-tv-bench-with-underframe-white__1242991_pe920480_s5.jpg",
+       "filterClass": "media furniture"
+      }
+     },
+     {
+      "product": {
+       "id": "s59560674",
+       "itemNo": "59560674",
+       "itemType": "SPR",
+       "name": "KALLAX",
+       "typeName": "TV storage combination",
+       "validDesignText": "white stained oak effect",
+       "itemMeasureReferenceText": "147x39x60 cm",
+       "salesPrice": {
+        "currencyCode": "EUR",
+        "numeral": 105.99,
+        "current": {
+         "prefix": "",
+         "wholeNumber": "105",
+         "separator": ",",
+         "decimals": "99",
+         "suffix": "€",
+         "isRegularCurrency": false,
+         "style": "SUPER"
+        },
+        "isBreathTaking": false,
+        "discount": "",
+        "tag": "NONE",
+        "priceText": "Price",
+        "tags": [],
+        "tagWithText": {
+         "tag": "NONE"
+        }
+       },
+       "pipUrl": "https://www.ikea.com/ee/en/p/kallax-tv-storage-combination-white-stained-oak-effect-s59560674/",
+       "mainImageUrl": "https://www.ikea.com/ee/en/images/products/kallax-tv-storage-combination-white-stained-oak-effect__1277929_pe931115_s5.jpg",
+       "filterClass": "media furniture"
+      }
+     },
+     {
+      "product": {
+       "id": "30582445",
+       "itemNo": "30582445",
+       "itemType": "ART",
+       "name": "KALLAX",
+       "typeName": "Desk",
+       "validDesignText": "white",
+       "itemMeasureReferenceText": "111x39 cm",
+       "salesPrice": {
+        "currencyCode": "EUR",
+        "numeral": 44.99,
+        "current": {
+         "prefix": "",
+         "wholeNumber": "44",
+         "separator": ",",
+         "decimals": "99",
+         "suffix": "€",
+         "isRegularCurrency": false,
+         "style": "SUPER"
+        },
+        "isBreathTaking": false,
+        "discount": "",
+        "tag": "NONE",
+        "priceText": "Price",
+        "tags": [],
+        "tagWithText": {
+         "tag": "NONE"
+        }
+       },
+       "pipUrl": "https://www.ikea.com/ee/en/p/kallax-desk-white-30582445/",
+       "mainImageUrl": "https://www.ikea.com/ee/en/images/products/kallax-desk-white__1327543_pe944490_s5.jpg",
+       "filterClass": "desks"
+      }
+     }
+    ]
+   }
+  }
+ }
+}

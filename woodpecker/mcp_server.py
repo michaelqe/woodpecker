@@ -5,7 +5,7 @@ from typing import Any
 
 from mcp.server.mcpserver import MCPServer
 
-from . import catalog, cutlist, store
+from . import catalog, cutlist, ikea, store
 from .model import EPS, Design
 from .server import format_cutlist
 
@@ -36,8 +36,10 @@ Model rules:
   (IKEA KALLAX, BILLY, ...) drawn as its panels with ids like kallax/top. Its `at` is the
   product's min corner (x = width, y = depth, z = up) and it may be rotated about z.
   Respect the catalog's `construction` notes (honeycomb panels do not hold screws) and
-  its published load limits. Never guess catalog numbers: add products with
-  wp_catalog_add only from the maker's page, and list anything not published in `assumed`.
+  its published load limits. Never guess catalog numbers. For IKEA, use wp_ikea_search
+  (live search of ikea.com) and wp_ikea_import (reads the product page and saves it to the
+  catalog). For other makers, wp_catalog_add with numbers from the maker's page only, and
+  list anything not published in `assumed`. Tell the human what an import had to assume.
 - `cutouts`: [{"label", "at", "size"}] boxes cut from the part (local coords). A joint
   with `cut_into: [host ids]` cuts the joint's other parts out of the hosts (through-
   mortise, dado, birdsmouth notch). The viewer shows the holes; the cut list notes them.
@@ -258,8 +260,30 @@ def wp_catalog_add(item: dict) -> dict:
     fasten to it), assumed [what is not published], color.
     geometry: {"generator": "cube_grid", "cols", "rows", "panel"} (KALLAX-style),
     {"generator": "carcass", "panel", "back", "shelves", "partitions", "plinth"}
-    (BILLY/BESTÅ-style), or {"generator": "block"} (a solid box)."""
+    (BILLY/BESTÅ-style), {"generator": "table", "top", "leg"} (top on 4 legs), or
+    {"generator": "block"} (a solid box)."""
     return catalog.add(item)
+
+
+@mcp.tool()
+def wp_ikea_search(q: str) -> dict:
+    """Live search of IKEA's shop (country from WOODPECKER_IKEA_COUNTRY, default ee) via its
+    unofficial web endpoints. Returns article numbers, names, IKEA's size label (W x D x H),
+    price, product URL, and `in_catalog` (local catalog id if already imported). Pass the
+    article (or URL) to wp_ikea_import to use one in a design."""
+    cc, lang = ikea.market()
+    return {"market": f"{cc}/{lang}", "results": ikea.search(q)}
+
+
+@mcp.tool()
+def wp_ikea_import(ref: str) -> dict:
+    """Import one IKEA product into the local catalog from its product page: published
+    width/depth/height, load limits, package weights, materials, price and notes. ref is
+    an article number ("202.758.14"), item number or product URL. Internal structure (panel
+    thickness, shelves) is guessed by product type and listed in `assumed`; refine it with
+    wp_catalog_add if the human measures. Products already in the catalog are kept as they are.
+    Returns the catalog id to use as a part's `component`."""
+    return ikea.import_product(ref)
 
 
 def main():

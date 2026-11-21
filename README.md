@@ -20,7 +20,7 @@ the TV?", "swap the base for a KALLAX".
 | Move (G) | Drag an arrow. Snaps to the step chosen in the toolbar (1/10/50 mm). Copies move together. |
 | Size (S) | Drag a handle to make a part longer, wider or thicker. Expressions are kept ("base_d" becomes "base_d + 60"). |
 | Board (B) | Pick a material and orientation, click on the floor or a top face, click again. Snaps to nearby edges. Upright boards take one click and the height box. |
-| + Product | Drop in a catalog product (IKEA KALLAX, BILLY, EKET, BESTÅ…). |
+| + Product | Drop in a bought product. Searches your catalog and, live, IKEA's shop; picking an IKEA result imports it. |
 | Units | mm / cm / inches. Files stay in mm. Params accept `18`, `3/4"`, `1' 6"`, `45cm`. |
 | Undo | ⌘Z. Reverts the last change, yours or the agent's. Delete key removes the selected part. |
 
@@ -33,13 +33,26 @@ a printable build sheet (`/print/<design>`).
 
 `catalog/<brand>/*.json` holds bought products with the maker's published dimensions,
 price, load limits and source URL. Anything the maker doesn't publish (usually panel
-thickness) is listed under `assumed`, and the viewer shows it. Ask the agent to add a
-product; it looks it up on the maker's site and adds it with `wp_catalog_add`.
+thickness) is listed under `assumed`, and the viewer shows it.
+
+**IKEA, live.** The product picker and the agent (`wp_ikea_search`, `wp_ikea_import`) search
+IKEA's shop through its unofficial web endpoints (documented at
+https://ingmar.dels.ink/ikea-openapi/). Importing reads the product page: width, depth,
+height, load limits, package weights, materials, price and notes. It saves them as a catalog
+file, so designs keep working if IKEA changes its site. What IKEA does not publish (panel
+thickness, the inside layout) is guessed from the product type and listed in `assumed`;
+edit the file if you measure. Combinations whose label has only two numbers ("147x77 cm")
+are refused: add the plain units instead. The market is Estonia in English; change it with
+`WOODPECKER_IKEA_COUNTRY` / `WOODPECKER_IKEA_LANGUAGE` (e.g. `us` / `en`). These endpoints
+are not a supported API and can break.
+
+For other makers, ask the agent to add the product from the maker's page (`wp_catalog_add`).
 
 ## Tests
 
 ```bash
-.venv/bin/pytest                 # model, cut list, catalog, edits
+.venv/bin/pytest                 # model, cut list, catalog, edits, IKEA parsing (offline)
+WOODPECKER_LIVE=1 .venv/bin/pytest tests/test_ikea.py   # one real IKEA search and import
 node tests/ui_smoke.mjs          # drives the viewer in headless Chrome (server must be running)
 ```
 

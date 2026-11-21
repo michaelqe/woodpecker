@@ -406,26 +406,47 @@ function fillBoardMaterials() {
 }
 
 // ------------------------------------------------------------------ catalog picker
+// Local catalog first (instant), then a live IKEA search below it (debounced). Picking an
+// IKEA result imports it into the local catalog, then drops it into the design.
+const loadText = (load) => load ? Object.entries(load).map(([k, v]) => `${k.replace(/_kg$/, "").replace(/_/g, " ")} ${v} kg`).join(", ") : "";
+let ikeaTimer = null, ikeaSeq = 0;
 async function openCatalog() {
   const dlg = $("#catDlg");
-  const list = $("#catList");
   const render = async () => {
-    const items = await api(`/api/catalog?q=${encodeURIComponent($("#catQ").value)}`);
-    list.innerHTML = items.length ? items.map((it) => `
+    const q = $("#catQ").value;
+    const items = await api(`/api/catalog?q=${encodeURIComponent(q)}`);
+    $("#catList").innerHTML = items.length ? items.map((it) => `
       <div class="cat" data-cat="${esc(it.id)}">
         <div><b>${esc(it.name)}</b> <span class="muted small">${esc(it.brand)} ${esc(it.article || "")}</span></div>
-        <div class="small muted">${U.dims(it.size_mm)} (W × D × H)${it.price ? ` · ${num(it.price.amount, 2)} ${esc(it.price.currency)}` : ""}${it.load ? " · " + Object.entries(it.load).map(([k, v]) => `${k.replace(/_kg$/, "").replace(/_/g, " ")} ${v} kg`).join(", ") : ""}</div>
-      </div>`).join("") : '<p class="muted">Nothing found. Ask the agent to add the product from the maker’s page.</p>';
+        <div class="small muted">${U.dims(it.size_mm)} (W × D × H)${it.price ? ` · ${num(it.price.amount, 2)} ${esc(it.price.currency)}` : ""}${it.load ? " · " + loadText(it.load) : ""}</div>
+      </div>`).join("") : '<p class="muted small">Nothing in your catalog matches.</p>';
+    clearTimeout(ikeaTimer);
+    const box = $("#ikeaList");
+    if (q.trim().length < 2) { box.innerHTML = '<p class="muted small">Type at least 2 letters to search IKEA too.</p>'; return; }
+    box.innerHTML = '<p class="muted small">Searching IKEA…</p>';
+    const seq = ++ikeaSeq;
+    ikeaTimer = setTimeout(async () => {
+      try {
+        const r = await api(`/api/ikea?q=${encodeURIComponent(q)}`);
+        if (seq !== ikeaSeq) return;
+        $("#ikeaHead").textContent = `From IKEA (${r.market.split("/")[0].toUpperCase()}, live)`;
+        box.innerHTML = r.results.length ? r.results.map((h) => `
+          <div class="cat" ${h.in_catalog ? `data-cat="${esc(h.in_catalog)}"` : `data-ikea="${esc(h.item_no)}"`}>
+            ${h.image ? `<img src="${esc(h.image)}" alt="" loading="lazy">` : ""}
+            <div><b>${esc(h.name)}</b> ${esc(h.type || "")}${h.variant ? `, ${esc(h.variant)}` : ""} <span class="muted small">${esc(h.article)}${h.in_catalog ? " · in your catalog" : ""}</span></div>
+            <div class="small muted">${esc(h.size_text || "")}${h.price ? ` · ${num(h.price.amount, 2)} ${esc(h.price.currency)}` : ""}${h.combination ? " · combination" : ""}</div>
+          </div>`).join("") : '<p class="muted small">IKEA found nothing.</p>';
+      } catch (err) {
+        if (seq === ikeaSeq) box.innerHTML = `<p class="muted small">IKEA search failed: ${esc(err.message)}</p>`;
+      }
+    }, 350);
   };
   $("#catQ").oninput = render;
   await render();
   dlg.showModal();
 }
-$("#catList").addEventListener("click", async (e) => {
-  const el = e.target.closest("[data-cat]");
-  if (!el) return;
-  $("#catDlg").close();
-  const item = await api(`/api/catalog/${el.dataset.cat}`);
+async function placeProduct(itemId) {
+  const item = await api(`/api/catalog/${itemId}`);
   const b = state.data.design.bounds;
   const base = item.name.split(/[ ,]/)[0].toLowerCase().replace(/[^a-z0-9]+/g, "_") || "product";
   const ids = new Set(state.data.design.parts.map((p) => p.source));
@@ -434,13 +455,33 @@ $("#catList").addEventListener("click", async (e) => {
     id, name: item.name.split(",")[0], group: "Bought", component: item.id,
     at: [Math.round((b.max[0] + 200) / 10) * 10, 0, 0], role: "",
   };
+  const data = await api(`/api/designs/${state.name}/parts`, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ part }),
+  });
+  const guessed = item.assumed?.length ? ` (guessed: ${item.assumed.join("; ")})` : "";
+  accept(data, `added ${part.name} beside the design; use Move to place it${guessed}`);
+  select(state.data.design.parts.find((p) => p.source === id)?.id);
+}
+$("#catDlg").addEventListener("click", async (e) => {
+  const el = e.target.closest("[data-cat],[data-ikea]");
+  if (!el) return;
   try {
-    const data = await api(`/api/designs/${state.name}/parts`, {
-      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ part }),
-    });
-    accept(data, `added ${part.name} beside the design; use Move to place it`);
-    select(state.data.design.parts.find((p) => p.source === id)?.id);
-  } catch (err) { showError(err.message); }
+    let itemId = el.dataset.cat;
+    if (!itemId) {
+      el.classList.add("busy");
+      status("fetching the product from IKEA…");
+      const r = await api("/api/ikea/import", {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ref: el.dataset.ikea }),
+      });
+      itemId = r.id;
+    }
+    $("#catDlg").close();
+    await placeProduct(itemId);
+  } catch (err) {
+    el.classList.remove("busy");
+    $("#catDlg").close();
+    showError(err.message);
+  }
 });
 
 // ------------------------------------------------------------------ panels

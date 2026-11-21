@@ -2,9 +2,10 @@
 // Needs the server running (woodpecker serve) and Google Chrome. Run: node tests/ui_smoke.mjs
 // It works on a throwaway copy of tv-cart (designs/ui-smoke.json) and deletes it after.
 import { spawn } from "node:child_process";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const BASE = process.env.WOODPECKER_URL || "http://127.0.0.1:8790";
 const CHROME = process.env.CHROME || "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
@@ -15,6 +16,8 @@ const api = async (path, body) => {
   return r.json();
 };
 let failures = 0;
+const imported = [];  // catalog files this run created, removed at the end
+const REPO = join(dirname(fileURLToPath(import.meta.url)), "..");
 const check = (ok, msg) => { console.log(`${ok ? "ok  " : "FAIL"} ${msg}`); if (!ok) failures++; };
 
 const created = await api("/api/designs", { name: "ui-smoke", title: "UI smoke test", copy_from: "tv-cart" });
@@ -89,6 +92,23 @@ try {
   const raw = await (await fetch(`${BASE}/api/designs/ui-smoke`)).json();
   check(raw.design.params.length > 0, "design still resolves");
 
+  // ---- product picker: live IKEA search, import, place
+  await evaluate("document.querySelector('#addProduct').click(); true");
+  check(await waitFor("document.querySelector('#catDlg').open", 3000), "product dialog opens");
+  await evaluate("const q = document.querySelector('#catQ'); q.value = 'lack side table'; q.dispatchEvent(new Event('input')); true");
+  const gotIkea = await waitFor("document.querySelectorAll('#ikeaList [data-ikea]').length > 0", 20000);
+  check(gotIkea, "live IKEA results appear");
+  if (gotIkea) {
+    const no = await evaluate("document.querySelector('#ikeaList [data-ikea]').dataset.ikea");
+    const before = (await api("/api/designs/ui-smoke")).design.parts.length;
+    await evaluate("document.querySelector('#ikeaList [data-ikea]').click(); true");
+    check(await waitFor(`wp.state.data.design.parts.length > ${before}`, 30000), `IKEA product ${no} is imported and placed`);
+    const placed = (await api("/api/designs/ui-smoke")).design.parts.filter((p) => p.component).map((p) => p.component);
+    const id = placed.find((c) => c.endsWith(no));
+    if (id) imported.push(join(REPO, "catalog", "ikea", `${id}.json`));
+    check(!!id, `part uses the imported catalog item (${id})`);
+  }
+
   // ---- holes are cut once Manifold arrives
   check(await waitFor("!!wp.state.wasm", 20000), "Manifold (WebAssembly) loads");
 
@@ -99,6 +119,7 @@ try {
   ws.close();
 } finally {
   await fetch(`${BASE}/api/designs/ui-smoke/delete`, { method: "POST" }).catch(() => {});
+  for (const f of imported) if (existsSync(f)) rmSync(f);
   const exited = new Promise((r) => chrome.once("exit", r));
   chrome.kill();
   await Promise.race([exited, sleep(5000)]);

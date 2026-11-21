@@ -22,7 +22,8 @@ the human is looking; the tools validate and keep undo history.
 
 - `woodpecker/model.py` — load + resolve a design into world-space convex solids (safe expression evaluator, params, rotate/ends/repeat/mirror, components, joint cuts, checks). Python is the single source of geometry; the viewer draws `mesh` as sent.
 - `woodpecker/geometry.py` — matrices, convex solids, volume/centroid, SAT overlap
-- `woodpecker/catalog.py` + `catalog/<brand>/*.json` — bought products (published dims + `assumed`), panel generators (`cube_grid`, `carcass`, `block`)
+- `woodpecker/catalog.py` + `catalog/<brand>/*.json` — bought products (published dims + `assumed`), panel generators (`cube_grid`, `carcass`, `table`, `block`)
+- `woodpecker/ikea.py` — live IKEA search/import through IKEA's unofficial web endpoints (see https://ingmar.dels.ink/ikea-openapi/); imports are saved to `catalog/ikea/`
 - `woodpecker/cutlist.py` — cut list, stock (lumber first-fit, sheets guillotine layouts), bought items, hardware, cost (only given prices), tip check (floor hull)
 - `woodpecker/chat.py` — the viewer's Ask tab: `claude -p` with only the woodpecker tools + web lookup, one resumed session per design
 - `woodpecker/store.py` — the only writer: validated edits, atomic writes, undo history in `.woodpecker/history/`, selection in `.woodpecker/selection.json`

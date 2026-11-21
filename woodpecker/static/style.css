@@ -95,6 +95,10 @@ dialog label input, #catQ { display: block; width: 100%; margin-top: 4px; }
 .catlist { max-height: 50vh; overflow-y: auto; margin-top: 8px; }
 .cat { padding: 8px; border-bottom: 1px solid var(--line); cursor: pointer; }
 .cat:hover { background: var(--tile); }
+.cat img { float: left; width: 44px; height: 44px; object-fit: contain; margin-right: 8px; background: #fff; }
+.cat::after { content: ""; display: block; clear: both; }
+.cat.busy { opacity: .5; pointer-events: none; }
+.catlist h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 12px 0 4px; font-weight: 600; }
 
 .tab.chat { display: flex; flex-direction: column; padding: 0; }
 .tab.chat[hidden] { display: none; }

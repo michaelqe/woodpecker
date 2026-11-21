@@ -54,6 +54,15 @@ def search(q: str = "") -> list[dict]:
     return out
 
 
+def by_article(article: str) -> str | None:
+    """Catalog id of the item with this maker's article number, if any."""
+    a = article.replace(".", "")
+    for it in all_items().values():
+        if str(it.get("article", "")).replace(".", "") == a:
+            return it["id"]
+    return None
+
+
 def summary(it: dict) -> dict:
     return {
         "id": it["id"], "brand": it.get("brand"), "name": it.get("name"),
@@ -98,6 +107,8 @@ def generate(item: dict, options: dict) -> list[dict]:
         return _carcass(W, D, H, float(geo["panel"]), float(geo.get("back", 0)),
                         int(geo.get("shelves", 0)), int(geo.get("partitions", 0)),
                         float(geo.get("plinth", 0)))
+    if gen == "table":
+        return _table(W, D, H, float(geo.get("top", 40)), float(geo.get("leg", 50)))
     if gen == "block":
         return [_p("body", "Body", [W, D, H], [0, 0, 0])]
     raise DesignError(f"catalog {item.get('id')}: unknown generator {gen!r}")
@@ -156,4 +167,13 @@ def _carcass(W, D, H, t, back, shelves, partitions, plinth):
         for b in range(bays):
             x = t + b * (bw + t)
             parts.append(_p(f"shelf_{s}_{b}", f"Shelf {s}", [bw, d, t], [x, 0, z]))
+    return parts
+
+
+def _table(W, D, H, top, leg):
+    """Top on four square legs at the corners."""
+    parts = [_p("top", "Top", [W, D, top], [0, 0, H - top])]
+    for sub, name, x, y in (("leg_fl", "Leg, front left", 0, 0), ("leg_fr", "Leg, front right", W - leg, 0),
+                            ("leg_bl", "Leg, back left", 0, D - leg), ("leg_br", "Leg, back right", W - leg, D - leg)):
+        parts.append(_p(sub, name, [leg, leg, H - top], [x, y, 0]))
     return parts

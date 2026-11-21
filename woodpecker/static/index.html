@@ -80,8 +80,13 @@
   <form method="dialog">
     <h2>Add a product</h2>
     <input id="catQ" placeholder="Search: kallax, billy, 202.758.14…" autocomplete="off">
-    <div id="catList" class="catlist"></div>
-    <div class="row2"><span class="muted small">Missing one? Ask the agent to add it from the maker’s page.</span><button value="cancel">Close</button></div>
+    <div class="catlist">
+      <h3>Your catalog</h3>
+      <div id="catList"></div>
+      <h3 id="ikeaHead">From IKEA (live)</h3>
+      <div id="ikeaList"></div>
+    </div>
+    <div class="row2"><span class="muted small">IKEA results come from IKEA’s unofficial web endpoints. Sizes, prices and loads are IKEA’s; panel thickness and insides are guesses, shown as “assumed”.</span><button value="cancel">Close</button></div>
   </form>
 </dialog>
 

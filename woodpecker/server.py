@@ -10,7 +10,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlparse
 
-from . import catalog, chat, cutlist, store
+from . import catalog, chat, cutlist, ikea, store
 from .model import DesignError
 
 STATIC = Path(__file__).resolve().parent / "static"
@@ -173,6 +173,15 @@ class Handler(BaseHTTPRequestHandler):
     @route("GET", r"/api/catalog/([a-z0-9-]+)")
     def catalog_item(self, item_id):
         self._json(catalog.get(item_id))
+
+    @route("GET", r"/api/ikea")
+    def ikea_search(self):
+        cc, lang = ikea.market()
+        self._json({"market": f"{cc}/{lang}", "results": ikea.search(self._query().get("q", ""))})
+
+    @route("POST", r"/api/ikea/import")
+    def ikea_import(self):
+        self._json(ikea.import_product(str(self._body()["ref"])))
 
     # ---- selection
     @route("GET", r"/api/selection")

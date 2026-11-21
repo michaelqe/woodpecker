@@ -1,0 +1,7 @@
+.venv/
+.woodpecker/
+__pycache__/
+*.egg-info/
+*.json.tmp
+.DS_Store
+.idea/

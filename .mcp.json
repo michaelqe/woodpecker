@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "woodpecker": {
+      "command": "/Users/michael/Personal/Woodpecker/.venv/bin/woodpecker-mcp"
+    }
+  }
+}

@@ -1,0 +1,678 @@
+{
+  "title": "Rolling TV cart (43\")",
+  "description": "Low-centre-of-gravity cart that rolls a 43\" TV and Apple TV across the living room on one extension cord. Ballast box base on braked casters, laminated spruce upright through the top panel, knee braces on all four sides, store-bought VESA 200x200 wall bracket. From the Projector conversation, 2026-11-21.",
+  "units": "mm",
+  "params": {
+    "ply": {
+      "value": 18,
+      "label": "Plywood thickness"
+    },
+    "base_w": {
+      "value": 560,
+      "label": "Base width (side to side)"
+    },
+    "base_d": {
+      "value": 600,
+      "label": "Base depth (front to back)",
+      "notes": "Deeper = harder to tip forward. Go to 700 if kids may climb it."
+    },
+    "base_h": {
+      "value": 140,
+      "label": "Base box height"
+    },
+    "caster_h": {
+      "value": 75,
+      "label": "Caster height (floor to mounting plate)"
+    },
+    "caster_plate": {
+      "value": 50,
+      "label": "Caster plate size"
+    },
+    "post_w": {
+      "value": 95,
+      "label": "Upright width"
+    },
+    "post_lam": {
+      "value": 45,
+      "label": "One lamination of the upright"
+    },
+    "screen_center": {
+      "value": 1000,
+      "label": "Screen centre height",
+      "notes": "Seated eye height is about 1000-1100 mm."
+    },
+    "post_above": {
+      "value": 150,
+      "label": "Upright above screen centre"
+    },
+    "brace": {
+      "value": 250,
+      "label": "Front/back knee brace leg"
+    },
+    "brace_side": {
+      "value": 180,
+      "label": "Side knee brace leg"
+    },
+    "bracket_gap": {
+      "value": 25,
+      "label": "VESA bracket depth"
+    },
+    "tv_w": {
+      "value": 965,
+      "label": "TV width"
+    },
+    "tv_h": {
+      "value": 560,
+      "label": "TV height"
+    },
+    "tv_d": {
+      "value": 60,
+      "label": "TV depth"
+    },
+    "tv_mass": {
+      "value": 9,
+      "label": "TV mass (kg)"
+    },
+    "ballast_mass": {
+      "value": 9,
+      "label": "Mass of one ballast block (kg)"
+    },
+    "base_top": "caster_h + base_h",
+    "post_y": "base_d / 2 - post_lam",
+    "post_x": "(base_w - post_w) / 2",
+    "post_z": "caster_h + ply",
+    "post_len": "screen_center + post_above - post_z",
+    "inner_h": "base_h - 2 * ply"
+  },
+  "materials": {
+    "ply18": {
+      "name": "Birch plywood 18 mm",
+      "kind": "sheet",
+      "thickness": 18,
+      "stock": [
+        2500,
+        1250
+      ],
+      "density": 680,
+      "notes": "1250x2500 and 1525x1525 are both common in Estonia; half sheets are often sold."
+    },
+    "spruce45x95": {
+      "name": "Spruce 45x95, planed",
+      "kind": "lumber",
+      "section": [
+        45,
+        95
+      ],
+      "stock_length": 3000,
+      "density": 450
+    },
+    "caster": {
+      "name": "Braked swivel caster, 75 mm, soft rubber wheel",
+      "kind": "hardware",
+      "mass_kg": 0.3,
+      "notes": "Plate mount. All four with brakes; bigger wheels roll over rug edges better."
+    },
+    "vesa_bracket": {
+      "name": "Fixed or tilting VESA 200x200 wall bracket",
+      "kind": "hardware",
+      "mass_kg": 1.5,
+      "notes": "Wall brackets are made to lag into wood studs, which is what the upright is."
+    },
+    "ballast": {
+      "name": "Ballast block (paving slab, steel plate or sandbag)",
+      "kind": "hardware",
+      "notes": "Hidden in the base. Cheap, and the main reason the cart does not tip."
+    },
+    "tv": {
+      "name": "43\" TV",
+      "kind": "reference"
+    },
+    "appletv": {
+      "name": "Apple TV",
+      "kind": "reference",
+      "mass_kg": 0.2
+    }
+  },
+  "parts": [
+    {
+      "id": "caster_fl",
+      "name": "Caster, front left",
+      "group": "Casters",
+      "material": "caster",
+      "size": [
+        "caster_plate",
+        "caster_plate",
+        "caster_h"
+      ],
+      "at": [
+        0,
+        0,
+        0
+      ],
+      "role": "Rolls the cart. Lock the brakes once it is in place."
+    },
+    {
+      "id": "caster_fr",
+      "name": "Caster, front right",
+      "group": "Casters",
+      "material": "caster",
+      "size": [
+        "caster_plate",
+        "caster_plate",
+        "caster_h"
+      ],
+      "at": [
+        "base_w - caster_plate",
+        0,
+        0
+      ],
+      "role": "Rolls the cart."
+    },
+    {
+      "id": "caster_bl",
+      "name": "Caster, back left",
+      "group": "Casters",
+      "material": "caster",
+      "size": [
+        "caster_plate",
+        "caster_plate",
+        "caster_h"
+      ],
+      "at": [
+        0,
+        "base_d - caster_plate",
+        0
+      ],
+      "role": "Rolls the cart."
+    },
+    {
+      "id": "caster_br",
+      "name": "Caster, back right",
+      "group": "Casters",
+      "material": "caster",
+      "size": [
+        "caster_plate",
+        "caster_plate",
+        "caster_h"
+      ],
+      "at": [
+        "base_w - caster_plate",
+        "base_d - caster_plate",
+        0
+      ],
+      "role": "Rolls the cart."
+    },
+    {
+      "id": "base_bottom",
+      "name": "Base bottom",
+      "group": "Base",
+      "material": "ply18",
+      "size": [
+        "base_w",
+        "base_d",
+        "ply"
+      ],
+      "at": [
+        0,
+        0,
+        "caster_h"
+      ],
+      "role": "Floor of the ballast box. The casters screw to its corners and the upright stands on it.",
+      "notes": "Casters at the very corners give the widest footprint, which is what resists tipping."
+    },
+    {
+      "id": "base_front",
+      "name": "Base front",
+      "group": "Base",
+      "material": "ply18",
+      "size": [
+        "base_w",
+        "ply",
+        "inner_h"
+      ],
+      "at": [
+        0,
+        0,
+        "post_z"
+      ],
+      "role": "Front wall of the ballast box. Push here (low) when rolling the cart, not on the TV."
+    },
+    {
+      "id": "base_back",
+      "name": "Base back",
+      "group": "Base",
+      "material": "ply18",
+      "size": [
+        "base_w",
+        "ply",
+        "inner_h"
+      ],
+      "at": [
+        0,
+        "base_d - ply",
+        "post_z"
+      ],
+      "role": "Back wall of the ballast box."
+    },
+    {
+      "id": "base_left",
+      "name": "Base side",
+      "group": "Base",
+      "material": "ply18",
+      "size": [
+        "ply",
+        "base_d - 2 * ply",
+        "inner_h"
+      ],
+      "at": [
+        0,
+        "ply",
+        "post_z"
+      ],
+      "role": "Side wall, fits between the front and back walls."
+    },
+    {
+      "id": "base_right",
+      "name": "Base side",
+      "group": "Base",
+      "material": "ply18",
+      "size": [
+        "ply",
+        "base_d - 2 * ply",
+        "inner_h"
+      ],
+      "at": [
+        "base_w - ply",
+        "ply",
+        "post_z"
+      ],
+      "role": "Side wall, fits between the front and back walls."
+    },
+    {
+      "id": "base_top",
+      "name": "Base top",
+      "group": "Base",
+      "material": "ply18",
+      "size": [
+        "base_w",
+        "base_d",
+        "ply"
+      ],
+      "at": [
+        0,
+        0,
+        "base_top - ply"
+      ],
+      "role": "Lid of the ballast box. The upright passes through a cutout in it, so the top holds the post upright at a second point, 120 mm above the bottom.",
+      "notes": "Cut a 95x90 hole in the centre for the upright. Screw it on (no glue) so you can open the box to add ballast or stow the cord."
+    },
+    {
+      "id": "ballast_l",
+      "name": "Ballast, left",
+      "group": "Ballast",
+      "material": "ballast",
+      "mass_kg": "ballast_mass",
+      "size": [
+        200,
+        400,
+        50
+      ],
+      "at": [
+        "ply + 5",
+        "(base_d - 400) / 2",
+        "post_z"
+      ],
+      "role": "Dead weight low in the base. It pulls the centre of gravity down so the cart is hard to tip."
+    },
+    {
+      "id": "ballast_r",
+      "name": "Ballast, right",
+      "group": "Ballast",
+      "material": "ballast",
+      "mass_kg": "ballast_mass",
+      "size": [
+        200,
+        400,
+        50
+      ],
+      "at": [
+        "base_w - ply - 5 - 200",
+        "(base_d - 400) / 2",
+        "post_z"
+      ],
+      "role": "Dead weight low in the base."
+    },
+    {
+      "id": "post_front",
+      "name": "Upright, front lamination",
+      "group": "Upright",
+      "material": "spruce45x95",
+      "size": [
+        "post_w",
+        "post_lam",
+        "post_len"
+      ],
+      "at": [
+        "post_x",
+        "post_y",
+        "post_z"
+      ],
+      "role": "Carries the TV bracket. Glued to the back lamination to make a 90x95 post."
+    },
+    {
+      "id": "post_back",
+      "name": "Upright, back lamination",
+      "group": "Upright",
+      "material": "spruce45x95",
+      "size": [
+        "post_w",
+        "post_lam",
+        "post_len"
+      ],
+      "at": [
+        "post_x",
+        "base_d / 2",
+        "post_z"
+      ],
+      "role": "Second half of the laminated post. The Apple TV sticks to its back face."
+    },
+    {
+      "id": "brace_front",
+      "name": "Knee brace, front",
+      "group": "Braces",
+      "material": "ply18",
+      "shape": "gusset",
+      "leg": "back",
+      "size": [
+        "ply",
+        "brace",
+        "brace"
+      ],
+      "at": [
+        "base_w / 2 - ply / 2",
+        "post_y - brace",
+        "base_top"
+      ],
+      "role": "Triangle between the base top and the front of the post. Stops the post leaning forward under the TV's weight, which is the main load on the cart."
+    },
+    {
+      "id": "brace_back",
+      "name": "Knee brace, back",
+      "group": "Braces",
+      "material": "ply18",
+      "shape": "gusset",
+      "leg": "front",
+      "size": [
+        "ply",
+        "brace",
+        "brace"
+      ],
+      "at": [
+        "base_w / 2 - ply / 2",
+        "base_d / 2 + post_lam",
+        "base_top"
+      ],
+      "role": "Triangle behind the post. Stops it leaning back when you bump the TV or roll the cart."
+    },
+    {
+      "id": "brace_left",
+      "name": "Knee brace, left",
+      "group": "Braces",
+      "material": "ply18",
+      "shape": "gusset",
+      "leg": "right",
+      "size": [
+        "brace_side",
+        "ply",
+        "brace_side"
+      ],
+      "at": [
+        "post_x - brace_side",
+        "base_d / 2 - ply / 2",
+        "base_top"
+      ],
+      "role": "Stops the post racking (wobbling side to side). The M8 bolts go through this brace, the post and the right brace."
+    },
+    {
+      "id": "brace_right",
+      "name": "Knee brace, right",
+      "group": "Braces",
+      "material": "ply18",
+      "shape": "gusset",
+      "leg": "left",
+      "size": [
+        "brace_side",
+        "ply",
+        "brace_side"
+      ],
+      "at": [
+        "post_x + post_w",
+        "base_d / 2 - ply / 2",
+        "base_top"
+      ],
+      "role": "Stops the post racking. Bolted through the post to the left brace."
+    },
+    {
+      "id": "bracket",
+      "name": "VESA bracket",
+      "group": "TV",
+      "material": "vesa_bracket",
+      "size": [
+        250,
+        "bracket_gap",
+        250
+      ],
+      "at": [
+        "base_w / 2 - 125",
+        "post_y - bracket_gap",
+        "screen_center - 125"
+      ],
+      "role": "Store-bought wall bracket, lag-screwed to the front of the upright. The TV hangs on it."
+    },
+    {
+      "id": "tv",
+      "name": "TV (43\")",
+      "group": "TV",
+      "material": "tv",
+      "mass_kg": "tv_mass",
+      "size": [
+        "tv_w",
+        "tv_d",
+        "tv_h"
+      ],
+      "at": [
+        "(base_w - tv_w) / 2",
+        "post_y - bracket_gap - tv_d",
+        "screen_center - tv_h / 2"
+      ],
+      "role": "For reference only: not part of the build. Its weight is counted in the tip check."
+    },
+    {
+      "id": "apple_tv",
+      "name": "Apple TV",
+      "group": "TV",
+      "material": "appletv",
+      "size": [
+        98,
+        31,
+        98
+      ],
+      "at": [
+        "base_w / 2 - 49",
+        "base_d / 2 + post_lam",
+        "screen_center - 200"
+      ],
+      "role": "Stuck to the back of the upright with Velcro. The Siri Remote is Bluetooth, so it needs no line of sight."
+    }
+  ],
+  "joints": [
+    {
+      "id": "box",
+      "type": "butt, glued and screwed",
+      "parts": [
+        "base_bottom",
+        "base_front",
+        "base_back",
+        "base_left",
+        "base_right"
+      ],
+      "fasteners": "PVA glue + 4x40 screws about every 150 mm, pre-drilled",
+      "notes": "Front and back walls run full width; the sides fit between them."
+    },
+    {
+      "id": "lid",
+      "type": "screwed (removable)",
+      "parts": [
+        "base_top",
+        "base_front",
+        "base_back",
+        "base_left",
+        "base_right"
+      ],
+      "fasteners": "4x40 screws, no glue",
+      "notes": "Removable so you can change ballast or stow the cord."
+    },
+    {
+      "id": "post_lamination",
+      "type": "face lamination",
+      "parts": [
+        "post_front",
+        "post_back"
+      ],
+      "fasteners": "PVA glue, clamped every 200 mm",
+      "notes": "Plane or sand the edges flush once the glue is dry."
+    },
+    {
+      "id": "post_through_top",
+      "type": "through-mortise",
+      "parts": [
+        "post_front",
+        "post_back",
+        "base_top"
+      ],
+      "fasteners": "Snug 95x90 cutout; 2 screws through the top into the post",
+      "notes": "The post is held at two heights (bottom panel and top panel), which is what keeps it from levering out."
+    },
+    {
+      "id": "post_foot",
+      "type": "screwed from below",
+      "parts": [
+        "post_front",
+        "post_back",
+        "base_bottom"
+      ],
+      "fasteners": "2x 8x100 coach screws up through the bottom panel into the post",
+      "notes": "Pre-drill. End grain is weak, so this mostly locates the post; the braces and top carry the load."
+    },
+    {
+      "id": "side_braces_bolted",
+      "type": "through-bolted",
+      "parts": [
+        "brace_left",
+        "brace_right",
+        "post_front",
+        "post_back"
+      ],
+      "fasteners": "2x M8x150 carriage bolts with washers and nuts",
+      "notes": "This joint takes the leverage, so it is the strongest in the build."
+    },
+    {
+      "id": "front_back_braces",
+      "type": "glued and screwed",
+      "parts": [
+        "brace_front",
+        "brace_back",
+        "post_front",
+        "post_back",
+        "base_top"
+      ],
+      "fasteners": "Glue + 4x50 screws into the post and up through the base top",
+      "notes": ""
+    },
+    {
+      "id": "side_braces_to_top",
+      "type": "glued and screwed",
+      "parts": [
+        "brace_left",
+        "brace_right",
+        "base_top"
+      ],
+      "fasteners": "Glue + 4x50 screws up through the base top",
+      "notes": ""
+    },
+    {
+      "id": "casters_on",
+      "type": "screwed",
+      "parts": [
+        "caster_fl",
+        "caster_fr",
+        "caster_bl",
+        "caster_br",
+        "base_bottom"
+      ],
+      "fasteners": "4 screws per caster, 5x25 (stays inside 18 mm ply plus a bit; check length)",
+      "notes": ""
+    },
+    {
+      "id": "bracket_on",
+      "type": "lag-screwed",
+      "parts": [
+        "bracket",
+        "post_front"
+      ],
+      "fasteners": "4x 8x60 coach screws through the bracket's stud holes",
+      "notes": "Centre the bracket on the post."
+    }
+  ],
+  "hardware": [
+    {
+      "item": "M8x150 carriage bolt + washer + nut",
+      "qty": 2
+    },
+    {
+      "item": "8x100 coach screw",
+      "qty": 2
+    },
+    {
+      "item": "8x60 coach screw",
+      "qty": 4
+    },
+    {
+      "item": "4x40 wood screws",
+      "qty": 50
+    },
+    {
+      "item": "4x50 wood screws",
+      "qty": 20
+    },
+    {
+      "item": "5x25 wood screws (casters)",
+      "qty": 16
+    },
+    {
+      "item": "PVA wood glue",
+      "qty": 1
+    },
+    {
+      "item": "3-way Schuko power strip (on the back of the upright)",
+      "qty": 1
+    },
+    {
+      "item": "5 m extension cord, 1.5 mm2",
+      "qty": 1
+    },
+    {
+      "item": "Rubber cord cover",
+      "qty": 1,
+      "notes": "Only if people walk across the cord"
+    },
+    {
+      "item": "Velcro strips for the Apple TV",
+      "qty": 1
+    }
+  ],
+  "shop": {
+    "kerf": 3,
+    "sheet_waste": 0.25
+  }
+}

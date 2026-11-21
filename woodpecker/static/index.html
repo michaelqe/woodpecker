@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Woodpecker</title>
+<link rel="stylesheet" href="/static/style.css">
+<script type="importmap">
+{ "imports": { "three": "/static/vendor/three.module.js" } }
+</script>
+</head>
+<body>
+<header class="bar">
+  <span class="brand">woodpecker</span>
+  <select id="design" aria-label="Design"></select>
+  <nav class="views" aria-label="View">
+    <button data-view="persp" class="on">3D</button>
+    <button data-view="front">Front</button>
+    <button data-view="side">Side</button>
+    <button data-view="top">Top</button>
+  </nav>
+  <label class="toggle"><input type="checkbox" id="showRef" checked> reference</label>
+  <button id="undo" title="Undo the last change (yours or the agent's)">Undo</button>
+  <span id="status" class="status"></span>
+</header>
+<main>
+  <section id="viewport">
+    <canvas id="canvas"></canvas>
+    <div id="overall" class="overlay"></div>
+    <div id="hover" class="hover" hidden></div>
+    <div id="error" class="error" hidden></div>
+  </section>
+  <aside id="panel">
+    <nav class="tabs">
+      <button data-tab="part" class="on">Part</button>
+      <button data-tab="params">Params</button>
+      <button data-tab="cut">Cut list</button>
+      <button data-tab="check">Check</button>
+    </nav>
+    <div id="tab-part" class="tab"></div>
+    <div id="tab-params" class="tab" hidden></div>
+    <div id="tab-cut" class="tab" hidden></div>
+    <div id="tab-check" class="tab" hidden></div>
+  </aside>
+</main>
+<script type="module" src="/static/app.js"></script>
+</body>
+</html>

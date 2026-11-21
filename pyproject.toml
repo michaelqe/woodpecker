@@ -1,0 +1,23 @@
+[project]
+name = "woodpecker"
+version = "0.1.0"
+description = "Agent-friendly woodworking and garage-building design tool"
+requires-python = ">=3.12"
+dependencies = ["mcp>=2.3,<3"]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[project.scripts]
+woodpecker = "woodpecker.server:main"
+woodpecker-mcp = "woodpecker.mcp_server:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["woodpecker*"]
+
+[tool.setuptools.package-data]
+woodpecker = ["static/*", "static/vendor/*"]

@@ -1045,6 +1045,24 @@ async function openNew(copyFrom = "") {
 }
 $("#newDesign").addEventListener("click", () => openNew());
 $("#dupDesign").addEventListener("click", () => state.name && openNew(state.name));
+$("#delDesign").addEventListener("click", async () => {
+  if (!state.name) return;
+  const name = state.name, title = state.data.design.title;
+  try {
+    const used = await api(`/api/designs/${name}/placed-in`);
+    const warn = used.length ? `\n\nIt is placed in ${used.map((d) => `“${d.title}”`).join(", ")}; ${used.length > 1 ? "those show" : "that shows"} an error until you remove it there.` : "";
+    if (!confirm(`Delete “${title}”?${warn}\n\nA copy stays in its history, so it can be brought back.`)) return;
+    await api(`/api/designs/${name}/delete`, { method: "POST" });
+    const list = await api("/api/designs");
+    $("#design").innerHTML = list.map((d) => `<option value="${esc(d.name)}">${esc(d.title)}</option>`).join("");
+    state.selected.clear(); state.fitted = false; chatLoaded = null;
+    if (!list.length) { state.name = null; showError("No designs left. Click New to start one."); return; }
+    $("#design").value = list[0].name;
+    try { localStorage.setItem("wp.design", list[0].name); } catch { /* private mode */ }
+    await loadDesign(list[0].name);
+    status(`deleted ${title}`);
+  } catch (err) { showError(err.message); }
+});
 $("#ndTitle").addEventListener("input", () => { if (!$("#ndName").dataset.touched) $("#ndName").value = slug($("#ndTitle").value); });
 $("#ndName").addEventListener("input", () => { $("#ndName").dataset.touched = "1"; });
 $("#newDlg").addEventListener("close", async () => {

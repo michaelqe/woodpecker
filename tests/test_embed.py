@@ -58,3 +58,17 @@ def test_placing_repeats_and_missing_and_cycles(tmp_path):
     selfish = {"title": "S", "materials": {}, "parts": [{"id": "me", "design": "selfish", "at": [0, 0, 0]}]}
     d = model.load(_write(tmp_path, "selfish", selfish))
     assert any("contain itself" in i["message"] for i in d.issues), d.issues
+
+
+def test_delete_reports_where_a_design_was_placed(tmp_path, monkeypatch):
+    from woodpecker import store
+    (tmp_path / "designs").mkdir()
+    monkeypatch.setattr(store, "DESIGNS", tmp_path / "designs")
+    monkeypatch.setattr(store, "STATE", tmp_path / ".woodpecker")
+    _write(tmp_path / "designs", "stand", BOARD)
+    _write(tmp_path / "designs", "room", {"title": "Room", "materials": {}, "parts": [{"id": "s", "design": "stand", "at": [0, 0, 0]}]})
+    assert store.placed_in("stand") == [{"name": "room", "title": "Room"}]
+    out = store.delete_design("stand")
+    assert out["was_placed_in"] == [{"name": "room", "title": "Room"}]
+    assert not (tmp_path / "designs" / "stand.json").exists()
+    assert list((tmp_path / ".woodpecker" / "history" / "stand").glob("*.json"))

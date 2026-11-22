@@ -151,6 +151,10 @@ class Handler(BaseHTTPRequestHandler):
         threading.Thread(target=magpie.mark_deleted, args=(name,), daemon=True).start()
         self._json(out)
 
+    @route("GET", rf"/api/designs/{NAME}/placed-in")
+    def design_placed_in(self, name):
+        self._json(store.placed_in(name))
+
     @route("GET", rf"/api/designs/{NAME}/page")
     def design_page(self, name):
         self._json(magpie.info(name))

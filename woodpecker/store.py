@@ -307,14 +307,30 @@ def create(name: str, title: str, description: str = "", copy_from: str | None =
     return write(name, raw)
 
 
+def placed_in(name: str) -> list[dict]:
+    """Designs that place this one as a part ({"design": name}); they break if it is deleted."""
+    out = []
+    for p in sorted(DESIGNS.glob("*.json")):
+        if p.stem == name:
+            continue
+        try:
+            raw = json.loads(p.read_text())
+        except json.JSONDecodeError:
+            continue
+        if any(isinstance(sp, dict) and sp.get("design") == name for sp in raw.get("parts", [])):
+            out.append({"name": p.stem, "title": raw.get("title", p.stem)})
+    return out
+
+
 def delete_design(name: str) -> dict:
     """Remove a design file. A snapshot stays in .woodpecker/history/<name>/ to recover it."""
     path = design_path(name)
     if not path.exists():
         raise DesignError(f"no design {name!r}")
+    used = placed_in(name)
     _snapshot(name, path.read_text())
     path.unlink()
-    return {"deleted": name}
+    return {"deleted": name, "was_placed_in": used}
 
 
 # ---------------------------------------------------------------- selection

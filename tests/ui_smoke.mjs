@@ -218,6 +218,20 @@ try {
   await api("/api/designs/ui-smoke/parts/base_top/move", { delta: [10, 0, 0] });
   check((await api("/api/designs/ui-smoke-copy/mtime")).mtime > m0, "editing the placed design marks the copy changed (viewer reloads)");
 
+  // ---- Delete: warns where it is placed, then removes it and opens another design
+  await evaluate("document.querySelector('#design').value = 'ui-smoke'; document.querySelector('#design').dispatchEvent(new Event('change')); true");
+  await waitFor("wp.state.name === 'ui-smoke'", 5000);
+  await send("Page.enable");
+  let dialogText = "";
+  const onDialog = (e) => { const m = JSON.parse(e.data); if (m.method === "Page.javascriptDialogOpening") { dialogText = m.params.message;
+    ws.send(JSON.stringify({ id: 99999, method: "Page.handleJavaScriptDialog", params: { accept: true } })); } };
+  ws.addEventListener("message", onDialog);
+  await evaluate("document.querySelector('#delDesign').click(); true");
+  check(await waitFor("wp.state.name && wp.state.name !== 'ui-smoke'", 8000), "Delete removes the design and opens another");
+  check(dialogText.includes("UI smoke test (copy)"), "the confirm names the design it is placed in");
+  check(!(await api("/api/designs")).some((d) => d.name === "ui-smoke"), "it is gone from the list");
+  ws.removeEventListener("message", onDialog);
+
   // ---- holes are cut once Manifold arrives
   check(await waitFor("!!wp.state.wasm", 20000), "Manifold (WebAssembly) loads");
 

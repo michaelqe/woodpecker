@@ -24,7 +24,21 @@ def test_house_loads_clean_and_pages_go_to_digital_twin():
     d = model.load(REPO / "designs" / "house.json")
     assert not d.issues
     assert d.magpie_project == 38
-    assert all(p.kind == "reference" for p in d.parts)
+    assert all(p.kind == "reference" for p in d.parts if p.group != "Furniture")
+
+
+def test_furniture_is_placed_live_inside_its_room():
+    d = model.load(REPO / "designs" / "house.json")
+    rooms = {r[0]: r[5] for r in house.ROOMS}
+    for fid, design, room, *_ in house.FURNITURE:
+        ps = [p for p in d.parts if p.source == fid]
+        assert ps and all(p.component == f"design:{design}" for p in ps), fid
+        lo = [min(p.at[i] for p in ps) for i in range(3)]
+        hi = [max(p.max[i] for p in ps) for i in range(3)]
+        # back to drawing coordinates: plan y = DEPTH - Woodpecker y
+        x0, x1, y0, y1 = lo[0], hi[0], house.DEPTH - hi[1], house.DEPTH - lo[1]
+        assert any(rx0 <= x0 and x1 <= rx1 and ry0 <= y0 and y1 <= ry1 for rx0, ry0, rx1, ry1 in rooms[room]), (fid, lo, hi)
+        assert lo[2] >= 20 - 1e-6, fid  # on the floor, not in it
 
 
 def test_shell_is_exterior_only_and_fits_the_pad():

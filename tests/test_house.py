@@ -85,3 +85,54 @@ def test_garage_site_is_north_up_like_the_map():
         assert house_x and max(house_x) <= 0, name
         frame = [pt for pt in d.parts if pt.id.startswith(("post_front", "beam_front", "g_front", "slab"))]
         assert frame and min(pt.at[0] for pt in frame) >= 0, name
+
+
+# ---------------------------------------------------------------- electrical fixtures (HOUSE-2)
+el = house.electrical
+
+
+def test_fixture_ids_unique_and_circuits_known():
+    ids = [fx[0] for fx in el.FIXTURES]
+    assert len(ids) == len(set(ids))
+    for fid, _, _, kind, *_rest in el.FIXTURES:
+        circuit = _rest[3]
+        if kind in ("data", "phone", "antenna"):
+            assert circuit is None, fid
+        else:
+            assert circuit is None or circuit in el.CIRCUITS, fid
+
+
+def test_every_fixture_sits_in_its_room_or_outside():
+    rooms = {r[0]: r[5] for r in house.ROOMS}
+    rooms["stairwell"] = [[5773, 4034, 8166, 6234]]
+    indoor = {f: [rc for r in house.ROOMS if r[1] == f and r[6] != "outside" for rc in r[5]] for f in house.LEVEL}
+
+    def inside(rects, x, y):
+        return any(x0 <= x <= x1 and y0 <= y <= y1 for x0, y0, x1, y1 in rects)
+
+    for fx, x0, y0, z0, x1, y1, z1 in el.placed(house.WALLS, house.BLOCKS, house.ROOMS, house.LEVEL):
+        fid, f, room = fx[:3]
+        cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+        if room == "OUT":
+            assert not inside(indoor[f], cx, cy), fid
+        else:
+            assert inside(rooms[room], cx, cy), (fid, room, cx, cy)
+        lv = house.LEVEL[f]
+        assert lv["z"] <= z0 < z1 <= lv["z"] + el.CEILING, fid
+
+
+def test_numbered_sockets_match_the_drawings():
+    labels = [fx[9] for fx in el.FIXTURES]
+    expected = ([f"9P{i}" for i in range(1, 7)] + [f"11P{i}" for i in range(1, 11)]
+                + [f"12P{i}" for i in range(1, 11)] + [f"13P{i}" for i in range(1, 13)]
+                + [f"27P{i}" for i in range(1, 4)] + ["5P", "6P", "7P", "8P"])
+    for lab in expected:
+        assert labels.count(lab) == 1, lab
+
+
+def test_fixtures_are_in_the_design():
+    raw = json.loads((REPO / "designs" / "house.json").read_text())
+    parts = [p for p in raw["parts"] if p["id"].startswith("el-")]
+    assert len(parts) == len(el.FIXTURES)
+    assert all(p["material"] in el.MATERIALS for p in parts)
+    assert all("2006" in p["role"] for p in parts)

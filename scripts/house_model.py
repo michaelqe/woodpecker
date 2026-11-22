@@ -321,13 +321,22 @@ def shell_on_pad():
     The short plan-south / back-door wall is the pad's west edge; the long plan-east / front-door
     wall faces the road. Part ids are prefixed with `house-`.
     """
+    return to_site(shell_parts())
+
+
+def to_site(parts, prefix="house-", group="House"):
+    """Rotate house parts (drawing frame, from box()) into the north-up garage site frame.
+
+    Every house part is an axis-aligned box, so a 90° turn in plan is a swap of x/y sizes.
+    group=None keeps each part's own group (Ground floor, Upper floor, Stair, Site)."""
     out = []
-    for p in shell_parts():
+    for p in parts:
         hx, hy, hz = p["at"]
         sx, sy, sz = p["size"]
         q = dict(p)
-        q["id"] = f"house-{p['id']}"
-        q["group"] = "House"
+        q["id"] = f"{prefix}{p['id']}"
+        if group:
+            q["group"] = group
         # 90° CCW in plan: south → +x (east), east → +y (north)
         q["at"] = [round(-(hy + sy), 1), round(hx - SOUTH_WEST, 1), round(hz, 1)]
         q["size"] = [round(sy, 1), round(sx, 1), round(sz, 1)]
@@ -335,16 +344,24 @@ def shell_on_pad():
     return out
 
 
-def build():
+def interior_parts(walls=None, rooms=None, blocks=None):
+    """Walls, floors, built-ins and the stair (no electrical) for a given layout; defaults to
+    the traced house. scripts/house_carport.py passes a changed layout for redesign concepts."""
+    walls, rooms, blocks = walls or WALLS, rooms or ROOMS, blocks or BLOCKS
     parts = []
-    for w in WALLS:
+    for w in walls:
         parts += wall_parts(*w)
-    for r in ROOMS:
+    for r in rooms:
         parts += room_parts(*r)
-    for bid, f, name, (x0, y0, x1, y1), (h0, h1), mat, role in BLOCKS:
+    for bid, f, name, (x0, y0, x1, y1), (h0, h1), mat, role in blocks:
         z = LEVEL[f]["z"]
         parts.append(box(bid, name, LEVEL[f]["name"], mat, x0, y0, z + h0, x1, y1, z + h1, role))
     parts += stair_parts()
+    return parts
+
+
+def build():
+    parts = interior_parts()
     parts += electrical.fixture_parts(WALLS, BLOCKS, ROOMS, LEVEL, box)
     for p in parts:
         p["size"] = [round(v, 1) for v in p["size"]]

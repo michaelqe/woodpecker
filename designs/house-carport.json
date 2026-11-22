@@ -1,0 +1,4201 @@
+{
+  "title": "House + carport for 2 cars (6.6 x 6.0 m)",
+  "description": "The whole house as traced (both floors: walls, windows, doors, floors, the stair, fireplace and built-ins; electrical fixtures left out) next to option 1, the 6.6 x 6.0 m two-car carport with the solar roof, on the real pad. North up like the map: the back-door wall faces the pad, the front-door wall faces the road. Cars parked as in option 1, where the Multivan stands over the back step.",
+  "units": "mm",
+  "anchored": "A house and a carport on ground screws: nothing to tip over.",
+  "params": {
+    "x0": {
+      "value": 150,
+      "label": "Gap between house wall and roof edge"
+    },
+    "W": {
+      "value": 6600,
+      "label": "Roof width (along the house wall's side, x)"
+    },
+    "D": {
+      "value": 5950,
+      "label": "Roof depth, garden (south) to road (north)"
+    },
+    "y0": {
+      "value": 150,
+      "label": "Roof garden (south) edge"
+    },
+    "bays": {
+      "value": 2,
+      "label": "Bays between posts",
+      "unit": "count"
+    },
+    "h_front": {
+      "value": 2900,
+      "label": "Top of the front (road / north) beam"
+    },
+    "pitch": {
+      "value": 5,
+      "label": "Roof pitch (falls toward the garden / south)",
+      "unit": "deg"
+    },
+    "oh_side": {
+      "value": 250,
+      "label": "Roof overhang past the end posts"
+    },
+    "oh_front": {
+      "value": 300,
+      "label": "Roof overhang north of the front posts"
+    },
+    "oh_back": {
+      "value": 300,
+      "label": "Roof overhang south of the back posts"
+    },
+    "post": {
+      "value": 140,
+      "label": "Post size (glulam, square)"
+    },
+    "beam_h": {
+      "value": 225,
+      "label": "Beam depth (glulam)"
+    },
+    "raf_h": {
+      "value": 220,
+      "label": "Rafter depth"
+    },
+    "raf_t": {
+      "value": 45,
+      "label": "Rafter thickness"
+    },
+    "raf_max": {
+      "value": 600,
+      "label": "Max rafter spacing"
+    },
+    "batten_max": {
+      "value": 800,
+      "label": "Max batten spacing (along the slope)"
+    },
+    "brace": {
+      "value": 600,
+      "label": "Knee brace leg"
+    },
+    "post_step": "(W - 2 * oh_side - post) / bays",
+    "yb": "y0 + oh_back",
+    "yf": "y0 + D - oh_front - post",
+    "h_back": {
+      "value": "h_front - (yf - yb) * tan(pitch)",
+      "label": "Top of the back (garden) beam"
+    },
+    "raf_len": "D / cos(pitch)",
+    "raf_n": "ceil((W - raf_t) / raf_max) + 1",
+    "raf_step": "(W - raf_t) / (raf_n - 1)",
+    "raf_z": "h_back + (yb + post / 2 - y0) * tan(pitch)",
+    "top_z": "raf_z + raf_h / cos(pitch)",
+    "bat_n": "ceil((raf_len - 100) / batten_max) + 1",
+    "bat_step": "(raf_len - 100) / (bat_n - 1)",
+    "roof_area_m2": {
+      "value": "W * D / 1000000",
+      "label": "Roofed area (counts as footprint)",
+      "unit": "m2"
+    },
+    "height_max": {
+      "value": "h_front + raf_h / cos(pitch) + 32 + 25",
+      "label": "Highest point (roof sheet at the road edge)"
+    }
+  },
+  "materials": {
+    "gl_post": {
+      "name": "Glulam GL30c 140x140 (post)",
+      "kind": "lumber",
+      "section": [
+        140,
+        140
+      ],
+      "stock_length": 6000,
+      "density": 460,
+      "notes": "Glulam is ordered cut to length; 6 m is a common stock length."
+    },
+    "gl_beam": {
+      "name": "Glulam GL30c 140x225 (beam)",
+      "kind": "lumber",
+      "section": [
+        140,
+        225
+      ],
+      "stock_length": 12000,
+      "density": 460,
+      "notes": "Ordered cut to length."
+    },
+    "c24_220": {
+      "name": "Spruce C24 45x220",
+      "kind": "lumber",
+      "section": [
+        45,
+        220
+      ],
+      "stock_length": 6000,
+      "density": 450
+    },
+    "c24_95": {
+      "name": "Spruce C24 45x95",
+      "kind": "lumber",
+      "section": [
+        45,
+        95
+      ],
+      "stock_length": 3600,
+      "density": 450
+    },
+    "batten": {
+      "name": "Roof batten 32x100, planed",
+      "kind": "lumber",
+      "section": [
+        32,
+        100
+      ],
+      "stock_length": 4800,
+      "density": 450
+    },
+    "roof_sheet": {
+      "name": "Profiled steel roof sheet (reference)",
+      "kind": "reference",
+      "color": "#59636e"
+    },
+    "solar": {
+      "name": "Solar panel about 430 W, 1722x1134 (reference)",
+      "kind": "reference",
+      "color": "#1d3557"
+    },
+    "site": {
+      "name": "Site (reference, approximate)",
+      "kind": "reference",
+      "color": "#b9b4aa"
+    },
+    "boundary": {
+      "name": "Plot boundary (reference)",
+      "kind": "reference",
+      "color": "#e3b505"
+    },
+    "car": {
+      "name": "Car (reference)",
+      "kind": "reference",
+      "color": "#4f7cac"
+    },
+    "zone": {
+      "name": "Cable protection zone (reference, approximate)",
+      "kind": "reference",
+      "color": "#d64541"
+    },
+    "wall": {
+      "name": "Wall (reference)",
+      "kind": "reference",
+      "color": "#d6d4ce"
+    },
+    "glass": {
+      "name": "Window glass (reference)",
+      "kind": "reference",
+      "color": "#8fbfe0"
+    },
+    "floor": {
+      "name": "Floor, wood (reference)",
+      "kind": "reference",
+      "color": "#b8946a"
+    },
+    "tile": {
+      "name": "Floor, tiles (reference)",
+      "kind": "reference",
+      "color": "#8fa3ad"
+    },
+    "slab": {
+      "name": "Floor between storeys (reference)",
+      "kind": "reference",
+      "color": "#a7a7a2"
+    },
+    "outside": {
+      "name": "Terrace and steps (reference)",
+      "kind": "reference",
+      "color": "#8a8f7a"
+    },
+    "masonry": {
+      "name": "Fireplace and chimney (reference)",
+      "kind": "reference",
+      "color": "#9c8576"
+    },
+    "fixture": {
+      "name": "Built-in fixture (reference)",
+      "kind": "reference",
+      "color": "#a59e90"
+    },
+    "appliance": {
+      "name": "Appliance (reference)",
+      "kind": "reference",
+      "color": "#e8e8e8"
+    },
+    "stair": {
+      "name": "Stair treads (reference)",
+      "kind": "reference",
+      "color": "#a07850"
+    },
+    "rail": {
+      "name": "Railing (reference)",
+      "kind": "reference",
+      "color": "#555a60"
+    }
+  },
+  "parts": [
+    {
+      "id": "post_front",
+      "name": "Post, front (road)",
+      "group": "Frame",
+      "material": "gl_post",
+      "size": [
+        "post",
+        "post",
+        "h_front - beam_h"
+      ],
+      "at": [
+        "x0 + oh_side",
+        "yf",
+        0
+      ],
+      "repeat": {
+        "count": "bays + 1",
+        "axis": "x",
+        "spacing": "post_step"
+      },
+      "role": "Carries the front (road / north) beam down to a ground screw. Sized and spaced so walls and a door can be added later."
+    },
+    {
+      "id": "post_back",
+      "name": "Post, back (garden)",
+      "group": "Frame",
+      "material": "gl_post",
+      "size": [
+        "post",
+        "post",
+        "h_back - beam_h"
+      ],
+      "at": [
+        "x0 + oh_side",
+        "yb",
+        0
+      ],
+      "repeat": {
+        "count": "bays + 1",
+        "axis": "x",
+        "spacing": "post_step"
+      },
+      "role": "Carries the back (low / garden) beam. Shorter than the front posts because the roof falls toward the garden."
+    },
+    {
+      "id": "beam_front",
+      "name": "Beam, front (road)",
+      "group": "Frame",
+      "material": "gl_beam",
+      "size": [
+        "W - 200",
+        "post",
+        "beam_h"
+      ],
+      "at": [
+        "x0 + 100",
+        "yf",
+        "h_front - beam_h"
+      ],
+      "role": "Front (high / road) beam on top of the front posts; the rafters sit on it."
+    },
+    {
+      "id": "beam_back",
+      "name": "Beam, back (garden)",
+      "group": "Frame",
+      "material": "gl_beam",
+      "size": [
+        "W - 200",
+        "post",
+        "beam_h"
+      ],
+      "at": [
+        "x0 + 100",
+        "yb",
+        "h_back - beam_h"
+      ],
+      "role": "Back (low / garden) beam on top of the back posts."
+    },
+    {
+      "id": "brace_front",
+      "name": "Knee brace, front",
+      "group": "Frame",
+      "material": "c24_95",
+      "size": [
+        "brace / cos(45)",
+        45,
+        95
+      ],
+      "at": [
+        "x0 + oh_side + post",
+        "yf + post / 2 - 22.5",
+        "h_front - beam_h - brace - 95 * sqrt(2) + 2"
+      ],
+      "rotate": {
+        "axis": "y",
+        "deg": -45
+      },
+      "ends": {
+        "start": 45,
+        "end": -45
+      },
+      "repeat": {
+        "count": "bays",
+        "axis": "x",
+        "spacing": "post_step"
+      },
+      "mirror": {
+        "axis": "x",
+        "about": "x0 + W / 2"
+      },
+      "role": "Diagonal between post and beam. Stops the frame racking sideways along its length (wind, a nudge from a car)."
+    },
+    {
+      "id": "brace_back",
+      "name": "Knee brace, back",
+      "group": "Frame",
+      "material": "c24_95",
+      "size": [
+        "brace / cos(45)",
+        45,
+        95
+      ],
+      "at": [
+        "x0 + oh_side + post",
+        "yb + post / 2 - 22.5",
+        "h_back - beam_h - brace - 95 * sqrt(2) + 2"
+      ],
+      "rotate": {
+        "axis": "y",
+        "deg": -45
+      },
+      "ends": {
+        "start": 45,
+        "end": -45
+      },
+      "repeat": {
+        "count": "bays",
+        "axis": "x",
+        "spacing": "post_step"
+      },
+      "mirror": {
+        "axis": "x",
+        "about": "x0 + W / 2"
+      },
+      "role": "Diagonal between post and beam. Stops the frame racking sideways along its length (wind, a nudge from a car)."
+    },
+    {
+      "id": "rafter",
+      "name": "Rafter",
+      "group": "Roof",
+      "material": "c24_220",
+      "size": [
+        "raf_t",
+        "raf_len",
+        "raf_h"
+      ],
+      "at": [
+        "x0",
+        "y0",
+        "raf_z"
+      ],
+      "rotate": {
+        "axis": "x",
+        "deg": "pitch"
+      },
+      "repeat": {
+        "count": "raf_n",
+        "axis": "x",
+        "spacing": "raf_step"
+      },
+      "role": "Spans from the back beam to the front beam, rising toward the road so rain and snow run off to the garden. Fixed with a rafter tie at each beam.",
+      "notes": "About 5.3 m between the beams: check the span against the snow load in the design project (45x220 at 600 c/c is at the limit; 400 c/c or 45x245 if needed)."
+    },
+    {
+      "id": "batten_1",
+      "name": "Roof batten, piece 1",
+      "group": "Roof",
+      "material": "batten",
+      "size": [
+        "W / 2",
+        100,
+        32
+      ],
+      "at": [
+        "x0 + 0 * W / 2",
+        "y0 + 50 * cos(pitch)",
+        "top_z + 50 * sin(pitch)"
+      ],
+      "rotate": {
+        "axis": "x",
+        "deg": "pitch"
+      },
+      "repeat": {
+        "count": "bat_n",
+        "step": [
+          0,
+          "bat_step * cos(pitch)",
+          "bat_step * sin(pitch)"
+        ]
+      },
+      "role": "Across the rafters; the steel roof sheets are screwed to these. Joints fall on a rafter."
+    },
+    {
+      "id": "batten_2",
+      "name": "Roof batten, piece 2",
+      "group": "Roof",
+      "material": "batten",
+      "size": [
+        "W / 2",
+        100,
+        32
+      ],
+      "at": [
+        "x0 + 1 * W / 2",
+        "y0 + 50 * cos(pitch)",
+        "top_z + 50 * sin(pitch)"
+      ],
+      "rotate": {
+        "axis": "x",
+        "deg": "pitch"
+      },
+      "repeat": {
+        "count": "bat_n",
+        "step": [
+          0,
+          "bat_step * cos(pitch)",
+          "bat_step * sin(pitch)"
+        ]
+      },
+      "role": "Across the rafters; the steel roof sheets are screwed to these. Joints fall on a rafter."
+    },
+    {
+      "id": "roof",
+      "name": "Roof sheet",
+      "group": "Roof",
+      "material": "roof_sheet",
+      "size": [
+        "W",
+        "raf_len",
+        25
+      ],
+      "at": [
+        "x0",
+        "y0",
+        "top_z + 32"
+      ],
+      "rotate": {
+        "axis": "x",
+        "deg": "pitch"
+      },
+      "role": "Profiled steel sheet with anti-condensation felt (so it does not drip on the cars)."
+    },
+    {
+      "id": "solar_1",
+      "name": "Solar panel, row 1",
+      "group": "Solar",
+      "material": "solar",
+      "size": [
+        1134,
+        1722,
+        35
+      ],
+      "at": [
+        "x0 + (W - 5 * 1150) / 2",
+        "y0 + (150 + 0 * 1740) * cos(pitch)",
+        "top_z + 32 + 25 + 60 + (150 + 0 * 1740) * sin(pitch)"
+      ],
+      "rotate": {
+        "axis": "x",
+        "deg": "pitch"
+      },
+      "repeat": {
+        "count": 5,
+        "axis": "x",
+        "spacing": 1150
+      },
+      "role": "Solar panels on rails over the roof sheet. The roof falls to the south (garden), so the panels face south."
+    },
+    {
+      "id": "solar_2",
+      "name": "Solar panel, row 2",
+      "group": "Solar",
+      "material": "solar",
+      "size": [
+        1134,
+        1722,
+        35
+      ],
+      "at": [
+        "x0 + (W - 5 * 1150) / 2",
+        "y0 + (150 + 1 * 1740) * cos(pitch)",
+        "top_z + 32 + 25 + 60 + (150 + 1 * 1740) * sin(pitch)"
+      ],
+      "rotate": {
+        "axis": "x",
+        "deg": "pitch"
+      },
+      "repeat": {
+        "count": 5,
+        "axis": "x",
+        "spacing": 1150
+      },
+      "role": "Solar panels on rails over the roof sheet. The roof falls to the south (garden), so the panels face south."
+    },
+    {
+      "id": "solar_3",
+      "name": "Solar panel, row 3",
+      "group": "Solar",
+      "material": "solar",
+      "size": [
+        1134,
+        1722,
+        35
+      ],
+      "at": [
+        "x0 + (W - 5 * 1150) / 2",
+        "y0 + (150 + 2 * 1740) * cos(pitch)",
+        "top_z + 32 + 25 + 60 + (150 + 2 * 1740) * sin(pitch)"
+      ],
+      "rotate": {
+        "axis": "x",
+        "deg": "pitch"
+      },
+      "repeat": {
+        "count": 5,
+        "axis": "x",
+        "spacing": 1150
+      },
+      "role": "Solar panels on rails over the roof sheet. The roof falls to the south (garden), so the panels face south."
+    },
+    {
+      "id": "multivan",
+      "name": "VW Multivan T6.1 (2021)",
+      "group": "Cars",
+      "component": "vw-multivan-t61-2021",
+      "at": [
+        2802,
+        5650,
+        0
+      ],
+      "rotate": {
+        "axis": "z",
+        "deg": 180
+      },
+      "role": "VW Multivan T6.1 (2021), to check the fit. Reference only: not in the cut list."
+    },
+    {
+      "id": "alltrack",
+      "name": "VW Golf Alltrack (2017)",
+      "group": "Cars",
+      "component": "vw-golf-alltrack-2017",
+      "at": [
+        5784,
+        5650,
+        0
+      ],
+      "rotate": {
+        "axis": "z",
+        "deg": 180
+      },
+      "role": "VW Golf Alltrack (2017), to check the fit. Reference only: not in the cut list."
+    },
+    {
+      "id": "cargo_bike",
+      "name": "Cargo bike",
+      "group": "Cars",
+      "material": "car",
+      "size": [
+        2700,
+        650,
+        1100
+      ],
+      "at": [
+        3900,
+        130,
+        0
+      ],
+      "role": "Cargo bike, about 2.7 m long, behind the Alltrack (which is shorter than the Multivan)."
+    },
+    {
+      "id": "pad",
+      "name": "Parking pad (pavers), main part",
+      "group": "Site",
+      "material": "site",
+      "size": [
+        10290,
+        4380,
+        20
+      ],
+      "at": [
+        0,
+        1720,
+        0
+      ],
+      "role": "The existing paved pad, 58 m2 (Top view is north-up like the map: road at the top, garden at the bottom). Measured on the cadastral: 10.29 m along the road, 11.72 m along the garden, 6.1 m at the house, 4.57 m at the east end."
+    },
+    {
+      "id": "pad_wedge",
+      "name": "Parking pad, garden-side wedge",
+      "group": "Site",
+      "material": "site",
+      "shape": "gusset",
+      "leg": "left",
+      "size": [
+        11593,
+        20,
+        1720
+      ],
+      "at": [
+        0,
+        0,
+        20
+      ],
+      "rotate": {
+        "axis": "x",
+        "deg": -90
+      },
+      "role": "Part of the pad: it is deeper at the house end (6.1 m) than at the east end (4.4-4.6 m)."
+    },
+    {
+      "id": "pad_east",
+      "name": "Parking pad, east wedge",
+      "group": "Site",
+      "material": "site",
+      "shape": "gusset",
+      "leg": "left",
+      "size": [
+        1303,
+        20,
+        4380
+      ],
+      "at": [
+        10290,
+        1720,
+        20
+      ],
+      "rotate": {
+        "axis": "x",
+        "deg": -90
+      },
+      "role": "Part of the pad: the east edge slants outward toward the garden."
+    },
+    {
+      "id": "boundary_north",
+      "name": "Plot boundary, road side (approx.)",
+      "group": "Site",
+      "material": "boundary",
+      "size": [
+        14000,
+        60,
+        100
+      ],
+      "at": [
+        -2000,
+        9600,
+        0
+      ],
+      "role": "Boundary with the road-side strip, about 3.5 m north of the pad (measured on the map)."
+    },
+    {
+      "id": "boundary_east",
+      "name": "Plot boundary with 0127 (approx.)",
+      "group": "Site",
+      "material": "boundary",
+      "size": [
+        9000,
+        60,
+        100
+      ],
+      "at": [
+        11209,
+        10025,
+        0
+      ],
+      "rotate": {
+        "axis": "z",
+        "deg": -73.43
+      },
+      "role": "Boundary with plot 0127, about 2 m from the east end of the pad. Under 4 m means EI60 walls and, in Tallinn, a written agreement with the neighbour."
+    },
+    {
+      "id": "cable_zone_front",
+      "name": "Cable corridor protection zone (approx.)",
+      "group": "Site",
+      "material": "zone",
+      "size": [
+        16000,
+        2000,
+        15
+      ],
+      "at": [
+        -3000,
+        9600,
+        0
+      ],
+      "role": "Low-voltage cables run 4-5 m north of the pad's front edge, with about 1 m protection zone each side. No digging or footings here without Elektrilevi's consent."
+    },
+    {
+      "id": "cable_zone_ne",
+      "name": "Service cables from 1239, zone (approx.)",
+      "group": "Site",
+      "material": "zone",
+      "size": [
+        2000,
+        5500,
+        15
+      ],
+      "at": [
+        11300,
+        4100,
+        0
+      ],
+      "role": "AXPK 4x25 service cables leave distribution point 1239 heading south then east, about 2 m from the pad's NE corner. Positions on utility maps can be off by a metre; order an on-site marking."
+    },
+    {
+      "id": "dist_1239",
+      "name": "Distribution point 1239 (Haabersti)",
+      "group": "Site",
+      "material": "site",
+      "size": [
+        900,
+        500,
+        1400
+      ],
+      "at": [
+        11200,
+        7100,
+        0
+      ],
+      "role": "Elektrilevi distribution point on the neighbouring land, just past the NE corner of the pad."
+    },
+    {
+      "id": "house-g-n-1",
+      "name": "North wall by the kitchen (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        284,
+        884,
+        3000
+      ],
+      "at": [
+        -14450,
+        0,
+        0
+      ],
+      "role": "Exterior wall, 284 mm thick, 5 700 mm long (ground floor). Solid section."
+    },
+    {
+      "id": "house-g-n-2",
+      "name": "North wall by the kitchen (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        284,
+        1000,
+        900
+      ],
+      "at": [
+        -14450,
+        884,
+        0
+      ],
+      "role": "Exterior wall, 284 mm thick, 5 700 mm long (ground floor). Below the kitchen window (sill 900)."
+    },
+    {
+      "id": "house-g-n-3",
+      "name": "North wall by the kitchen (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        284,
+        1000,
+        900
+      ],
+      "at": [
+        -14450,
+        884,
+        2100
+      ],
+      "role": "Exterior wall, 284 mm thick, 5 700 mm long (ground floor). Above the kitchen window (head 2100). Kitchen window, 1000 mm wide at 3 634-4 634."
+    },
+    {
+      "id": "house-g-n-4",
+      "name": "Kitchen window",
+      "group": "House: ground floor",
+      "material": "glass",
+      "size": [
+        24.0,
+        1000,
+        1200
+      ],
+      "at": [
+        -14320.0,
+        884,
+        900
+      ],
+      "role": "Kitchen window, 1000 mm wide at 3 634-4 634, sill 900, head 2100 (north wall by the kitchen)."
+    },
+    {
+      "id": "house-g-n-5",
+      "name": "North wall by the kitchen (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        284,
+        3816,
+        3000
+      ],
+      "at": [
+        -14450,
+        1884,
+        0
+      ],
+      "role": "Exterior wall, 284 mm thick, 5 700 mm long (ground floor). Solid section."
+    },
+    {
+      "id": "house-g-e-1",
+      "name": "East wall (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        891,
+        284,
+        3000
+      ],
+      "at": [
+        -14450,
+        5416,
+        0
+      ],
+      "role": "Exterior wall, 284 mm thick, 14 450 mm long (ground floor). Solid section."
+    },
+    {
+      "id": "house-g-e-2",
+      "name": "East wall (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        2000,
+        284,
+        900
+      ],
+      "at": [
+        -13559,
+        5416,
+        0
+      ],
+      "role": "Exterior wall, 284 mm thick, 14 450 mm long (ground floor). Below the kitchen window (sill 900)."
+    },
+    {
+      "id": "house-g-e-3",
+      "name": "East wall (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        2000,
+        284,
+        900
+      ],
+      "at": [
+        -13559,
+        5416,
+        2100
+      ],
+      "role": "Exterior wall, 284 mm thick, 14 450 mm long (ground floor). Above the kitchen window (head 2100). Kitchen window, 2000 mm wide at 891-2 891."
+    },
+    {
+      "id": "house-g-e-4",
+      "name": "Kitchen window",
+      "group": "House: ground floor",
+      "material": "glass",
+      "size": [
+        2000,
+        24.0,
+        1200
+      ],
+      "at": [
+        -13559,
+        5546.0,
+        900
+      ],
+      "role": "Kitchen window, 2000 mm wide at 891-2 891, sill 900, head 2100 (east wall)."
+    },
+    {
+      "id": "house-g-e-5",
+      "name": "East wall (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        1491,
+        284,
+        3000
+      ],
+      "at": [
+        -11559,
+        5416,
+        0
+      ],
+      "role": "Exterior wall, 284 mm thick, 14 450 mm long (ground floor). Solid section."
+    },
+    {
+      "id": "house-g-e-6",
+      "name": "East wall (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        900,
+        284,
+        900
+      ],
+      "at": [
+        -10068,
+        5416,
+        0
+      ],
+      "role": "Exterior wall, 284 mm thick, 14 450 mm long (ground floor). Below the hall window (sill 900)."
+    },
+    {
+      "id": "house-g-e-7",
+      "name": "East wall (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        900,
+        284,
+        900
+      ],
+      "at": [
+        -10068,
+        5416,
+        2100
+      ],
+      "role": "Exterior wall, 284 mm thick, 14 450 mm long (ground floor). Above the hall window (head 2100). Hall window, 900 mm wide at 4 382-5 282."
+    },
+    {
+      "id": "house-g-e-8",
+      "name": "Hall window",
+      "group": "House: ground floor",
+      "material": "glass",
+      "size": [
+        900,
+        24.0,
+        1200
+      ],
+      "at": [
+        -10068,
+        5546.0,
+        900
+      ],
+      "role": "Hall window, 900 mm wide at 4 382-5 282, sill 900, head 2100 (east wall)."
+    },
+    {
+      "id": "house-g-e-9",
+      "name": "East wall (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        1401,
+        284,
+        3000
+      ],
+      "at": [
+        -9168,
+        5416,
+        0
+      ],
+      "role": "Exterior wall, 284 mm thick, 14 450 mm long (ground floor). Solid section."
+    },
+    {
+      "id": "house-g-e-10",
+      "name": "East wall (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        1004,
+        284,
+        900
+      ],
+      "at": [
+        -7767,
+        5416,
+        2100
+      ],
+      "role": "Exterior wall, 284 mm thick, 14 450 mm long (ground floor). Above the front door (head 2100). Front door, 1004 mm wide at 6 683-7 687."
+    },
+    {
+      "id": "house-g-e-11",
+      "name": "East wall (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        2460,
+        284,
+        3000
+      ],
+      "at": [
+        -6763,
+        5416,
+        0
+      ],
+      "role": "Exterior wall, 284 mm thick, 14 450 mm long (ground floor). Solid section."
+    },
+    {
+      "id": "house-g-e-12",
+      "name": "East wall (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        912,
+        284,
+        900
+      ],
+      "at": [
+        -4303,
+        5416,
+        0
+      ],
+      "role": "Exterior wall, 284 mm thick, 14 450 mm long (ground floor). Below the sink room window (sill 900)."
+    },
+    {
+      "id": "house-g-e-13",
+      "name": "East wall (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        912,
+        284,
+        900
+      ],
+      "at": [
+        -4303,
+        5416,
+        2100
+      ],
+      "role": "Exterior wall, 284 mm thick, 14 450 mm long (ground floor). Above the sink room window (head 2100). Sink room window, 912 mm wide at 10 147-11 059."
+    },
+    {
+      "id": "house-g-e-14",
+      "name": "Sink room window",
+      "group": "House: ground floor",
+      "material": "glass",
+      "size": [
+        912,
+        24.0,
+        1200
+      ],
+      "at": [
+        -4303,
+        5546.0,
+        900
+      ],
+      "role": "Sink room window, 912 mm wide at 10 147-11 059, sill 900, head 2100 (east wall)."
+    },
+    {
+      "id": "house-g-e-15",
+      "name": "East wall (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        3391,
+        284,
+        3000
+      ],
+      "at": [
+        -3391,
+        5416,
+        0
+      ],
+      "role": "Exterior wall, 284 mm thick, 14 450 mm long (ground floor). Solid section."
+    },
+    {
+      "id": "house-g-s-1",
+      "name": "South wall (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        284,
+        466,
+        3000
+      ],
+      "at": [
+        -284,
+        0,
+        0
+      ],
+      "role": "Exterior wall, 284 mm thick, 5 700 mm long (ground floor). Solid section."
+    },
+    {
+      "id": "house-g-s-2",
+      "name": "South wall (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        284,
+        1400,
+        900
+      ],
+      "at": [
+        -284,
+        466,
+        0
+      ],
+      "role": "Exterior wall, 284 mm thick, 5 700 mm long (ground floor). Below the office window (sill 900)."
+    },
+    {
+      "id": "house-g-s-3",
+      "name": "South wall (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        284,
+        1400,
+        900
+      ],
+      "at": [
+        -284,
+        466,
+        2100
+      ],
+      "role": "Exterior wall, 284 mm thick, 5 700 mm long (ground floor). Above the office window (head 2100). Office window, 1400 mm wide at 3 216-4 616."
+    },
+    {
+      "id": "house-g-s-4",
+      "name": "Office window",
+      "group": "House: ground floor",
+      "material": "glass",
+      "size": [
+        24.0,
+        1400,
+        1200
+      ],
+      "at": [
+        -154.0,
+        466,
+        900
+      ],
+      "role": "Office window, 1400 mm wide at 3 216-4 616, sill 900, head 2100 (south wall)."
+    },
+    {
+      "id": "house-g-s-5",
+      "name": "South wall (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        284,
+        1867,
+        3000
+      ],
+      "at": [
+        -284,
+        1866,
+        0
+      ],
+      "role": "Exterior wall, 284 mm thick, 5 700 mm long (ground floor). Solid section."
+    },
+    {
+      "id": "house-g-s-6",
+      "name": "South wall (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        284,
+        900,
+        900
+      ],
+      "at": [
+        -284,
+        3733,
+        2100
+      ],
+      "role": "Exterior wall, 284 mm thick, 5 700 mm long (ground floor). Above the back door (head 2100). Back door, 900 mm wide at 6 483-7 383."
+    },
+    {
+      "id": "house-g-s-7",
+      "name": "South wall (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        284,
+        1067,
+        3000
+      ],
+      "at": [
+        -284,
+        4633,
+        0
+      ],
+      "role": "Exterior wall, 284 mm thick, 5 700 mm long (ground floor). Solid section."
+    },
+    {
+      "id": "house-g-wk-1",
+      "name": "West wall by the kitchen (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        500,
+        284,
+        3000
+      ],
+      "at": [
+        -14450,
+        0,
+        0
+      ],
+      "role": "Exterior wall, 284 mm thick, 4 034 mm long (ground floor). Solid section."
+    },
+    {
+      "id": "house-g-wk-2",
+      "name": "West wall by the kitchen (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        900,
+        284,
+        300
+      ],
+      "at": [
+        -13950,
+        0,
+        0
+      ],
+      "role": "Exterior wall, 284 mm thick, 4 034 mm long (ground floor). Below the tall kitchen window (sill 300).",
+      "notes": "GUESS: position and width"
+    },
+    {
+      "id": "house-g-wk-3",
+      "name": "West wall by the kitchen (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        900,
+        284,
+        900
+      ],
+      "at": [
+        -13950,
+        0,
+        2100
+      ],
+      "role": "Exterior wall, 284 mm thick, 4 034 mm long (ground floor). Above the tall kitchen window (head 2100). Tall kitchen window, 900 mm wide at 500-1 400.",
+      "notes": "GUESS: position and width"
+    },
+    {
+      "id": "house-g-wk-4",
+      "name": "Tall kitchen window",
+      "group": "House: ground floor",
+      "material": "glass",
+      "size": [
+        900,
+        24.0,
+        1800
+      ],
+      "at": [
+        -13950,
+        130.0,
+        300
+      ],
+      "role": "Tall kitchen window, 900 mm wide at 500-1 400, sill 300, head 2100 (west wall by the kitchen).",
+      "notes": "GUESS: position and width"
+    },
+    {
+      "id": "house-g-wk-5",
+      "name": "West wall by the kitchen (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        200,
+        284,
+        3000
+      ],
+      "at": [
+        -13050,
+        0,
+        0
+      ],
+      "role": "Exterior wall, 284 mm thick, 4 034 mm long (ground floor). Solid section."
+    },
+    {
+      "id": "house-g-wk-6",
+      "name": "West wall by the kitchen (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        850,
+        284,
+        900
+      ],
+      "at": [
+        -12850,
+        0,
+        2100
+      ],
+      "role": "Exterior wall, 284 mm thick, 4 034 mm long (ground floor). Above the terrace door 1 (head 2100). Terrace door 1, 850 mm wide at 1 600-2 450.",
+      "notes": "GUESS: two doors side by side, widths not on the plan"
+    },
+    {
+      "id": "house-g-wk-7",
+      "name": "West wall by the kitchen (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        100,
+        284,
+        3000
+      ],
+      "at": [
+        -12000,
+        0,
+        0
+      ],
+      "role": "Exterior wall, 284 mm thick, 4 034 mm long (ground floor). Solid section."
+    },
+    {
+      "id": "house-g-wk-8",
+      "name": "West wall by the kitchen (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        850,
+        284,
+        900
+      ],
+      "at": [
+        -11900,
+        0,
+        2100
+      ],
+      "role": "Exterior wall, 284 mm thick, 4 034 mm long (ground floor). Above the terrace door 2 (head 2100). Terrace door 2, 850 mm wide at 2 550-3 400.",
+      "notes": "GUESS: two doors side by side, widths not on the plan"
+    },
+    {
+      "id": "house-g-wk-9",
+      "name": "West wall by the kitchen (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        634,
+        284,
+        3000
+      ],
+      "at": [
+        -11050,
+        0,
+        0
+      ],
+      "role": "Exterior wall, 284 mm thick, 4 034 mm long (ground floor). Solid section."
+    },
+    {
+      "id": "house-g-wl-1",
+      "name": "West wall by the office (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        1534,
+        284,
+        3000
+      ],
+      "at": [
+        -4584,
+        0,
+        0
+      ],
+      "role": "Exterior wall, 284 mm thick, 4 584 mm long (ground floor). Solid section."
+    },
+    {
+      "id": "house-g-wl-2",
+      "name": "West wall by the office (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        1400,
+        284,
+        900
+      ],
+      "at": [
+        -3050,
+        0,
+        0
+      ],
+      "role": "Exterior wall, 284 mm thick, 4 584 mm long (ground floor). Below the office west window (sill 900).",
+      "notes": "GUESS: position and width"
+    },
+    {
+      "id": "house-g-wl-3",
+      "name": "West wall by the office (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        1400,
+        284,
+        900
+      ],
+      "at": [
+        -3050,
+        0,
+        2100
+      ],
+      "role": "Exterior wall, 284 mm thick, 4 584 mm long (ground floor). Above the office west window (head 2100). Office west window, 1400 mm wide at 11 400-12 800.",
+      "notes": "GUESS: position and width"
+    },
+    {
+      "id": "house-g-wl-4",
+      "name": "Office west window",
+      "group": "House: ground floor",
+      "material": "glass",
+      "size": [
+        1400,
+        24.0,
+        1200
+      ],
+      "at": [
+        -3050,
+        130.0,
+        900
+      ],
+      "role": "Office west window, 1400 mm wide at 11 400-12 800, sill 900, head 2100 (west wall by the office).",
+      "notes": "GUESS: position and width"
+    },
+    {
+      "id": "house-g-wl-5",
+      "name": "West wall by the office (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        1650,
+        284,
+        3000
+      ],
+      "at": [
+        -1650,
+        0,
+        0
+      ],
+      "role": "Exterior wall, 284 mm thick, 4 584 mm long (ground floor). Solid section."
+    },
+    {
+      "id": "house-g-bn-1",
+      "name": "Bay north wall (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        284,
+        595,
+        3000
+      ],
+      "at": [
+        -10700,
+        -2750,
+        0
+      ],
+      "role": "Exterior wall, 284 mm thick, 2 750 mm long (ground floor). Solid section."
+    },
+    {
+      "id": "house-g-bn-2",
+      "name": "Bay north wall (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        284,
+        1000,
+        900
+      ],
+      "at": [
+        -10700,
+        -2155,
+        0
+      ],
+      "role": "Exterior wall, 284 mm thick, 2 750 mm long (ground floor). Below the living room north window (sill 900)."
+    },
+    {
+      "id": "house-g-bn-3",
+      "name": "Bay north wall (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        284,
+        1000,
+        900
+      ],
+      "at": [
+        -10700,
+        -2155,
+        2100
+      ],
+      "role": "Exterior wall, 284 mm thick, 2 750 mm long (ground floor). Above the living room north window (head 2100). Living room north window, 1000 mm wide at 595-1 595."
+    },
+    {
+      "id": "house-g-bn-4",
+      "name": "Living room north window",
+      "group": "House: ground floor",
+      "material": "glass",
+      "size": [
+        24.0,
+        1000,
+        1200
+      ],
+      "at": [
+        -10570.0,
+        -2155,
+        900
+      ],
+      "role": "Living room north window, 1000 mm wide at 595-1 595, sill 900, head 2100 (bay north wall)."
+    },
+    {
+      "id": "house-g-bn-5",
+      "name": "Bay north wall (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        284,
+        1155,
+        3000
+      ],
+      "at": [
+        -10700,
+        -1155,
+        0
+      ],
+      "role": "Exterior wall, 284 mm thick, 2 750 mm long (ground floor). Solid section."
+    },
+    {
+      "id": "house-g-bw-1",
+      "name": "Bay west wall (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        709,
+        284,
+        3000
+      ],
+      "at": [
+        -10700,
+        -2750,
+        0
+      ],
+      "role": "Exterior wall, 284 mm thick, 6 400 mm long (ground floor). Solid section."
+    },
+    {
+      "id": "house-g-bw-2",
+      "name": "Bay west wall (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        2441,
+        284,
+        500
+      ],
+      "at": [
+        -9991,
+        -2750,
+        0
+      ],
+      "role": "Exterior wall, 284 mm thick, 6 400 mm long (ground floor). Below the living room window 1 (sill 500).",
+      "notes": "GUESS: one window or two, sill height"
+    },
+    {
+      "id": "house-g-bw-3",
+      "name": "Bay west wall (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        2441,
+        284,
+        700
+      ],
+      "at": [
+        -9991,
+        -2750,
+        2300
+      ],
+      "role": "Exterior wall, 284 mm thick, 6 400 mm long (ground floor). Above the living room window 1 (head 2300). Living room window 1, 2441 mm wide at 4 459-6 900.",
+      "notes": "GUESS: one window or two, sill height"
+    },
+    {
+      "id": "house-g-bw-4",
+      "name": "Living room window 1",
+      "group": "House: ground floor",
+      "material": "glass",
+      "size": [
+        2441,
+        24.0,
+        1800
+      ],
+      "at": [
+        -9991,
+        -2620.0,
+        500
+      ],
+      "role": "Living room window 1, 2441 mm wide at 4 459-6 900, sill 500, head 2300 (bay west wall).",
+      "notes": "GUESS: one window or two, sill height"
+    },
+    {
+      "id": "house-g-bw-5",
+      "name": "Bay west wall (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        100,
+        284,
+        3000
+      ],
+      "at": [
+        -7550,
+        -2750,
+        0
+      ],
+      "role": "Exterior wall, 284 mm thick, 6 400 mm long (ground floor). Solid section."
+    },
+    {
+      "id": "house-g-bw-6",
+      "name": "Bay west wall (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        2441,
+        284,
+        500
+      ],
+      "at": [
+        -7450,
+        -2750,
+        0
+      ],
+      "role": "Exterior wall, 284 mm thick, 6 400 mm long (ground floor). Below the living room window 2 (sill 500).",
+      "notes": "GUESS: one window or two, sill height"
+    },
+    {
+      "id": "house-g-bw-7",
+      "name": "Bay west wall (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        2441,
+        284,
+        700
+      ],
+      "at": [
+        -7450,
+        -2750,
+        2300
+      ],
+      "role": "Exterior wall, 284 mm thick, 6 400 mm long (ground floor). Above the living room window 2 (head 2300). Living room window 2, 2441 mm wide at 7 000-9 441.",
+      "notes": "GUESS: one window or two, sill height"
+    },
+    {
+      "id": "house-g-bw-8",
+      "name": "Living room window 2",
+      "group": "House: ground floor",
+      "material": "glass",
+      "size": [
+        2441,
+        24.0,
+        1800
+      ],
+      "at": [
+        -7450,
+        -2620.0,
+        500
+      ],
+      "role": "Living room window 2, 2441 mm wide at 7 000-9 441, sill 500, head 2300 (bay west wall).",
+      "notes": "GUESS: one window or two, sill height"
+    },
+    {
+      "id": "house-g-bw-9",
+      "name": "Bay west wall (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        709,
+        284,
+        3000
+      ],
+      "at": [
+        -5009,
+        -2750,
+        0
+      ],
+      "role": "Exterior wall, 284 mm thick, 6 400 mm long (ground floor). Solid section."
+    },
+    {
+      "id": "house-g-bs-1",
+      "name": "Bay south wall (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        284,
+        2750,
+        3000
+      ],
+      "at": [
+        -4584,
+        -2750,
+        0
+      ],
+      "role": "Exterior wall, 284 mm thick, 2 750 mm long (ground floor). Solid section."
+    },
+    {
+      "id": "house-g-i1-1",
+      "name": "Kitchen / stair wall (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        194,
+        2400,
+        3000
+      ],
+      "at": [
+        -10610,
+        3016,
+        0
+      ],
+      "role": "Interior wall, 194 mm thick, 2 400 mm long (ground floor). Solid section."
+    },
+    {
+      "id": "house-g-i2-1",
+      "name": "Stair side wall (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        1116,
+        92,
+        3000
+      ],
+      "at": [
+        -10416,
+        3016,
+        0
+      ],
+      "role": "Interior wall, 92 mm thick, 1 116 mm long (ground floor). Solid section."
+    },
+    {
+      "id": "house-g-i3-1",
+      "name": "Hall / office wall (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        194,
+        1640,
+        3000
+      ],
+      "at": [
+        -4584,
+        284,
+        0
+      ],
+      "role": "Interior wall, 194 mm thick, 5 132 mm long (ground floor). Solid section."
+    },
+    {
+      "id": "house-g-i3-2",
+      "name": "Hall / office wall (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        194,
+        800,
+        900
+      ],
+      "at": [
+        -4584,
+        1924,
+        2100
+      ],
+      "role": "Interior wall, 194 mm thick, 5 132 mm long (ground floor). Above the office door (head 2100). Office door, 800 mm wide at 4 674-5 474."
+    },
+    {
+      "id": "house-g-i3-3",
+      "name": "Hall / office wall (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        194,
+        834,
+        3000
+      ],
+      "at": [
+        -4584,
+        2724,
+        0
+      ],
+      "role": "Interior wall, 194 mm thick, 5 132 mm long (ground floor). Solid section."
+    },
+    {
+      "id": "house-g-i3-4",
+      "name": "Hall / office wall (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        194,
+        900,
+        900
+      ],
+      "at": [
+        -4584,
+        3558,
+        2100
+      ],
+      "role": "Interior wall, 194 mm thick, 5 132 mm long (ground floor). Above the sink room door (head 2100). Sink room door, 900 mm wide at 6 308-7 208.",
+      "notes": "Drawn opening out of the WC; the real way in is not confirmed"
+    },
+    {
+      "id": "house-g-i3-5",
+      "name": "Hall / office wall (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        194,
+        958,
+        3000
+      ],
+      "at": [
+        -4584,
+        4458,
+        0
+      ],
+      "role": "Interior wall, 194 mm thick, 5 132 mm long (ground floor). Solid section."
+    },
+    {
+      "id": "house-g-i4-1",
+      "name": "Office / sink room wall (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        4106,
+        92,
+        3000
+      ],
+      "at": [
+        -4390,
+        2784,
+        0
+      ],
+      "role": "Interior wall, 92 mm thick, 4 106 mm long (ground floor). Solid section."
+    },
+    {
+      "id": "house-g-i5-1",
+      "name": "Sink room / plant room wall (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        92,
+        1079,
+        3000
+      ],
+      "at": [
+        -2398,
+        2876,
+        0
+      ],
+      "role": "Interior wall, 92 mm thick, 2 540 mm long (ground floor). Solid section."
+    },
+    {
+      "id": "house-g-i5-2",
+      "name": "Sink room / plant room wall (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        92,
+        700,
+        900
+      ],
+      "at": [
+        -2398,
+        3955,
+        2100
+      ],
+      "role": "Interior wall, 92 mm thick, 2 540 mm long (ground floor). Above the plant room door (head 2100). Plant room door, 700 mm wide at 6 705-7 405."
+    },
+    {
+      "id": "house-g-i5-3",
+      "name": "Sink room / plant room wall (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        92,
+        761,
+        3000
+      ],
+      "at": [
+        -2398,
+        4655,
+        0
+      ],
+      "role": "Interior wall, 92 mm thick, 2 540 mm long (ground floor). Solid section."
+    },
+    {
+      "id": "house-g-i6-1",
+      "name": "WC west wall (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        334,
+        92,
+        3000
+      ],
+      "at": [
+        -5684,
+        3403,
+        0
+      ],
+      "role": "Interior wall, 92 mm thick, 1 100 mm long (ground floor). Solid section."
+    },
+    {
+      "id": "house-g-i6-2",
+      "name": "WC west wall (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        700,
+        92,
+        900
+      ],
+      "at": [
+        -5350,
+        3403,
+        2100
+      ],
+      "role": "Interior wall, 92 mm thick, 1 100 mm long (ground floor). Above the wc door (head 2100). WC door, 700 mm wide at 9 100-9 800."
+    },
+    {
+      "id": "house-g-i6-3",
+      "name": "WC west wall (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        66,
+        92,
+        3000
+      ],
+      "at": [
+        -4650,
+        3403,
+        0
+      ],
+      "role": "Interior wall, 92 mm thick, 1 100 mm long (ground floor). Solid section."
+    },
+    {
+      "id": "house-g-i7-1",
+      "name": "WC / wardrobe wall (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        92,
+        2013,
+        3000
+      ],
+      "at": [
+        -5776,
+        3403,
+        0
+      ],
+      "role": "Interior wall, 92 mm thick, 2 013 mm long (ground floor). Solid section."
+    },
+    {
+      "id": "house-g-i8-1",
+      "name": "Wardrobe end wall (ground floor)",
+      "group": "House: ground floor",
+      "material": "wall",
+      "size": [
+        800,
+        92,
+        3000
+      ],
+      "at": [
+        -6576,
+        3403,
+        0
+      ],
+      "role": "Interior wall, 92 mm thick, 800 mm long (ground floor). Solid section."
+    },
+    {
+      "id": "house-u-n-1",
+      "name": "North wall by bedroom 1 (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        284,
+        884,
+        2700
+      ],
+      "at": [
+        -14450,
+        0,
+        3000
+      ],
+      "role": "Exterior wall, 284 mm thick, 5 700 mm long (upper floor). Solid section."
+    },
+    {
+      "id": "house-u-n-2",
+      "name": "North wall by bedroom 1 (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        284,
+        1000,
+        900
+      ],
+      "at": [
+        -14450,
+        884,
+        3000
+      ],
+      "role": "Exterior wall, 284 mm thick, 5 700 mm long (upper floor). Below the bedroom 1 north window (sill 900)."
+    },
+    {
+      "id": "house-u-n-3",
+      "name": "North wall by bedroom 1 (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        284,
+        1000,
+        600
+      ],
+      "at": [
+        -14450,
+        884,
+        5100
+      ],
+      "role": "Exterior wall, 284 mm thick, 5 700 mm long (upper floor). Above the bedroom 1 north window (head 2100). Bedroom 1 north window, 1000 mm wide at 3 634-4 634."
+    },
+    {
+      "id": "house-u-n-4",
+      "name": "Bedroom 1 north window",
+      "group": "House: upper floor",
+      "material": "glass",
+      "size": [
+        24.0,
+        1000,
+        1200
+      ],
+      "at": [
+        -14320.0,
+        884,
+        3900
+      ],
+      "role": "Bedroom 1 north window, 1000 mm wide at 3 634-4 634, sill 900, head 2100 (north wall by bedroom 1)."
+    },
+    {
+      "id": "house-u-n-5",
+      "name": "North wall by bedroom 1 (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        284,
+        3816,
+        2700
+      ],
+      "at": [
+        -14450,
+        1884,
+        3000
+      ],
+      "role": "Exterior wall, 284 mm thick, 5 700 mm long (upper floor). Solid section."
+    },
+    {
+      "id": "house-u-e-1",
+      "name": "East wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        4382,
+        284,
+        2700
+      ],
+      "at": [
+        -14450,
+        5416,
+        3000
+      ],
+      "role": "Exterior wall, 284 mm thick, 14 450 mm long (upper floor). Solid section."
+    },
+    {
+      "id": "house-u-e-2",
+      "name": "East wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        900,
+        284,
+        900
+      ],
+      "at": [
+        -10068,
+        5416,
+        3000
+      ],
+      "role": "Exterior wall, 284 mm thick, 14 450 mm long (upper floor). Below the landing window (sill 900).",
+      "notes": "Other east windows upstairs not clear on the photo"
+    },
+    {
+      "id": "house-u-e-3",
+      "name": "East wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        900,
+        284,
+        600
+      ],
+      "at": [
+        -10068,
+        5416,
+        5100
+      ],
+      "role": "Exterior wall, 284 mm thick, 14 450 mm long (upper floor). Above the landing window (head 2100). Landing window, 900 mm wide at 4 382-5 282.",
+      "notes": "Other east windows upstairs not clear on the photo"
+    },
+    {
+      "id": "house-u-e-4",
+      "name": "Landing window",
+      "group": "House: upper floor",
+      "material": "glass",
+      "size": [
+        900,
+        24.0,
+        1200
+      ],
+      "at": [
+        -10068,
+        5546.0,
+        3900
+      ],
+      "role": "Landing window, 900 mm wide at 4 382-5 282, sill 900, head 2100 (east wall).",
+      "notes": "Other east windows upstairs not clear on the photo"
+    },
+    {
+      "id": "house-u-e-5",
+      "name": "East wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        9168,
+        284,
+        2700
+      ],
+      "at": [
+        -9168,
+        5416,
+        3000
+      ],
+      "role": "Exterior wall, 284 mm thick, 14 450 mm long (upper floor). Solid section."
+    },
+    {
+      "id": "house-u-s-1",
+      "name": "South wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        284,
+        466,
+        2700
+      ],
+      "at": [
+        -284,
+        0,
+        3000
+      ],
+      "role": "Exterior wall, 284 mm thick, 5 700 mm long (upper floor). Solid section."
+    },
+    {
+      "id": "house-u-s-2",
+      "name": "South wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        284,
+        1400,
+        900
+      ],
+      "at": [
+        -284,
+        466,
+        3000
+      ],
+      "role": "Exterior wall, 284 mm thick, 5 700 mm long (upper floor). Below the bedroom 4 south window (sill 900)."
+    },
+    {
+      "id": "house-u-s-3",
+      "name": "South wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        284,
+        1400,
+        600
+      ],
+      "at": [
+        -284,
+        466,
+        5100
+      ],
+      "role": "Exterior wall, 284 mm thick, 5 700 mm long (upper floor). Above the bedroom 4 south window (head 2100). Bedroom 4 south window, 1400 mm wide at 3 216-4 616."
+    },
+    {
+      "id": "house-u-s-4",
+      "name": "Bedroom 4 south window",
+      "group": "House: upper floor",
+      "material": "glass",
+      "size": [
+        24.0,
+        1400,
+        1200
+      ],
+      "at": [
+        -154.0,
+        466,
+        3900
+      ],
+      "role": "Bedroom 4 south window, 1400 mm wide at 3 216-4 616, sill 900, head 2100 (south wall)."
+    },
+    {
+      "id": "house-u-s-5",
+      "name": "South wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        284,
+        3834,
+        2700
+      ],
+      "at": [
+        -284,
+        1866,
+        3000
+      ],
+      "role": "Exterior wall, 284 mm thick, 5 700 mm long (upper floor). Solid section."
+    },
+    {
+      "id": "house-u-wm-1",
+      "name": "West wall by bedroom 1 (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        594,
+        284,
+        2700
+      ],
+      "at": [
+        -14450,
+        0,
+        3000
+      ],
+      "role": "Exterior wall, 284 mm thick, 4 034 mm long (upper floor). Solid section."
+    },
+    {
+      "id": "house-u-wm-2",
+      "name": "West wall by bedroom 1 (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        1300,
+        284,
+        900
+      ],
+      "at": [
+        -13856,
+        0,
+        3000
+      ],
+      "role": "Exterior wall, 284 mm thick, 4 034 mm long (upper floor). Below the bedroom 1 west window (sill 900)."
+    },
+    {
+      "id": "house-u-wm-3",
+      "name": "West wall by bedroom 1 (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        1300,
+        284,
+        600
+      ],
+      "at": [
+        -13856,
+        0,
+        5100
+      ],
+      "role": "Exterior wall, 284 mm thick, 4 034 mm long (upper floor). Above the bedroom 1 west window (head 2100). Bedroom 1 west window, 1300 mm wide at 594-1 894."
+    },
+    {
+      "id": "house-u-wm-4",
+      "name": "Bedroom 1 west window",
+      "group": "House: upper floor",
+      "material": "glass",
+      "size": [
+        1300,
+        24.0,
+        1200
+      ],
+      "at": [
+        -13856,
+        130.0,
+        3900
+      ],
+      "role": "Bedroom 1 west window, 1300 mm wide at 594-1 894, sill 900, head 2100 (west wall by bedroom 1)."
+    },
+    {
+      "id": "house-u-wm-5",
+      "name": "West wall by bedroom 1 (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        806,
+        284,
+        2700
+      ],
+      "at": [
+        -12556,
+        0,
+        3000
+      ],
+      "role": "Exterior wall, 284 mm thick, 4 034 mm long (upper floor). Solid section."
+    },
+    {
+      "id": "house-u-wm-6",
+      "name": "West wall by bedroom 1 (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        760,
+        284,
+        600
+      ],
+      "at": [
+        -11750,
+        0,
+        5100
+      ],
+      "role": "Exterior wall, 284 mm thick, 4 034 mm long (upper floor). Above the bedroom 1 west door (head 2100). Bedroom 1 west door, 760 mm wide at 2 700-3 460.",
+      "notes": "GUESS: balcony or French window"
+    },
+    {
+      "id": "house-u-wm-7",
+      "name": "West wall by bedroom 1 (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        574,
+        284,
+        2700
+      ],
+      "at": [
+        -10990,
+        0,
+        3000
+      ],
+      "role": "Exterior wall, 284 mm thick, 4 034 mm long (upper floor). Solid section."
+    },
+    {
+      "id": "house-u-wl-1",
+      "name": "West wall by bedroom 4 (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        1134,
+        284,
+        2700
+      ],
+      "at": [
+        -4584,
+        0,
+        3000
+      ],
+      "role": "Exterior wall, 284 mm thick, 4 584 mm long (upper floor). Solid section."
+    },
+    {
+      "id": "house-u-wl-2",
+      "name": "West wall by bedroom 4 (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        1400,
+        284,
+        900
+      ],
+      "at": [
+        -3450,
+        0,
+        3000
+      ],
+      "role": "Exterior wall, 284 mm thick, 4 584 mm long (upper floor). Below the bedroom 4 west window (sill 900).",
+      "notes": "GUESS: position and width"
+    },
+    {
+      "id": "house-u-wl-3",
+      "name": "West wall by bedroom 4 (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        1400,
+        284,
+        600
+      ],
+      "at": [
+        -3450,
+        0,
+        5100
+      ],
+      "role": "Exterior wall, 284 mm thick, 4 584 mm long (upper floor). Above the bedroom 4 west window (head 2100). Bedroom 4 west window, 1400 mm wide at 11 000-12 400.",
+      "notes": "GUESS: position and width"
+    },
+    {
+      "id": "house-u-wl-4",
+      "name": "Bedroom 4 west window",
+      "group": "House: upper floor",
+      "material": "glass",
+      "size": [
+        1400,
+        24.0,
+        1200
+      ],
+      "at": [
+        -3450,
+        130.0,
+        3900
+      ],
+      "role": "Bedroom 4 west window, 1400 mm wide at 11 000-12 400, sill 900, head 2100 (west wall by bedroom 4).",
+      "notes": "GUESS: position and width"
+    },
+    {
+      "id": "house-u-wl-5",
+      "name": "West wall by bedroom 4 (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        2050,
+        284,
+        2700
+      ],
+      "at": [
+        -2050,
+        0,
+        3000
+      ],
+      "role": "Exterior wall, 284 mm thick, 4 584 mm long (upper floor). Solid section."
+    },
+    {
+      "id": "house-u-bn-1",
+      "name": "Bay north wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        284,
+        595,
+        2700
+      ],
+      "at": [
+        -10700,
+        -2750,
+        3000
+      ],
+      "role": "Exterior wall, 284 mm thick, 2 750 mm long (upper floor). Solid section."
+    },
+    {
+      "id": "house-u-bn-2",
+      "name": "Bay north wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        284,
+        1000,
+        900
+      ],
+      "at": [
+        -10700,
+        -2155,
+        3000
+      ],
+      "role": "Exterior wall, 284 mm thick, 2 750 mm long (upper floor). Below the bedroom 2 north window (sill 900)."
+    },
+    {
+      "id": "house-u-bn-3",
+      "name": "Bay north wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        284,
+        1000,
+        600
+      ],
+      "at": [
+        -10700,
+        -2155,
+        5100
+      ],
+      "role": "Exterior wall, 284 mm thick, 2 750 mm long (upper floor). Above the bedroom 2 north window (head 2100). Bedroom 2 north window, 1000 mm wide at 595-1 595."
+    },
+    {
+      "id": "house-u-bn-4",
+      "name": "Bedroom 2 north window",
+      "group": "House: upper floor",
+      "material": "glass",
+      "size": [
+        24.0,
+        1000,
+        1200
+      ],
+      "at": [
+        -10570.0,
+        -2155,
+        3900
+      ],
+      "role": "Bedroom 2 north window, 1000 mm wide at 595-1 595, sill 900, head 2100 (bay north wall)."
+    },
+    {
+      "id": "house-u-bn-5",
+      "name": "Bay north wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        284,
+        1155,
+        2700
+      ],
+      "at": [
+        -10700,
+        -1155,
+        3000
+      ],
+      "role": "Exterior wall, 284 mm thick, 2 750 mm long (upper floor). Solid section."
+    },
+    {
+      "id": "house-u-bw-1",
+      "name": "Bay west wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        709,
+        284,
+        2700
+      ],
+      "at": [
+        -10700,
+        -2750,
+        3000
+      ],
+      "role": "Exterior wall, 284 mm thick, 6 400 mm long (upper floor). Solid section."
+    },
+    {
+      "id": "house-u-bw-2",
+      "name": "Bay west wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        2000,
+        284,
+        900
+      ],
+      "at": [
+        -9991,
+        -2750,
+        3000
+      ],
+      "role": "Exterior wall, 284 mm thick, 6 400 mm long (upper floor). Below the bedroom 2 west window (sill 900)."
+    },
+    {
+      "id": "house-u-bw-3",
+      "name": "Bay west wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        2000,
+        284,
+        600
+      ],
+      "at": [
+        -9991,
+        -2750,
+        5100
+      ],
+      "role": "Exterior wall, 284 mm thick, 6 400 mm long (upper floor). Above the bedroom 2 west window (head 2100). Bedroom 2 west window, 2000 mm wide at 4 459-6 459."
+    },
+    {
+      "id": "house-u-bw-4",
+      "name": "Bedroom 2 west window",
+      "group": "House: upper floor",
+      "material": "glass",
+      "size": [
+        2000,
+        24.0,
+        1200
+      ],
+      "at": [
+        -9991,
+        -2620.0,
+        3900
+      ],
+      "role": "Bedroom 2 west window, 2000 mm wide at 4 459-6 459, sill 900, head 2100 (bay west wall)."
+    },
+    {
+      "id": "house-u-bw-5",
+      "name": "Bay west wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        999,
+        284,
+        2700
+      ],
+      "at": [
+        -7991,
+        -2750,
+        3000
+      ],
+      "role": "Exterior wall, 284 mm thick, 6 400 mm long (upper floor). Solid section."
+    },
+    {
+      "id": "house-u-bw-6",
+      "name": "Bay west wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        2000,
+        284,
+        900
+      ],
+      "at": [
+        -6992,
+        -2750,
+        3000
+      ],
+      "role": "Exterior wall, 284 mm thick, 6 400 mm long (upper floor). Below the bedroom 3 west window (sill 900)."
+    },
+    {
+      "id": "house-u-bw-7",
+      "name": "Bay west wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        2000,
+        284,
+        600
+      ],
+      "at": [
+        -6992,
+        -2750,
+        5100
+      ],
+      "role": "Exterior wall, 284 mm thick, 6 400 mm long (upper floor). Above the bedroom 3 west window (head 2100). Bedroom 3 west window, 2000 mm wide at 7 458-9 458."
+    },
+    {
+      "id": "house-u-bw-8",
+      "name": "Bedroom 3 west window",
+      "group": "House: upper floor",
+      "material": "glass",
+      "size": [
+        2000,
+        24.0,
+        1200
+      ],
+      "at": [
+        -6992,
+        -2620.0,
+        3900
+      ],
+      "role": "Bedroom 3 west window, 2000 mm wide at 7 458-9 458, sill 900, head 2100 (bay west wall)."
+    },
+    {
+      "id": "house-u-bw-9",
+      "name": "Bay west wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        692,
+        284,
+        2700
+      ],
+      "at": [
+        -4992,
+        -2750,
+        3000
+      ],
+      "role": "Exterior wall, 284 mm thick, 6 400 mm long (upper floor). Solid section."
+    },
+    {
+      "id": "house-u-bs-1",
+      "name": "Bay south wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        284,
+        2750,
+        2700
+      ],
+      "at": [
+        -4584,
+        -2750,
+        3000
+      ],
+      "role": "Exterior wall, 284 mm thick, 2 750 mm long (upper floor). Solid section."
+    },
+    {
+      "id": "house-u-i1-1",
+      "name": "Bedroom 1 south wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        194,
+        1666,
+        2700
+      ],
+      "at": [
+        -10610,
+        284,
+        3000
+      ],
+      "role": "Interior wall, 194 mm thick, 5 132 mm long (upper floor). Solid section."
+    },
+    {
+      "id": "house-u-i1-2",
+      "name": "Bedroom 1 south wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        194,
+        900,
+        600
+      ],
+      "at": [
+        -10610,
+        1950,
+        5100
+      ],
+      "role": "Interior wall, 194 mm thick, 5 132 mm long (upper floor). Above the bedroom 1 door (head 2100). Bedroom 1 door, 900 mm wide at 4 700-5 600."
+    },
+    {
+      "id": "house-u-i1-3",
+      "name": "Bedroom 1 south wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        194,
+        2566,
+        2700
+      ],
+      "at": [
+        -10610,
+        2850,
+        3000
+      ],
+      "role": "Interior wall, 194 mm thick, 5 132 mm long (upper floor). Solid section."
+    },
+    {
+      "id": "house-u-i2-1",
+      "name": "Walk-in wardrobe partition (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        2716,
+        92,
+        2700
+      ],
+      "at": [
+        -14166,
+        4516,
+        3000
+      ],
+      "role": "Interior wall, 92 mm thick, 3 556 mm long (upper floor). Solid section."
+    },
+    {
+      "id": "house-u-i2-2",
+      "name": "Walk-in wardrobe partition (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        700,
+        92,
+        600
+      ],
+      "at": [
+        -11450,
+        4516,
+        5100
+      ],
+      "role": "Interior wall, 92 mm thick, 3 556 mm long (upper floor). Above the wardrobe opening (head 2100). Wardrobe opening, 700 mm wide at 3 000-3 700.",
+      "notes": "GUESS: the plan shows no way in"
+    },
+    {
+      "id": "house-u-i2-3",
+      "name": "Walk-in wardrobe partition (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        140,
+        92,
+        2700
+      ],
+      "at": [
+        -10750,
+        4516,
+        3000
+      ],
+      "role": "Interior wall, 92 mm thick, 3 556 mm long (upper floor). Solid section."
+    },
+    {
+      "id": "house-u-i3-1",
+      "name": "Bedrooms 2-3 / landing wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        2016,
+        194,
+        2700
+      ],
+      "at": [
+        -10416,
+        1706,
+        3000
+      ],
+      "role": "Interior wall, 194 mm thick, 5 832 mm long (upper floor). Solid section."
+    },
+    {
+      "id": "house-u-i3-2",
+      "name": "Bedrooms 2-3 / landing wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        800,
+        194,
+        600
+      ],
+      "at": [
+        -8400,
+        1706,
+        5100
+      ],
+      "role": "Interior wall, 194 mm thick, 5 832 mm long (upper floor). Above the bedroom 2 door (head 2100). Bedroom 2 door, 800 mm wide at 6 050-6 850."
+    },
+    {
+      "id": "house-u-i3-3",
+      "name": "Bedrooms 2-3 / landing wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        2100,
+        194,
+        2700
+      ],
+      "at": [
+        -7600,
+        1706,
+        3000
+      ],
+      "role": "Interior wall, 194 mm thick, 5 832 mm long (upper floor). Solid section."
+    },
+    {
+      "id": "house-u-i3-4",
+      "name": "Bedrooms 2-3 / landing wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        800,
+        194,
+        600
+      ],
+      "at": [
+        -5500,
+        1706,
+        5100
+      ],
+      "role": "Interior wall, 194 mm thick, 5 832 mm long (upper floor). Above the bedroom 3 door (head 2100). Bedroom 3 door, 800 mm wide at 8 950-9 750."
+    },
+    {
+      "id": "house-u-i3-5",
+      "name": "Bedrooms 2-3 / landing wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        116,
+        194,
+        2700
+      ],
+      "at": [
+        -4700,
+        1706,
+        3000
+      ],
+      "role": "Interior wall, 194 mm thick, 5 832 mm long (upper floor). Solid section."
+    },
+    {
+      "id": "house-u-i4-1",
+      "name": "Bedroom 2 / 3 wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        92,
+        4172,
+        2700
+      ],
+      "at": [
+        -7546,
+        -2466,
+        3000
+      ],
+      "role": "Interior wall, 92 mm thick, 4 172 mm long (upper floor). Solid section."
+    },
+    {
+      "id": "house-u-i5-1",
+      "name": "Bedroom 4 north wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        194,
+        1816,
+        2700
+      ],
+      "at": [
+        -4584,
+        284,
+        3000
+      ],
+      "role": "Interior wall, 194 mm thick, 2 732 mm long (upper floor). Solid section."
+    },
+    {
+      "id": "house-u-i5-2",
+      "name": "Bedroom 4 north wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        194,
+        800,
+        600
+      ],
+      "at": [
+        -4584,
+        2100,
+        5100
+      ],
+      "role": "Interior wall, 194 mm thick, 2 732 mm long (upper floor). Above the bedroom 4 door (head 2100). Bedroom 4 door, 800 mm wide at 4 850-5 650."
+    },
+    {
+      "id": "house-u-i5-3",
+      "name": "Bedroom 4 north wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        194,
+        116,
+        2700
+      ],
+      "at": [
+        -4584,
+        2900,
+        3000
+      ],
+      "role": "Interior wall, 194 mm thick, 2 732 mm long (upper floor). Solid section."
+    },
+    {
+      "id": "house-u-i6-1",
+      "name": "Bathroom west wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        4392,
+        92,
+        2700
+      ],
+      "at": [
+        -6708,
+        3016,
+        3000
+      ],
+      "role": "Interior wall, 92 mm thick, 4 392 mm long (upper floor). Solid section."
+    },
+    {
+      "id": "house-u-i7-1",
+      "name": "Bathroom north wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        92,
+        92,
+        2700
+      ],
+      "at": [
+        -6708,
+        3108,
+        3000
+      ],
+      "role": "Interior wall, 92 mm thick, 2 308 mm long (upper floor). Solid section."
+    },
+    {
+      "id": "house-u-i7-2",
+      "name": "Bathroom north wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        92,
+        800,
+        600
+      ],
+      "at": [
+        -6708,
+        3200,
+        5100
+      ],
+      "role": "Interior wall, 92 mm thick, 2 308 mm long (upper floor). Above the bathroom door (head 2100). Bathroom door, 800 mm wide at 5 950-6 750.",
+      "notes": "GUESS: position"
+    },
+    {
+      "id": "house-u-i7-3",
+      "name": "Bathroom north wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        92,
+        1416,
+        2700
+      ],
+      "at": [
+        -6708,
+        4000,
+        3000
+      ],
+      "role": "Interior wall, 92 mm thick, 2 308 mm long (upper floor). Solid section."
+    },
+    {
+      "id": "house-u-i8-1",
+      "name": "WC west wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        766,
+        92,
+        2700
+      ],
+      "at": [
+        -8216,
+        4124,
+        3000
+      ],
+      "role": "Interior wall, 92 mm thick, 1 508 mm long (upper floor). Solid section."
+    },
+    {
+      "id": "house-u-i8-2",
+      "name": "WC west wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        700,
+        92,
+        600
+      ],
+      "at": [
+        -7450,
+        4124,
+        5100
+      ],
+      "role": "Interior wall, 92 mm thick, 1 508 mm long (upper floor). Above the wc door (head 2100). WC door, 700 mm wide at 7 000-7 700."
+    },
+    {
+      "id": "house-u-i8-3",
+      "name": "WC west wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        42,
+        92,
+        2700
+      ],
+      "at": [
+        -6750,
+        4124,
+        3000
+      ],
+      "role": "Interior wall, 92 mm thick, 1 508 mm long (upper floor). Solid section."
+    },
+    {
+      "id": "house-u-i9-1",
+      "name": "WC north wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        92,
+        1292,
+        2700
+      ],
+      "at": [
+        -8216,
+        4124,
+        3000
+      ],
+      "role": "Interior wall, 92 mm thick, 1 292 mm long (upper floor). Solid section."
+    },
+    {
+      "id": "house-u-i10-1",
+      "name": "Basin room / bath room wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        194,
+        102,
+        2700
+      ],
+      "at": [
+        -4584,
+        3108,
+        3000
+      ],
+      "role": "Interior wall, 194 mm thick, 2 308 mm long (upper floor). Solid section."
+    },
+    {
+      "id": "house-u-i10-2",
+      "name": "Basin room / bath room wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        194,
+        1000,
+        600
+      ],
+      "at": [
+        -4584,
+        3210,
+        5100
+      ],
+      "role": "Interior wall, 194 mm thick, 2 308 mm long (upper floor). Above the opening between the bathroom halves (head 2100). Opening between the bathroom halves, 1000 mm wide at 5 960-6 960."
+    },
+    {
+      "id": "house-u-i10-3",
+      "name": "Basin room / bath room wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        194,
+        1206,
+        2700
+      ],
+      "at": [
+        -4584,
+        4210,
+        3000
+      ],
+      "role": "Interior wall, 194 mm thick, 2 308 mm long (upper floor). Solid section."
+    },
+    {
+      "id": "house-u-i11-1",
+      "name": "Bath / sauna wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        92,
+        932,
+        2700
+      ],
+      "at": [
+        -2408,
+        3108,
+        3000
+      ],
+      "role": "Interior wall, 92 mm thick, 2 308 mm long (upper floor). Solid section."
+    },
+    {
+      "id": "house-u-i11-2",
+      "name": "Bath / sauna wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        92,
+        600,
+        600
+      ],
+      "at": [
+        -2408,
+        4040,
+        5100
+      ],
+      "role": "Interior wall, 92 mm thick, 2 308 mm long (upper floor). Above the sauna door (head 2100). Sauna door, 600 mm wide at 6 790-7 390."
+    },
+    {
+      "id": "house-u-i11-3",
+      "name": "Bath / sauna wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        92,
+        776,
+        2700
+      ],
+      "at": [
+        -2408,
+        4640,
+        3000
+      ],
+      "role": "Interior wall, 92 mm thick, 2 308 mm long (upper floor). Solid section."
+    },
+    {
+      "id": "house-u-i12-1",
+      "name": "Closet / sauna wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        2032,
+        92,
+        2700
+      ],
+      "at": [
+        -2316,
+        3816,
+        3000
+      ],
+      "role": "Interior wall, 92 mm thick, 2 032 mm long (upper floor). Solid section."
+    },
+    {
+      "id": "house-u-i13-1",
+      "name": "Bedroom 4 closet wall (upper floor)",
+      "group": "House: upper floor",
+      "material": "wall",
+      "size": [
+        1485,
+        92,
+        2700
+      ],
+      "at": [
+        -1769,
+        3016,
+        3000
+      ],
+      "role": "Interior wall, 92 mm thick, 1 485 mm long (upper floor). Solid section."
+    },
+    {
+      "id": "house-kook-floor",
+      "name": "Kitchen floor",
+      "group": "House: ground floor",
+      "material": "floor",
+      "size": [
+        3556,
+        5132,
+        20
+      ],
+      "at": [
+        -14166,
+        284,
+        0
+      ],
+      "role": "Kitchen (Köök), ground floor. This piece 5 132 x 3 556 mm; the room is 18.25 m2 as traced; plan says 18.1 m2."
+    },
+    {
+      "id": "house-elutuba-floor-1",
+      "name": "Living room floor",
+      "group": "House: ground floor",
+      "material": "floor",
+      "size": [
+        5832,
+        2466,
+        20
+      ],
+      "at": [
+        -10416,
+        -2466,
+        0
+      ],
+      "role": "Living room (Elutuba), ground floor. This piece 2 466 x 5 832 mm; the room is 23.30 m2 as traced; plan says 23.3 m2.",
+      "notes": "Open to the hall. Split at x 4279, where both rooms match the plan areas."
+    },
+    {
+      "id": "house-elutuba-floor-2",
+      "name": "Living room floor",
+      "group": "House: ground floor",
+      "material": "floor",
+      "size": [
+        5832,
+        1529,
+        20
+      ],
+      "at": [
+        -10416,
+        0,
+        0
+      ],
+      "role": "Living room (Elutuba), ground floor. This piece 1 529 x 5 832 mm; the room is 23.30 m2 as traced; plan says 23.3 m2.",
+      "notes": "Open to the hall. Split at x 4279, where both rooms match the plan areas."
+    },
+    {
+      "id": "house-esik-floor-1",
+      "name": "Hall floor",
+      "group": "House: ground floor",
+      "material": "floor",
+      "size": [
+        5832,
+        1494,
+        20
+      ],
+      "at": [
+        -10416,
+        1529,
+        0
+      ],
+      "role": "Hall (Esik), ground floor. This piece 1 494 x 5 832 mm; the room is 13.00 m2 as traced; plan says 12.8 m2.",
+      "notes": "Open to the living room. Split at x 4279, where both rooms match the plan areas."
+    },
+    {
+      "id": "house-esik-floor-2",
+      "name": "Hall floor",
+      "group": "House: ground floor",
+      "material": "floor",
+      "size": [
+        1474,
+        2393,
+        20
+      ],
+      "at": [
+        -8050,
+        3023,
+        0
+      ],
+      "role": "Hall (Esik), ground floor. This piece 2 393 x 1 474 mm; the room is 13.00 m2 as traced; plan says 12.8 m2.",
+      "notes": "Open to the living room. Split at x 4279, where both rooms match the plan areas."
+    },
+    {
+      "id": "house-esik-floor-3",
+      "name": "Hall floor",
+      "group": "House: ground floor",
+      "material": "floor",
+      "size": [
+        1992,
+        380,
+        20
+      ],
+      "at": [
+        -6576,
+        3023,
+        0
+      ],
+      "role": "Hall (Esik), ground floor. This piece 380 x 1 992 mm; the room is 13.00 m2 as traced; plan says 12.8 m2.",
+      "notes": "Open to the living room. Split at x 4279, where both rooms match the plan areas."
+    },
+    {
+      "id": "house-stair-floor-floor",
+      "name": "Under the stair floor",
+      "group": "House: ground floor",
+      "material": "floor",
+      "size": [
+        2366,
+        2393,
+        20
+      ],
+      "at": [
+        -10416,
+        3023,
+        0
+      ],
+      "role": "Under the stair (Trepi alune), ground floor. This piece 2 393 x 2 366 mm; the room is 5.66 m2 as traced.",
+      "notes": "Floating stair: the space under it is usable."
+    },
+    {
+      "id": "house-wc0-floor",
+      "name": "WC floor",
+      "group": "House: ground floor",
+      "material": "tile",
+      "size": [
+        1100,
+        1921,
+        20
+      ],
+      "at": [
+        -5684,
+        3495,
+        0
+      ],
+      "role": "WC (WC), ground floor. This piece 1 921 x 1 100 mm; the room is 2.11 m2 as traced; plan says 2.1 m2."
+    },
+    {
+      "id": "house-kabinet-floor",
+      "name": "Office floor",
+      "group": "House: ground floor",
+      "material": "floor",
+      "size": [
+        4106,
+        2500,
+        20
+      ],
+      "at": [
+        -4390,
+        284,
+        0
+      ],
+      "role": "Office (Kabinet), ground floor. This piece 2 500 x 4 106 mm; the room is 10.27 m2 as traced; plan says 10.2 m2."
+    },
+    {
+      "id": "house-pesuruum-floor",
+      "name": "Sink and storage floor",
+      "group": "House: ground floor",
+      "material": "tile",
+      "size": [
+        1992,
+        2540,
+        20
+      ],
+      "at": [
+        -4390,
+        2876,
+        0
+      ],
+      "role": "Sink and storage (Pesuruum), ground floor. This piece 2 540 x 1 992 mm; the room is 5.06 m2 as traced; plan says 5.2 m2.",
+      "notes": "Drawn as the laundry; now a sink and built-in storage. The laundry moved upstairs."
+    },
+    {
+      "id": "house-tehnoruum-floor",
+      "name": "Plant room floor",
+      "group": "House: ground floor",
+      "material": "tile",
+      "size": [
+        2022,
+        2540,
+        20
+      ],
+      "at": [
+        -2306,
+        2876,
+        0
+      ],
+      "role": "Plant room (Tehnoruum), ground floor. This piece 2 540 x 2 022 mm; the room is 5.14 m2 as traced; plan says 5.0 m2."
+    },
+    {
+      "id": "house-terrass-floor",
+      "name": "Terrace floor",
+      "group": "House: outside",
+      "material": "outside",
+      "size": [
+        3630,
+        2450,
+        20
+      ],
+      "at": [
+        -14330,
+        -2450,
+        0
+      ],
+      "role": "Terrace (Terrass), 2 450 x 3 630 mm.",
+      "notes": "Outline only; no dimensions on the plan."
+    },
+    {
+      "id": "house-porch-e-floor",
+      "name": "Entrance step floor",
+      "group": "House: outside",
+      "material": "outside",
+      "size": [
+        2700,
+        1500,
+        150
+      ],
+      "at": [
+        -8550,
+        5700,
+        0
+      ],
+      "role": "Entrance step (Välisuks), 1 500 x 2 700 mm.",
+      "notes": "2700 x 1200 + 300 step."
+    },
+    {
+      "id": "house-porch-s-floor",
+      "name": "Back step floor",
+      "group": "House: outside",
+      "material": "outside",
+      "size": [
+        1500,
+        1800,
+        150
+      ],
+      "at": [
+        0,
+        3283,
+        0
+      ],
+      "role": "Back step (Tagauks), 1 800 x 1 500 mm.",
+      "notes": "1800 x 1200 + 300 step."
+    },
+    {
+      "id": "house-mag1-floor",
+      "name": "Bedroom 1 floor",
+      "group": "House: upper floor",
+      "material": "floor",
+      "size": [
+        3556,
+        4232,
+        300
+      ],
+      "at": [
+        -14166,
+        284,
+        2700
+      ],
+      "role": "Bedroom 1 (Magamistuba 1), upper floor. This piece 4 232 x 3 556 mm; the room is 15.05 m2 as traced; plan says 15.1 m2."
+    },
+    {
+      "id": "house-garderoob-floor",
+      "name": "Walk-in wardrobe floor",
+      "group": "House: upper floor",
+      "material": "floor",
+      "size": [
+        3556,
+        808,
+        300
+      ],
+      "at": [
+        -14166,
+        4608,
+        2700
+      ],
+      "role": "Walk-in wardrobe (Garderoob), upper floor. This piece 808 x 3 556 mm; the room is 2.87 m2 as traced; plan says 2.9 m2."
+    },
+    {
+      "id": "house-mag2-floor",
+      "name": "Bedroom 2 floor",
+      "group": "House: upper floor",
+      "material": "floor",
+      "size": [
+        2870,
+        4172,
+        300
+      ],
+      "at": [
+        -10416,
+        -2466,
+        2700
+      ],
+      "role": "Bedroom 2 (Magamistuba 2), upper floor. This piece 4 172 x 2 870 mm; the room is 11.97 m2 as traced; plan says 12.0 m2."
+    },
+    {
+      "id": "house-mag3-floor",
+      "name": "Bedroom 3 floor",
+      "group": "House: upper floor",
+      "material": "floor",
+      "size": [
+        2870,
+        4172,
+        300
+      ],
+      "at": [
+        -7454,
+        -2466,
+        2700
+      ],
+      "role": "Bedroom 3 (Magamistuba 3), upper floor. This piece 4 172 x 2 870 mm; the room is 11.97 m2 as traced; plan says 12.0 m2."
+    },
+    {
+      "id": "house-trepihall-floor-1",
+      "name": "Landing floor",
+      "group": "House: upper floor",
+      "material": "floor",
+      "size": [
+        2200,
+        1123,
+        300
+      ],
+      "at": [
+        -10416,
+        1900,
+        2700
+      ],
+      "role": "Landing (Trepihall), upper floor. This piece 1 123 x 2 200 mm; the room is 8.19 m2 as traced; plan says 8.2 m2."
+    },
+    {
+      "id": "house-trepihall-floor-2",
+      "name": "Landing floor",
+      "group": "House: upper floor",
+      "material": "floor",
+      "size": [
+        1508,
+        2224,
+        300
+      ],
+      "at": [
+        -8216,
+        1900,
+        2700
+      ],
+      "role": "Landing (Trepihall), upper floor. This piece 2 224 x 1 508 mm; the room is 8.19 m2 as traced; plan says 8.2 m2."
+    },
+    {
+      "id": "house-trepihall-floor-3",
+      "name": "Landing floor",
+      "group": "House: upper floor",
+      "material": "floor",
+      "size": [
+        2124,
+        1116,
+        300
+      ],
+      "at": [
+        -6708,
+        1900,
+        2700
+      ],
+      "role": "Landing (Trepihall), upper floor. This piece 1 116 x 2 124 mm; the room is 8.19 m2 as traced; plan says 8.2 m2."
+    },
+    {
+      "id": "house-wc1-floor",
+      "name": "WC floor",
+      "group": "House: upper floor",
+      "material": "tile",
+      "size": [
+        1416,
+        1200,
+        300
+      ],
+      "at": [
+        -8124,
+        4216,
+        2700
+      ],
+      "role": "WC (WC), upper floor. This piece 1 200 x 1 416 mm; the room is 1.70 m2 as traced; plan says 1.7 m2."
+    },
+    {
+      "id": "house-vann1-floor",
+      "name": "Bathroom, basins floor",
+      "group": "House: upper floor",
+      "material": "tile",
+      "size": [
+        2032,
+        2308,
+        300
+      ],
+      "at": [
+        -6616,
+        3108,
+        2700
+      ],
+      "role": "Bathroom, basins (Vannituba), upper floor. This piece 2 308 x 2 032 mm; the room is 4.69 m2 as traced; plan says 4.7 m2."
+    },
+    {
+      "id": "house-vann2-floor",
+      "name": "Bathroom, bath and laundry floor",
+      "group": "House: upper floor",
+      "material": "tile",
+      "size": [
+        1982,
+        2308,
+        300
+      ],
+      "at": [
+        -4390,
+        3108,
+        2700
+      ],
+      "role": "Bathroom, bath and laundry (Vannituba), upper floor. This piece 2 308 x 1 982 mm; the room is 4.57 m2 as traced; plan says 4.6 m2.",
+      "notes": "The washing machine is here, across from the bath."
+    },
+    {
+      "id": "house-leil-floor",
+      "name": "Sauna floor",
+      "group": "House: upper floor",
+      "material": "tile",
+      "size": [
+        2032,
+        1508,
+        300
+      ],
+      "at": [
+        -2316,
+        3908,
+        2700
+      ],
+      "role": "Sauna (Leil), upper floor. This piece 1 508 x 2 032 mm; the room is 3.06 m2 as traced; plan says 3.1 m2."
+    },
+    {
+      "id": "house-mag4-floor-1",
+      "name": "Bedroom 4 floor",
+      "group": "House: upper floor",
+      "material": "floor",
+      "size": [
+        4106,
+        2732,
+        300
+      ],
+      "at": [
+        -4390,
+        284,
+        2700
+      ],
+      "role": "Bedroom 4 (Magamistuba 4), upper floor. This piece 2 732 x 4 106 mm; the room is 12.66 m2 as traced; plan says 12.8 m2.",
+      "notes": "Includes the 708 mm closet beside the sauna."
+    },
+    {
+      "id": "house-mag4-floor-2",
+      "name": "Bedroom 4 floor",
+      "group": "House: upper floor",
+      "material": "floor",
+      "size": [
+        2032,
+        708,
+        300
+      ],
+      "at": [
+        -2316,
+        3108,
+        2700
+      ],
+      "role": "Bedroom 4 (Magamistuba 4), upper floor. This piece 708 x 2 032 mm; the room is 12.66 m2 as traced; plan says 12.8 m2.",
+      "notes": "Includes the 708 mm closet beside the sauna."
+    },
+    {
+      "id": "house-fireplace",
+      "name": "Fireplace",
+      "group": "House: ground floor",
+      "material": "masonry",
+      "size": [
+        2751,
+        758,
+        3000
+      ],
+      "at": [
+        -8403,
+        1227,
+        0
+      ],
+      "role": "Fireplace between the living room and the hall. Size read off the photo, about +-50 mm."
+    },
+    {
+      "id": "house-chimney-up",
+      "name": "Chimney",
+      "group": "House: upper floor",
+      "material": "masonry",
+      "size": [
+        434,
+        425,
+        2700
+      ],
+      "at": [
+        -7276,
+        1281,
+        3000
+      ],
+      "role": "Chimney through bedroom 3, from the plan symbol."
+    },
+    {
+      "id": "house-hall-wardrobe",
+      "name": "Hall wardrobe",
+      "group": "House: ground floor",
+      "material": "fixture",
+      "size": [
+        800,
+        1921,
+        2400
+      ],
+      "at": [
+        -6576,
+        3495,
+        0
+      ],
+      "role": "Built-in wardrobe by the front door, 1921 x 800."
+    },
+    {
+      "id": "house-washer",
+      "name": "Washing machine",
+      "group": "House: upper floor",
+      "material": "appliance",
+      "size": [
+        600,
+        600,
+        850
+      ],
+      "at": [
+        -3750,
+        3120,
+        3000
+      ],
+      "role": "Laundry across from the bath. GUESS: exact position."
+    },
+    {
+      "id": "house-tread-1",
+      "name": "Stair tread 1",
+      "group": "House: stair",
+      "material": "stair",
+      "size": [
+        1100,
+        214,
+        40.0
+      ],
+      "at": [
+        -9150,
+        3050,
+        136.5
+      ],
+      "role": "Floating stair tread (no risers, space under it is usable). Layout guessed from the tread lines on the plan."
+    },
+    {
+      "id": "house-tread-2",
+      "name": "Stair tread 2",
+      "group": "House: stair",
+      "material": "stair",
+      "size": [
+        1100,
+        214,
+        40.0
+      ],
+      "at": [
+        -9150,
+        3264,
+        312.9
+      ],
+      "role": "Floating stair tread (no risers, space under it is usable). Layout guessed from the tread lines on the plan."
+    },
+    {
+      "id": "house-tread-3",
+      "name": "Stair tread 3",
+      "group": "House: stair",
+      "material": "stair",
+      "size": [
+        1100,
+        214,
+        40.0
+      ],
+      "at": [
+        -9150,
+        3478,
+        489.4
+      ],
+      "role": "Floating stair tread (no risers, space under it is usable). Layout guessed from the tread lines on the plan."
+    },
+    {
+      "id": "house-tread-4",
+      "name": "Stair tread 4",
+      "group": "House: stair",
+      "material": "stair",
+      "size": [
+        1100,
+        214,
+        40.0
+      ],
+      "at": [
+        -9150,
+        3692,
+        665.9
+      ],
+      "role": "Floating stair tread (no risers, space under it is usable). Layout guessed from the tread lines on the plan."
+    },
+    {
+      "id": "house-tread-5",
+      "name": "Stair tread 5",
+      "group": "House: stair",
+      "material": "stair",
+      "size": [
+        1100,
+        214,
+        40.0
+      ],
+      "at": [
+        -9150,
+        3906,
+        842.4
+      ],
+      "role": "Floating stair tread (no risers, space under it is usable). Layout guessed from the tread lines on the plan."
+    },
+    {
+      "id": "house-tread-6",
+      "name": "Stair tread 6",
+      "group": "House: stair",
+      "material": "stair",
+      "size": [
+        1100,
+        214,
+        40.0
+      ],
+      "at": [
+        -9150,
+        4120,
+        1018.8
+      ],
+      "role": "Floating stair tread (no risers, space under it is usable). Layout guessed from the tread lines on the plan."
+    },
+    {
+      "id": "house-tread-7",
+      "name": "Stair tread 7",
+      "group": "House: stair",
+      "material": "stair",
+      "size": [
+        1100,
+        214,
+        40.0
+      ],
+      "at": [
+        -9150,
+        4334,
+        1195.3
+      ],
+      "role": "Floating stair tread (no risers, space under it is usable). Layout guessed from the tread lines on the plan."
+    },
+    {
+      "id": "house-tread-landing",
+      "name": "Stair landing",
+      "group": "House: stair",
+      "material": "stair",
+      "size": [
+        2366,
+        868,
+        40.0
+      ],
+      "at": [
+        -10416,
+        4548,
+        1371.8
+      ],
+      "role": "Stair landing or winders at the east wall (drawn as winders; simplified to a landing)."
+    },
+    {
+      "id": "house-tread-9",
+      "name": "Stair tread 9",
+      "group": "House: stair",
+      "material": "stair",
+      "size": [
+        1100,
+        187,
+        40.0
+      ],
+      "at": [
+        -10416,
+        4361,
+        1548.2
+      ],
+      "role": "Floating stair tread (no risers, space under it is usable). Layout guessed from the tread lines on the plan."
+    },
+    {
+      "id": "house-tread-10",
+      "name": "Stair tread 10",
+      "group": "House: stair",
+      "material": "stair",
+      "size": [
+        1100,
+        187,
+        40.0
+      ],
+      "at": [
+        -10416,
+        4174,
+        1724.7
+      ],
+      "role": "Floating stair tread (no risers, space under it is usable). Layout guessed from the tread lines on the plan."
+    },
+    {
+      "id": "house-tread-11",
+      "name": "Stair tread 11",
+      "group": "House: stair",
+      "material": "stair",
+      "size": [
+        1100,
+        187,
+        40.0
+      ],
+      "at": [
+        -10416,
+        3986,
+        1901.2
+      ],
+      "role": "Floating stair tread (no risers, space under it is usable). Layout guessed from the tread lines on the plan."
+    },
+    {
+      "id": "house-tread-12",
+      "name": "Stair tread 12",
+      "group": "House: stair",
+      "material": "stair",
+      "size": [
+        1100,
+        187,
+        40.0
+      ],
+      "at": [
+        -10416,
+        3799,
+        2077.6
+      ],
+      "role": "Floating stair tread (no risers, space under it is usable). Layout guessed from the tread lines on the plan."
+    },
+    {
+      "id": "house-tread-13",
+      "name": "Stair tread 13",
+      "group": "House: stair",
+      "material": "stair",
+      "size": [
+        1100,
+        187,
+        40.0
+      ],
+      "at": [
+        -10416,
+        3612,
+        2254.1
+      ],
+      "role": "Floating stair tread (no risers, space under it is usable). Layout guessed from the tread lines on the plan."
+    },
+    {
+      "id": "house-tread-14",
+      "name": "Stair tread 14",
+      "group": "House: stair",
+      "material": "stair",
+      "size": [
+        1100,
+        187,
+        40.0
+      ],
+      "at": [
+        -10416,
+        3424,
+        2430.6
+      ],
+      "role": "Floating stair tread (no risers, space under it is usable). Layout guessed from the tread lines on the plan."
+    },
+    {
+      "id": "house-tread-15",
+      "name": "Stair tread 15",
+      "group": "House: stair",
+      "material": "stair",
+      "size": [
+        1100,
+        187,
+        40.0
+      ],
+      "at": [
+        -10416,
+        3237,
+        2607.1
+      ],
+      "role": "Floating stair tread (no risers, space under it is usable). Layout guessed from the tread lines on the plan."
+    },
+    {
+      "id": "house-tread-16",
+      "name": "Stair tread 16",
+      "group": "House: stair",
+      "material": "stair",
+      "size": [
+        1100,
+        187,
+        40.0
+      ],
+      "at": [
+        -10416,
+        3050,
+        2783.5
+      ],
+      "role": "Floating stair tread (no risers, space under it is usable). Layout guessed from the tread lines on the plan."
+    },
+    {
+      "id": "house-rail-west",
+      "name": "Landing railing",
+      "group": "House: stair",
+      "material": "rail",
+      "size": [
+        1100,
+        40,
+        900
+      ],
+      "at": [
+        -9316,
+        3003,
+        3000
+      ],
+      "role": "Railing round the stairwell upstairs."
+    },
+    {
+      "id": "house-rail-south",
+      "name": "Landing railing",
+      "group": "House: stair",
+      "material": "rail",
+      "size": [
+        40,
+        1081,
+        900
+      ],
+      "at": [
+        -8236,
+        3043,
+        3000
+      ],
+      "role": "Railing round the stairwell upstairs."
+    }
+  ],
+  "joints": [
+    {
+      "id": "post_beam",
+      "type": "bolted",
+      "parts": [
+        "post_front",
+        "beam_front",
+        "post_back",
+        "beam_back"
+      ],
+      "fasteners": "Post-to-beam steel brackets, 2x M12 bolts each, or a slotted post with 2x M12"
+    },
+    {
+      "id": "braces",
+      "type": "screwed",
+      "parts": [
+        "brace_front",
+        "brace_back",
+        "post_front",
+        "post_back",
+        "beam_front",
+        "beam_back"
+      ],
+      "fasteners": "2x 8x160 construction screws at each end"
+    },
+    {
+      "id": "rafters_on_beams",
+      "type": "screwed",
+      "parts": [
+        "rafter",
+        "beam_front",
+        "beam_back"
+      ],
+      "fasteners": "Rafter tie (hurricane clip) each side of each rafter at both beams"
+    },
+    {
+      "id": "battens",
+      "type": "screwed",
+      "parts": [
+        "rafter",
+        "roof",
+        "batten_1",
+        "batten_2"
+      ],
+      "fasteners": "2x 5x90 screws per crossing"
+    },
+    {
+      "id": "solar_on_roof",
+      "type": "clamped",
+      "parts": [
+        "roof",
+        "solar_1",
+        "solar_2",
+        "solar_3"
+      ],
+      "fasteners": "Panel rails on roof hooks into the battens"
+    }
+  ],
+  "hardware": [
+    {
+      "item": "Ground screw 76x1000 with adjustable post plate",
+      "qty": 6,
+      "notes": "One per post. Lift the pavers locally, screw in, re-lay. Keep clear of cable zones."
+    },
+    {
+      "item": "Post-to-beam steel bracket + 2x M12x200 bolts",
+      "qty": 6
+    },
+    {
+      "item": "Rafter tie / hurricane clip",
+      "qty": 52
+    },
+    {
+      "item": "Profiled steel roof sheet with anti-condensation felt, about 39 m2",
+      "qty": 1
+    },
+    {
+      "item": "Gutter along the back (low) edge, with downpipe to a soakaway",
+      "qty": 1
+    },
+    {
+      "item": "8x160 construction screws (braces)",
+      "qty": 40
+    },
+    {
+      "item": "5x90 screws (battens), box of 250",
+      "qty": 2
+    },
+    {
+      "item": "Solar panel about 430 W (15 = about 6.5 kWp) + rails, inverter, small-producer connection",
+      "qty": 15
+    }
+  ]
+}

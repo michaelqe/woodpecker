@@ -16,7 +16,6 @@ import math
 import sys
 from pathlib import Path
 
-OUT = Path(sys.argv[1])
 _REPO = Path(__file__).resolve().parent.parent
 _spec = importlib.util.spec_from_file_location("house_model", _REPO / "scripts" / "house_model.py")
 _house = importlib.util.module_from_spec(_spec)
@@ -337,7 +336,7 @@ def wall(prefix, label, axis, origin, length, height, openings=(), stud=145, t=4
     return parts, ids
 
 
-def main():
+def main(out):
     designs = {}
 
     # ---------- 1. two-car carport with solar
@@ -588,8 +587,9 @@ def main():
     }
 
     for name, d in designs.items():
-        (OUT / f"{name}.json").write_text(json.dumps(d, indent=2, ensure_ascii=False) + "\n")
+        (out / f"{name}.json").write_text(json.dumps(d, indent=2, ensure_ascii=False) + "\n")
         print("wrote", name, len(d["parts"]), "part specs")
 
 
-main()
+if __name__ == "__main__":
+    main(Path(sys.argv[1]))

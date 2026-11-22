@@ -136,3 +136,49 @@ def test_fixtures_are_in_the_design():
     assert len(parts) == len(el.FIXTURES)
     assert all(p["material"] in el.MATERIALS for p in parts)
     assert all("2006" in p["role"] for p in parts)
+
+
+# ---------------------------------------------------------------- full house beside the carport
+_hc_spec = importlib.util.spec_from_file_location("house_carport", REPO / "scripts" / "house_carport.py")
+hc = importlib.util.module_from_spec(_hc_spec)
+_hc_spec.loader.exec_module(hc)
+
+
+def _overlaps_xy(a, b):
+    return all(a.at[i] < b.max[i] and b.at[i] < a.max[i] for i in range(2))
+
+
+def test_house_carport_designs_are_generated_and_load_clean():
+    for name, side in (("house-carport", False), ("house-carport-side-entrance", True)):
+        assert json.loads((REPO / "designs" / f"{name}.json").read_text()) == json.loads(json.dumps(hc.design(side))), name
+        d = model.load(REPO / "designs" / f"{name}.json")
+        assert not d.issues, (name, d.issues)
+        ids = {p["id"] for p in json.loads((REPO / "designs" / f"{name}.json").read_text())["parts"]}
+        # whole house (interior walls, both floors, stair), not just the shell
+        assert {"house-g-i3-1", "house-u-i1-1", "house-tread-1", "post_front"} <= ids, name
+        assert not any(i.startswith("house-el-") for i in ids)
+
+
+def test_side_entrance_route_is_clear():
+    walls, rooms, _ = hc.side_entrance_layout()
+    w = {x[0]: x for x in walls}
+    # The sink-room door that opened out of the WC is gone; the corridor opens into the hall.
+    assert not any("Sink room" in o["name"] for o in w["g-i3"][4])
+    gap = next(o for o in w["g-i3"][4] if o["t"] == "o")
+    assert hc.CORR_X0 <= gap["a"] and gap["b"] <= hc.CORR_X1
+    assert gap["b"] - gap["a"] >= 900
+    # Corridor at least 1 m clear; WC west wall sits east of it.
+    assert hc.CORR_X1 - hc.CORR_X0 >= 1000 and w["g-i6"][3][0] >= hc.CORR_X1
+    # The back door (x 6483-7383 on the south wall) opens into the back hall, not the plant cupboard.
+    back = next(o for o in w["g-s"][4] if o["name"] == "Back door")
+    assert back["b"] < hc.CUP_X0
+    a = hc.area_report()
+    assert a["wc0"] >= 1.5 and a["tagaesik"] > 5
+
+
+def test_cars_clear_the_back_step_only_in_the_concept():
+    for name, blocked in (("house-carport", True), ("house-carport-side-entrance", False)):
+        d = model.load(REPO / "designs" / f"{name}.json")
+        step = next(p for p in d.parts if p.id == "house-porch-s-floor")
+        hit = any(_overlaps_xy(p, step) for p in d.parts if p.id.startswith(("multivan", "alltrack", "cargo")))
+        assert hit is blocked, name

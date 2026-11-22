@@ -360,7 +360,9 @@ def fixture_parts(walls, blocks, rooms, level, box):
         role = f"{desc}: {label} ({where.lower()}). {circ}{height} From drawing {sheet} (2006)."
         notes = "Position read off the 2006 wiring drawing, about 250 mm. " + note
         group = "Electrical, outside" if room == "OUT" else f"Electrical, {level[f]['name'].lower()}"
-        parts.append(box(fid, f"{label} ({desc.split(',')[0].split(' (')[0].lower()})", group,
+        short = desc.split(",")[0].split(" (")[0].lower()
+        named = any(w in label.lower() for w in ("light", "switch", "outlet", "thermostat", "supply", "board", "sensor"))
+        parts.append(box(fid, label if named else f"{label} {short}", group,
                          KINDS[kind][1], x0, y0, z0, x1, y1, z1, role, notes.strip()))
     return parts
 

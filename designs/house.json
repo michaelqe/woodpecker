@@ -3435,7 +3435,7 @@
     },
     {
       "id": "el-g01",
-      "name": "5P (socket)",
+      "name": "5P socket",
       "group": "Electrical, ground floor",
       "material": "socket",
       "size": [
@@ -3453,7 +3453,7 @@
     },
     {
       "id": "el-g02",
-      "name": "6P (socket)",
+      "name": "6P socket",
       "group": "Electrical, ground floor",
       "material": "socket",
       "size": [
@@ -3471,7 +3471,7 @@
     },
     {
       "id": "el-g03",
-      "name": "Under-cabinet lighting supply (supply point)",
+      "name": "Under-cabinet lighting supply",
       "group": "Electrical, ground floor",
       "material": "supply",
       "size": [
@@ -3489,7 +3489,7 @@
     },
     {
       "id": "el-g04",
-      "name": "7P (socket)",
+      "name": "7P socket",
       "group": "Electrical, ground floor",
       "material": "socket",
       "size": [
@@ -3507,7 +3507,7 @@
     },
     {
       "id": "el-g05",
-      "name": "9P4 (socket)",
+      "name": "9P4 socket",
       "group": "Electrical, ground floor",
       "material": "socket",
       "size": [
@@ -3525,7 +3525,7 @@
     },
     {
       "id": "el-g06",
-      "name": "9P5 (socket)",
+      "name": "9P5 socket",
       "group": "Electrical, ground floor",
       "material": "socket",
       "size": [
@@ -3543,7 +3543,7 @@
     },
     {
       "id": "el-g07",
-      "name": "9P6 (socket)",
+      "name": "9P6 socket",
       "group": "Electrical, ground floor",
       "material": "socket",
       "size": [
@@ -3561,7 +3561,7 @@
     },
     {
       "id": "el-g08",
-      "name": "8P (socket)",
+      "name": "8P socket",
       "group": "Electrical, ground floor",
       "material": "socket",
       "size": [
@@ -3579,7 +3579,7 @@
     },
     {
       "id": "el-g09",
-      "name": "9P3 (socket)",
+      "name": "9P3 socket",
       "group": "Electrical, ground floor",
       "material": "socket",
       "size": [
@@ -3597,7 +3597,7 @@
     },
     {
       "id": "el-g10",
-      "name": "9P2 (socket)",
+      "name": "9P2 socket",
       "group": "Electrical, ground floor",
       "material": "socket",
       "size": [
@@ -3615,7 +3615,7 @@
     },
     {
       "id": "el-g11",
-      "name": "9P1 (socket)",
+      "name": "9P1 socket",
       "group": "Electrical, ground floor",
       "material": "socket",
       "size": [
@@ -3633,7 +3633,7 @@
     },
     {
       "id": "el-g12",
-      "name": "Gas hob supply from the floor (supply point)",
+      "name": "Gas hob supply from the floor",
       "group": "Electrical, ground floor",
       "material": "supply",
       "size": [
@@ -3651,7 +3651,7 @@
     },
     {
       "id": "el-g13",
-      "name": "Cooker hood supply from the ceiling (supply point)",
+      "name": "Cooker hood supply from the ceiling",
       "group": "Electrical, ground floor",
       "material": "supply",
       "size": [
@@ -3669,7 +3669,7 @@
     },
     {
       "id": "el-g14",
-      "name": "11P9 (socket)",
+      "name": "11P9 socket",
       "group": "Electrical, ground floor",
       "material": "socket",
       "size": [
@@ -3687,7 +3687,7 @@
     },
     {
       "id": "el-g15",
-      "name": "11P10 (socket)",
+      "name": "11P10 socket",
       "group": "Electrical, ground floor",
       "material": "socket",
       "size": [
@@ -3705,7 +3705,7 @@
     },
     {
       "id": "el-g16",
-      "name": "Thermostat 3 (underfloor heating thermostat)",
+      "name": "Thermostat 3",
       "group": "Electrical, ground floor",
       "material": "thermostat",
       "size": [
@@ -3723,7 +3723,7 @@
     },
     {
       "id": "el-g17",
-      "name": "Thermostat 4 (underfloor heating thermostat)",
+      "name": "Thermostat 4",
       "group": "Electrical, ground floor",
       "material": "thermostat",
       "size": [
@@ -3741,7 +3741,7 @@
     },
     {
       "id": "el-g18",
-      "name": "Thermostat 1 (underfloor heating thermostat)",
+      "name": "Thermostat 1",
       "group": "Electrical, ground floor",
       "material": "thermostat",
       "size": [
@@ -3759,7 +3759,7 @@
     },
     {
       "id": "el-g19",
-      "name": "Thermostat 2 (underfloor heating thermostat)",
+      "name": "Thermostat 2",
       "group": "Electrical, ground floor",
       "material": "thermostat",
       "size": [
@@ -3777,7 +3777,7 @@
     },
     {
       "id": "el-g20",
-      "name": "TV outlet (tv antenna outlet)",
+      "name": "TV outlet",
       "group": "Electrical, ground floor",
       "material": "data",
       "size": [
@@ -3795,7 +3795,7 @@
     },
     {
       "id": "el-g21",
-      "name": "11P8 (socket)",
+      "name": "11P8 socket",
       "group": "Electrical, ground floor",
       "material": "socket",
       "size": [
@@ -3813,7 +3813,7 @@
     },
     {
       "id": "el-g22",
-      "name": "11P7 (socket)",
+      "name": "11P7 socket",
       "group": "Electrical, ground floor",
       "material": "socket",
       "size": [
@@ -3831,7 +3831,7 @@
     },
     {
       "id": "el-g23",
-      "name": "11P6 (socket)",
+      "name": "11P6 socket",
       "group": "Electrical, ground floor",
       "material": "socket",
       "size": [
@@ -3849,7 +3849,7 @@
     },
     {
       "id": "el-g24",
-      "name": "11P (veranda) (socket)",
+      "name": "11P (veranda) socket",
       "group": "Electrical, ground floor",
       "material": "socket",
       "size": [
@@ -3867,7 +3867,7 @@
     },
     {
       "id": "el-g25",
-      "name": "TV outlet (tv antenna outlet)",
+      "name": "TV outlet",
       "group": "Electrical, ground floor",
       "material": "data",
       "size": [
@@ -3885,7 +3885,7 @@
     },
     {
       "id": "el-g26",
-      "name": "Phone outlet (phone outlet)",
+      "name": "Phone outlet",
       "group": "Electrical, ground floor",
       "material": "data",
       "size": [
@@ -3903,7 +3903,7 @@
     },
     {
       "id": "el-g27",
-      "name": "11P5 (socket)",
+      "name": "11P5 socket",
       "group": "Electrical, ground floor",
       "material": "socket",
       "size": [
@@ -3921,7 +3921,7 @@
     },
     {
       "id": "el-g28",
-      "name": "11P4 (socket)",
+      "name": "11P4 socket",
       "group": "Electrical, ground floor",
       "material": "socket",
       "size": [
@@ -3939,7 +3939,7 @@
     },
     {
       "id": "el-g29",
-      "name": "11P3 (socket)",
+      "name": "11P3 socket",
       "group": "Electrical, ground floor",
       "material": "socket",
       "size": [
@@ -3957,7 +3957,7 @@
     },
     {
       "id": "el-g30",
-      "name": "11P2 (socket)",
+      "name": "11P2 socket",
       "group": "Electrical, ground floor",
       "material": "socket",
       "size": [
@@ -3975,7 +3975,7 @@
     },
     {
       "id": "el-g31",
-      "name": "11P1 (socket)",
+      "name": "11P1 socket",
       "group": "Electrical, ground floor",
       "material": "socket",
       "size": [
@@ -3993,7 +3993,7 @@
     },
     {
       "id": "el-g32",
-      "name": "27P1 (socket)",
+      "name": "27P1 socket",
       "group": "Electrical, ground floor",
       "material": "socket",
       "size": [
@@ -4011,7 +4011,7 @@
     },
     {
       "id": "el-g33",
-      "name": "Gas boiler supply (supply point)",
+      "name": "Gas boiler supply",
       "group": "Electrical, ground floor",
       "material": "supply",
       "size": [
@@ -4029,7 +4029,7 @@
     },
     {
       "id": "el-g34",
-      "name": "Underfloor heating manifold supply (supply point)",
+      "name": "Underfloor heating manifold supply",
       "group": "Electrical, ground floor",
       "material": "supply",
       "size": [
@@ -4047,7 +4047,7 @@
     },
     {
       "id": "el-g35",
-      "name": "External gates supply (supply point)",
+      "name": "External gates supply",
       "group": "Electrical, outside",
       "material": "supply",
       "size": [
@@ -4065,7 +4065,7 @@
     },
     {
       "id": "el-g36",
-      "name": "Outdoor socket (socket)",
+      "name": "Outdoor socket socket",
       "group": "Electrical, outside",
       "material": "socket",
       "size": [
@@ -4083,7 +4083,7 @@
     },
     {
       "id": "el-g37",
-      "name": "26P (washing machine) (socket)",
+      "name": "26P (washing machine) socket",
       "group": "Electrical, ground floor",
       "material": "socket",
       "size": [
@@ -4101,7 +4101,7 @@
     },
     {
       "id": "el-g38",
-      "name": "12P1 (socket)",
+      "name": "12P1 socket",
       "group": "Electrical, ground floor",
       "material": "socket",
       "size": [
@@ -4119,7 +4119,7 @@
     },
     {
       "id": "el-g39",
-      "name": "13P1 (socket)",
+      "name": "13P1 socket",
       "group": "Electrical, ground floor",
       "material": "socket",
       "size": [
@@ -4137,7 +4137,7 @@
     },
     {
       "id": "el-g40",
-      "name": "13P2 (socket)",
+      "name": "13P2 socket",
       "group": "Electrical, ground floor",
       "material": "socket",
       "size": [
@@ -4155,7 +4155,7 @@
     },
     {
       "id": "el-g41",
-      "name": "13P3 (socket)",
+      "name": "13P3 socket",
       "group": "Electrical, ground floor",
       "material": "socket",
       "size": [
@@ -4173,7 +4173,7 @@
     },
     {
       "id": "el-g42",
-      "name": "Phone + data outlet (phone + data outlet)",
+      "name": "Phone + data outlet",
       "group": "Electrical, ground floor",
       "material": "data",
       "size": [
@@ -4191,7 +4191,7 @@
     },
     {
       "id": "el-g43",
-      "name": "PJK main distribution board (distribution board)",
+      "name": "PJK main distribution board",
       "group": "Electrical, ground floor",
       "material": "panel",
       "size": [
@@ -4209,7 +4209,7 @@
     },
     {
       "id": "el-u01",
-      "name": "12P8 (socket)",
+      "name": "12P8 socket",
       "group": "Electrical, upper floor",
       "material": "socket",
       "size": [
@@ -4227,7 +4227,7 @@
     },
     {
       "id": "el-u02",
-      "name": "12P7 (socket)",
+      "name": "12P7 socket",
       "group": "Electrical, upper floor",
       "material": "socket",
       "size": [
@@ -4245,7 +4245,7 @@
     },
     {
       "id": "el-u03",
-      "name": "12P9 (socket)",
+      "name": "12P9 socket",
       "group": "Electrical, upper floor",
       "material": "socket",
       "size": [
@@ -4263,7 +4263,7 @@
     },
     {
       "id": "el-u04",
-      "name": "12P10 (socket)",
+      "name": "12P10 socket",
       "group": "Electrical, upper floor",
       "material": "socket",
       "size": [
@@ -4281,7 +4281,7 @@
     },
     {
       "id": "el-u05",
-      "name": "12P6 (socket)",
+      "name": "12P6 socket",
       "group": "Electrical, upper floor",
       "material": "socket",
       "size": [
@@ -4299,7 +4299,7 @@
     },
     {
       "id": "el-u06",
-      "name": "12P5 (socket)",
+      "name": "12P5 socket",
       "group": "Electrical, upper floor",
       "material": "socket",
       "size": [
@@ -4317,7 +4317,7 @@
     },
     {
       "id": "el-u07",
-      "name": "12P4 (socket)",
+      "name": "12P4 socket",
       "group": "Electrical, upper floor",
       "material": "socket",
       "size": [
@@ -4335,7 +4335,7 @@
     },
     {
       "id": "el-u08",
-      "name": "12P3 (socket)",
+      "name": "12P3 socket",
       "group": "Electrical, upper floor",
       "material": "socket",
       "size": [
@@ -4353,7 +4353,7 @@
     },
     {
       "id": "el-u09",
-      "name": "12P2 (socket)",
+      "name": "12P2 socket",
       "group": "Electrical, upper floor",
       "material": "socket",
       "size": [
@@ -4371,7 +4371,7 @@
     },
     {
       "id": "el-u10",
-      "name": "27P2 (socket)",
+      "name": "27P2 socket",
       "group": "Electrical, upper floor",
       "material": "socket",
       "size": [
@@ -4389,7 +4389,7 @@
     },
     {
       "id": "el-u11",
-      "name": "27P3 (socket)",
+      "name": "27P3 socket",
       "group": "Electrical, upper floor",
       "material": "socket",
       "size": [
@@ -4407,7 +4407,7 @@
     },
     {
       "id": "el-u12",
-      "name": "Whirlpool bath supply (supply point)",
+      "name": "Whirlpool bath supply",
       "group": "Electrical, upper floor",
       "material": "supply",
       "size": [
@@ -4425,7 +4425,7 @@
     },
     {
       "id": "el-u13",
-      "name": "Sauna heater supply (elektrikeris) (supply point)",
+      "name": "Sauna heater supply (elektrikeris)",
       "group": "Electrical, upper floor",
       "material": "supply",
       "size": [
@@ -4443,7 +4443,7 @@
     },
     {
       "id": "el-u14",
-      "name": "Thermostat 5 (underfloor heating thermostat)",
+      "name": "Thermostat 5",
       "group": "Electrical, upper floor",
       "material": "thermostat",
       "size": [
@@ -4461,7 +4461,7 @@
     },
     {
       "id": "el-u15",
-      "name": "13P6 (socket)",
+      "name": "13P6 socket",
       "group": "Electrical, upper floor",
       "material": "socket",
       "size": [
@@ -4479,7 +4479,7 @@
     },
     {
       "id": "el-u16",
-      "name": "13P5 (socket)",
+      "name": "13P5 socket",
       "group": "Electrical, upper floor",
       "material": "socket",
       "size": [
@@ -4497,7 +4497,7 @@
     },
     {
       "id": "el-u17",
-      "name": "13P4 (socket)",
+      "name": "13P4 socket",
       "group": "Electrical, upper floor",
       "material": "socket",
       "size": [
@@ -4515,7 +4515,7 @@
     },
     {
       "id": "el-u18",
-      "name": "Phone + data outlet (phone + data outlet)",
+      "name": "Phone + data outlet",
       "group": "Electrical, upper floor",
       "material": "data",
       "size": [
@@ -4533,7 +4533,7 @@
     },
     {
       "id": "el-u19",
-      "name": "TV outlet (tv antenna outlet)",
+      "name": "TV outlet",
       "group": "Electrical, upper floor",
       "material": "data",
       "size": [
@@ -4551,7 +4551,7 @@
     },
     {
       "id": "el-u20",
-      "name": "13P12 (socket)",
+      "name": "13P12 socket",
       "group": "Electrical, upper floor",
       "material": "socket",
       "size": [
@@ -4569,7 +4569,7 @@
     },
     {
       "id": "el-u21",
-      "name": "13P11 (socket)",
+      "name": "13P11 socket",
       "group": "Electrical, upper floor",
       "material": "socket",
       "size": [
@@ -4587,7 +4587,7 @@
     },
     {
       "id": "el-u22",
-      "name": "13P10 (socket)",
+      "name": "13P10 socket",
       "group": "Electrical, upper floor",
       "material": "socket",
       "size": [
@@ -4605,7 +4605,7 @@
     },
     {
       "id": "el-u23",
-      "name": "Phone + data outlet (phone + data outlet)",
+      "name": "Phone + data outlet",
       "group": "Electrical, upper floor",
       "material": "data",
       "size": [
@@ -4623,7 +4623,7 @@
     },
     {
       "id": "el-u24",
-      "name": "TV outlet (tv antenna outlet)",
+      "name": "TV outlet",
       "group": "Electrical, upper floor",
       "material": "data",
       "size": [
@@ -4641,7 +4641,7 @@
     },
     {
       "id": "el-u25",
-      "name": "13P9 (socket)",
+      "name": "13P9 socket",
       "group": "Electrical, upper floor",
       "material": "socket",
       "size": [
@@ -4659,7 +4659,7 @@
     },
     {
       "id": "el-u26",
-      "name": "13P8 (socket)",
+      "name": "13P8 socket",
       "group": "Electrical, upper floor",
       "material": "socket",
       "size": [
@@ -4677,7 +4677,7 @@
     },
     {
       "id": "el-u27",
-      "name": "13P7 (socket)",
+      "name": "13P7 socket",
       "group": "Electrical, upper floor",
       "material": "socket",
       "size": [
@@ -4695,7 +4695,7 @@
     },
     {
       "id": "el-u28",
-      "name": "Thermostat with floor sensor (underfloor heating thermostat)",
+      "name": "Thermostat with floor sensor",
       "group": "Electrical, upper floor",
       "material": "thermostat",
       "size": [
@@ -4713,7 +4713,7 @@
     },
     {
       "id": "el-u29",
-      "name": "Phone + data outlet (phone + data outlet)",
+      "name": "Phone + data outlet",
       "group": "Electrical, upper floor",
       "material": "data",
       "size": [
@@ -4731,7 +4731,7 @@
     },
     {
       "id": "el-u30",
-      "name": "TV outlet (tv antenna outlet)",
+      "name": "TV outlet",
       "group": "Electrical, upper floor",
       "material": "data",
       "size": [
@@ -4749,7 +4749,7 @@
     },
     {
       "id": "el-g44",
-      "name": "Kitchen downlight (switch 3) (recessed ceiling downlight)",
+      "name": "Kitchen downlight (switch 3)",
       "group": "Electrical, ground floor",
       "material": "light",
       "size": [
@@ -4767,7 +4767,7 @@
     },
     {
       "id": "el-g45",
-      "name": "Kitchen downlight (switch 3) (recessed ceiling downlight)",
+      "name": "Kitchen downlight (switch 3)",
       "group": "Electrical, ground floor",
       "material": "light",
       "size": [
@@ -4785,7 +4785,7 @@
     },
     {
       "id": "el-g46",
-      "name": "Kitchen downlight (switch 3) (recessed ceiling downlight)",
+      "name": "Kitchen downlight (switch 3)",
       "group": "Electrical, ground floor",
       "material": "light",
       "size": [
@@ -4803,7 +4803,7 @@
     },
     {
       "id": "el-g47",
-      "name": "Kitchen downlight (switch 4) (recessed ceiling downlight)",
+      "name": "Kitchen downlight (switch 4)",
       "group": "Electrical, ground floor",
       "material": "light",
       "size": [
@@ -4821,7 +4821,7 @@
     },
     {
       "id": "el-g48",
-      "name": "Kitchen downlight (switch 4) (recessed ceiling downlight)",
+      "name": "Kitchen downlight (switch 4)",
       "group": "Electrical, ground floor",
       "material": "light",
       "size": [
@@ -4839,7 +4839,7 @@
     },
     {
       "id": "el-g49",
-      "name": "Kitchen table light (switch 5) (ceiling light)",
+      "name": "Kitchen table light (switch 5)",
       "group": "Electrical, ground floor",
       "material": "light",
       "size": [
@@ -4857,7 +4857,7 @@
     },
     {
       "id": "el-g50",
-      "name": "Switches 3-4-5 (kitchen lights) (light switch)",
+      "name": "Switches 3-4-5 (kitchen lights)",
       "group": "Electrical, ground floor",
       "material": "switch",
       "size": [
@@ -4875,7 +4875,7 @@
     },
     {
       "id": "el-g51",
-      "name": "Switches 1-2 (hall lights) (light switch)",
+      "name": "Switches 1-2 (hall lights)",
       "group": "Electrical, ground floor",
       "material": "switch",
       "size": [
@@ -4893,7 +4893,7 @@
     },
     {
       "id": "el-g52",
-      "name": "Two-way switch (stair light, with the upper floor) (light switch)",
+      "name": "Two-way switch (stair light, with the upper floor)",
       "group": "Electrical, ground floor",
       "material": "switch",
       "size": [
@@ -4911,7 +4911,7 @@
     },
     {
       "id": "el-g53",
-      "name": "Hall spotlight (switch 2) (surface-mounted directional spotlight)",
+      "name": "Hall spotlight (switch 2)",
       "group": "Electrical, ground floor",
       "material": "light",
       "size": [
@@ -4929,7 +4929,7 @@
     },
     {
       "id": "el-g54",
-      "name": "Hall spotlight (switch 2) (surface-mounted directional spotlight)",
+      "name": "Hall spotlight (switch 2)",
       "group": "Electrical, ground floor",
       "material": "light",
       "size": [
@@ -4947,7 +4947,7 @@
     },
     {
       "id": "el-g55",
-      "name": "Hall spotlight (switch 2) (surface-mounted directional spotlight)",
+      "name": "Hall spotlight (switch 2)",
       "group": "Electrical, ground floor",
       "material": "light",
       "size": [
@@ -4965,7 +4965,7 @@
     },
     {
       "id": "el-g56",
-      "name": "Hall spotlight (switch 2) (surface-mounted directional spotlight)",
+      "name": "Hall spotlight (switch 2)",
       "group": "Electrical, ground floor",
       "material": "light",
       "size": [
@@ -4983,7 +4983,7 @@
     },
     {
       "id": "el-g57",
-      "name": "Entrance light (switch 1) (ceiling light)",
+      "name": "Entrance light (switch 1)",
       "group": "Electrical, ground floor",
       "material": "light",
       "size": [
@@ -5001,7 +5001,7 @@
     },
     {
       "id": "el-g58",
-      "name": "Entrance light (switch 1) (ceiling light)",
+      "name": "Entrance light (switch 1)",
       "group": "Electrical, ground floor",
       "material": "light",
       "size": [
@@ -5019,7 +5019,7 @@
     },
     {
       "id": "el-g59",
-      "name": "Switches 1-2 by the front door (light switch)",
+      "name": "Switches 1-2 by the front door",
       "group": "Electrical, ground floor",
       "material": "switch",
       "size": [
@@ -5037,7 +5037,7 @@
     },
     {
       "id": "el-g60",
-      "name": "Front door wall light (outdoor wall light)",
+      "name": "Front door wall light",
       "group": "Electrical, outside",
       "material": "light",
       "size": [
@@ -5055,7 +5055,7 @@
     },
     {
       "id": "el-g61",
-      "name": "House number light (outdoor wall light)",
+      "name": "House number light",
       "group": "Electrical, outside",
       "material": "light",
       "size": [
@@ -5073,7 +5073,7 @@
     },
     {
       "id": "el-g62",
-      "name": "Outdoor light supply (provision) (supply point)",
+      "name": "Outdoor light supply (provision)",
       "group": "Electrical, outside",
       "material": "supply",
       "size": [
@@ -5091,7 +5091,7 @@
     },
     {
       "id": "el-g63",
-      "name": "Outdoor light supply (provision) (supply point)",
+      "name": "Outdoor light supply (provision)",
       "group": "Electrical, outside",
       "material": "supply",
       "size": [
@@ -5109,7 +5109,7 @@
     },
     {
       "id": "el-g64",
-      "name": "Outdoor light supply (provision) (supply point)",
+      "name": "Outdoor light supply (provision)",
       "group": "Electrical, outside",
       "material": "supply",
       "size": [
@@ -5127,7 +5127,7 @@
     },
     {
       "id": "el-g65",
-      "name": "Twilight switch sensor (HL) (twilight switch sensor)",
+      "name": "Twilight switch sensor (HL)",
       "group": "Electrical, outside",
       "material": "switch",
       "size": [
@@ -5145,7 +5145,7 @@
     },
     {
       "id": "el-g66",
-      "name": "Wall light with its own switch (wall light)",
+      "name": "Wall light with its own switch",
       "group": "Electrical, ground floor",
       "material": "light",
       "size": [
@@ -5163,7 +5163,7 @@
     },
     {
       "id": "el-g67",
-      "name": "Switches 1-2 (living room lights) (light switch)",
+      "name": "Switches 1-2 (living room lights)",
       "group": "Electrical, ground floor",
       "material": "switch",
       "size": [
@@ -5181,7 +5181,7 @@
     },
     {
       "id": "el-g68",
-      "name": "Living room ceiling light (ceiling light)",
+      "name": "Living room ceiling light",
       "group": "Electrical, ground floor",
       "material": "light",
       "size": [
@@ -5199,7 +5199,7 @@
     },
     {
       "id": "el-g69",
-      "name": "Living room ceiling light (ceiling light)",
+      "name": "Living room ceiling light",
       "group": "Electrical, ground floor",
       "material": "light",
       "size": [
@@ -5217,7 +5217,7 @@
     },
     {
       "id": "el-g70",
-      "name": "Veranda ceiling light (ceiling light)",
+      "name": "Veranda ceiling light",
       "group": "Electrical, ground floor",
       "material": "light",
       "size": [
@@ -5235,7 +5235,7 @@
     },
     {
       "id": "el-g71",
-      "name": "Veranda ceiling light (ceiling light)",
+      "name": "Veranda ceiling light",
       "group": "Electrical, ground floor",
       "material": "light",
       "size": [
@@ -5253,7 +5253,7 @@
     },
     {
       "id": "el-g72",
-      "name": "Switch (veranda lights) (light switch)",
+      "name": "Switch (veranda lights)",
       "group": "Electrical, ground floor",
       "material": "switch",
       "size": [
@@ -5271,7 +5271,7 @@
     },
     {
       "id": "el-g73",
-      "name": "Switches 1-2 (living room lights) (light switch)",
+      "name": "Switches 1-2 (living room lights)",
       "group": "Electrical, ground floor",
       "material": "switch",
       "size": [
@@ -5289,7 +5289,7 @@
     },
     {
       "id": "el-g74",
-      "name": "Two-way switch (office light, with bedroom 4 upstairs) (light switch)",
+      "name": "Two-way switch (office light, with bedroom 4 upstairs)",
       "group": "Electrical, ground floor",
       "material": "switch",
       "size": [
@@ -5307,7 +5307,7 @@
     },
     {
       "id": "el-g75",
-      "name": "Office ceiling light (ceiling light)",
+      "name": "Office ceiling light",
       "group": "Electrical, ground floor",
       "material": "light",
       "size": [
@@ -5325,7 +5325,7 @@
     },
     {
       "id": "el-g76",
-      "name": "Office ceiling light (ceiling light)",
+      "name": "Office ceiling light",
       "group": "Electrical, ground floor",
       "material": "light",
       "size": [
@@ -5343,7 +5343,7 @@
     },
     {
       "id": "el-g77",
-      "name": "WC ceiling light (ceiling light)",
+      "name": "WC ceiling light",
       "group": "Electrical, ground floor",
       "material": "light",
       "size": [
@@ -5361,7 +5361,7 @@
     },
     {
       "id": "el-g78",
-      "name": "Sink room ceiling light (ceiling light)",
+      "name": "Sink room ceiling light",
       "group": "Electrical, ground floor",
       "material": "light",
       "size": [
@@ -5379,7 +5379,7 @@
     },
     {
       "id": "el-g79",
-      "name": "Sink room ceiling light (ceiling light)",
+      "name": "Sink room ceiling light",
       "group": "Electrical, ground floor",
       "material": "light",
       "size": [
@@ -5397,7 +5397,7 @@
     },
     {
       "id": "el-g80",
-      "name": "Switches 1-2 (WC and sink room) (light switch)",
+      "name": "Switches 1-2 (WC and sink room)",
       "group": "Electrical, ground floor",
       "material": "switch",
       "size": [
@@ -5415,7 +5415,7 @@
     },
     {
       "id": "el-g81",
-      "name": "Mirror light supply (supply point)",
+      "name": "Mirror light supply",
       "group": "Electrical, ground floor",
       "material": "supply",
       "size": [
@@ -5433,7 +5433,7 @@
     },
     {
       "id": "el-g82",
-      "name": "Plant room ceiling light (ceiling light)",
+      "name": "Plant room ceiling light",
       "group": "Electrical, ground floor",
       "material": "light",
       "size": [
@@ -5451,7 +5451,7 @@
     },
     {
       "id": "el-g83",
-      "name": "Switches 1-2 (plant room) (light switch)",
+      "name": "Switches 1-2 (plant room)",
       "group": "Electrical, ground floor",
       "material": "switch",
       "size": [
@@ -5469,7 +5469,7 @@
     },
     {
       "id": "el-u31",
-      "name": "Bedroom 1 spotlight (surface-mounted directional spotlight)",
+      "name": "Bedroom 1 spotlight",
       "group": "Electrical, upper floor",
       "material": "light",
       "size": [
@@ -5487,7 +5487,7 @@
     },
     {
       "id": "el-u32",
-      "name": "Bedroom 1 spotlight (surface-mounted directional spotlight)",
+      "name": "Bedroom 1 spotlight",
       "group": "Electrical, upper floor",
       "material": "light",
       "size": [
@@ -5505,7 +5505,7 @@
     },
     {
       "id": "el-u33",
-      "name": "Bedroom 1 spotlight (surface-mounted directional spotlight)",
+      "name": "Bedroom 1 spotlight",
       "group": "Electrical, upper floor",
       "material": "light",
       "size": [
@@ -5523,7 +5523,7 @@
     },
     {
       "id": "el-u34",
-      "name": "Bedroom 1 ceiling light (switch 1) (ceiling light)",
+      "name": "Bedroom 1 ceiling light (switch 1)",
       "group": "Electrical, upper floor",
       "material": "light",
       "size": [
@@ -5541,7 +5541,7 @@
     },
     {
       "id": "el-u35",
-      "name": "Bedside wall light (wall light)",
+      "name": "Bedside wall light",
       "group": "Electrical, upper floor",
       "material": "light",
       "size": [
@@ -5559,7 +5559,7 @@
     },
     {
       "id": "el-u36",
-      "name": "Bedside wall light (wall light)",
+      "name": "Bedside wall light",
       "group": "Electrical, upper floor",
       "material": "light",
       "size": [
@@ -5577,7 +5577,7 @@
     },
     {
       "id": "el-u37",
-      "name": "Bedside switches 1-2 (light switch)",
+      "name": "Bedside switches 1-2",
       "group": "Electrical, upper floor",
       "material": "switch",
       "size": [
@@ -5595,7 +5595,7 @@
     },
     {
       "id": "el-u38",
-      "name": "Switches 1-2 (bedroom 1) (light switch)",
+      "name": "Switches 1-2 (bedroom 1)",
       "group": "Electrical, upper floor",
       "material": "switch",
       "size": [
@@ -5613,7 +5613,7 @@
     },
     {
       "id": "el-u39",
-      "name": "Switch (balcony light) (light switch)",
+      "name": "Switch (balcony light)",
       "group": "Electrical, upper floor",
       "material": "switch",
       "size": [
@@ -5631,7 +5631,7 @@
     },
     {
       "id": "el-u40",
-      "name": "Balcony light (outdoor wall light)",
+      "name": "Balcony light",
       "group": "Electrical, outside",
       "material": "light",
       "size": [
@@ -5649,7 +5649,7 @@
     },
     {
       "id": "el-u41",
-      "name": "Stairwell light (ceiling light)",
+      "name": "Stairwell light",
       "group": "Electrical, upper floor",
       "material": "light",
       "size": [
@@ -5667,7 +5667,7 @@
     },
     {
       "id": "el-u42",
-      "name": "Stairwell light (ceiling light)",
+      "name": "Stairwell light",
       "group": "Electrical, upper floor",
       "material": "light",
       "size": [
@@ -5685,7 +5685,7 @@
     },
     {
       "id": "el-u43",
-      "name": "Stairwell light (ceiling light)",
+      "name": "Stairwell light",
       "group": "Electrical, upper floor",
       "material": "light",
       "size": [
@@ -5703,7 +5703,7 @@
     },
     {
       "id": "el-u44",
-      "name": "Two-way switches (stair, with the ground floor) (light switch)",
+      "name": "Two-way switches (stair, with the ground floor)",
       "group": "Electrical, upper floor",
       "material": "switch",
       "size": [
@@ -5721,7 +5721,7 @@
     },
     {
       "id": "el-u45",
-      "name": "Landing ceiling light (ceiling light)",
+      "name": "Landing ceiling light",
       "group": "Electrical, upper floor",
       "material": "light",
       "size": [
@@ -5739,7 +5739,7 @@
     },
     {
       "id": "el-u46",
-      "name": "Landing ceiling light (ceiling light)",
+      "name": "Landing ceiling light",
       "group": "Electrical, upper floor",
       "material": "light",
       "size": [
@@ -5757,7 +5757,7 @@
     },
     {
       "id": "el-u47",
-      "name": "Landing ceiling light (ceiling light)",
+      "name": "Landing ceiling light",
       "group": "Electrical, upper floor",
       "material": "light",
       "size": [
@@ -5775,7 +5775,7 @@
     },
     {
       "id": "el-u48",
-      "name": "WC ceiling light (ceiling light)",
+      "name": "WC ceiling light",
       "group": "Electrical, upper floor",
       "material": "light",
       "size": [
@@ -5793,7 +5793,7 @@
     },
     {
       "id": "el-u49",
-      "name": "WC wall light with its own switch (wall light)",
+      "name": "WC wall light with its own switch",
       "group": "Electrical, upper floor",
       "material": "light",
       "size": [
@@ -5811,7 +5811,7 @@
     },
     {
       "id": "el-u50",
-      "name": "Switch (WC light) (light switch)",
+      "name": "Switch (WC light)",
       "group": "Electrical, upper floor",
       "material": "switch",
       "size": [
@@ -5829,7 +5829,7 @@
     },
     {
       "id": "el-u51",
-      "name": "Bathroom ceiling light (switch 1) (ceiling light)",
+      "name": "Bathroom ceiling light (switch 1)",
       "group": "Electrical, upper floor",
       "material": "light",
       "size": [
@@ -5847,7 +5847,7 @@
     },
     {
       "id": "el-u52",
-      "name": "Bathroom ceiling light (switch 1) (ceiling light)",
+      "name": "Bathroom ceiling light (switch 1)",
       "group": "Electrical, upper floor",
       "material": "light",
       "size": [
@@ -5865,7 +5865,7 @@
     },
     {
       "id": "el-u53",
-      "name": "Bathroom ceiling light (switch 1) (ceiling light)",
+      "name": "Bathroom ceiling light (switch 1)",
       "group": "Electrical, upper floor",
       "material": "light",
       "size": [
@@ -5883,7 +5883,7 @@
     },
     {
       "id": "el-u54",
-      "name": "Bathroom ceiling light (switch 1) (ceiling light)",
+      "name": "Bathroom ceiling light (switch 1)",
       "group": "Electrical, upper floor",
       "material": "light",
       "size": [
@@ -5901,7 +5901,7 @@
     },
     {
       "id": "el-u55",
-      "name": "Cornice light (switch 4) (strip light behind the cornice)",
+      "name": "Cornice light (switch 4)",
       "group": "Electrical, upper floor",
       "material": "light",
       "size": [
@@ -5919,7 +5919,7 @@
     },
     {
       "id": "el-u56",
-      "name": "Bathroom ceiling light (switch 2) (ceiling light)",
+      "name": "Bathroom ceiling light (switch 2)",
       "group": "Electrical, upper floor",
       "material": "light",
       "size": [
@@ -5937,7 +5937,7 @@
     },
     {
       "id": "el-u57",
-      "name": "Bathroom ceiling light (switch 2) (ceiling light)",
+      "name": "Bathroom ceiling light (switch 2)",
       "group": "Electrical, upper floor",
       "material": "light",
       "size": [
@@ -5955,7 +5955,7 @@
     },
     {
       "id": "el-u58",
-      "name": "Bathroom ceiling light (switch 2) (ceiling light)",
+      "name": "Bathroom ceiling light (switch 2)",
       "group": "Electrical, upper floor",
       "material": "light",
       "size": [
@@ -5973,7 +5973,7 @@
     },
     {
       "id": "el-u59",
-      "name": "Cornice light (switch 5) (strip light behind the cornice)",
+      "name": "Cornice light (switch 5)",
       "group": "Electrical, upper floor",
       "material": "light",
       "size": [
@@ -5991,7 +5991,7 @@
     },
     {
       "id": "el-u60",
-      "name": "Sauna light (switch 3) (sauna light)",
+      "name": "Sauna light (switch 3)",
       "group": "Electrical, upper floor",
       "material": "light",
       "size": [
@@ -6009,7 +6009,7 @@
     },
     {
       "id": "el-u61",
-      "name": "Sauna light (switch 3) (sauna light)",
+      "name": "Sauna light (switch 3)",
       "group": "Electrical, upper floor",
       "material": "light",
       "size": [
@@ -6027,7 +6027,7 @@
     },
     {
       "id": "el-u62",
-      "name": "Switches 1-5 (bathroom, sauna) (light switch)",
+      "name": "Switches 1-5 (bathroom, sauna)",
       "group": "Electrical, upper floor",
       "material": "switch",
       "size": [
@@ -6045,7 +6045,7 @@
     },
     {
       "id": "el-u63",
-      "name": "Switch (bedroom 2) (light switch)",
+      "name": "Switch (bedroom 2)",
       "group": "Electrical, upper floor",
       "material": "switch",
       "size": [
@@ -6063,7 +6063,7 @@
     },
     {
       "id": "el-u64",
-      "name": "Bedroom 2 ceiling light (ceiling light)",
+      "name": "Bedroom 2 ceiling light",
       "group": "Electrical, upper floor",
       "material": "light",
       "size": [
@@ -6081,7 +6081,7 @@
     },
     {
       "id": "el-u65",
-      "name": "Bedroom 2 ceiling light (ceiling light)",
+      "name": "Bedroom 2 ceiling light",
       "group": "Electrical, upper floor",
       "material": "light",
       "size": [
@@ -6099,7 +6099,7 @@
     },
     {
       "id": "el-u66",
-      "name": "Switch (bedroom 3) (light switch)",
+      "name": "Switch (bedroom 3)",
       "group": "Electrical, upper floor",
       "material": "switch",
       "size": [
@@ -6117,7 +6117,7 @@
     },
     {
       "id": "el-u67",
-      "name": "Bedroom 3 ceiling light (ceiling light)",
+      "name": "Bedroom 3 ceiling light",
       "group": "Electrical, upper floor",
       "material": "light",
       "size": [
@@ -6135,7 +6135,7 @@
     },
     {
       "id": "el-u68",
-      "name": "Bedroom 3 ceiling light (ceiling light)",
+      "name": "Bedroom 3 ceiling light",
       "group": "Electrical, upper floor",
       "material": "light",
       "size": [
@@ -6153,7 +6153,7 @@
     },
     {
       "id": "el-u69",
-      "name": "Switch (bedroom 4) (light switch)",
+      "name": "Switch (bedroom 4)",
       "group": "Electrical, upper floor",
       "material": "switch",
       "size": [
@@ -6171,7 +6171,7 @@
     },
     {
       "id": "el-u70",
-      "name": "Two-way switch (office light downstairs) (light switch)",
+      "name": "Two-way switch (office light downstairs)",
       "group": "Electrical, upper floor",
       "material": "switch",
       "size": [
@@ -6189,7 +6189,7 @@
     },
     {
       "id": "el-u71",
-      "name": "Bedroom 4 ceiling light (ceiling light)",
+      "name": "Bedroom 4 ceiling light",
       "group": "Electrical, upper floor",
       "material": "light",
       "size": [
@@ -6207,7 +6207,7 @@
     },
     {
       "id": "el-u72",
-      "name": "Bedroom 4 ceiling light (ceiling light)",
+      "name": "Bedroom 4 ceiling light",
       "group": "Electrical, upper floor",
       "material": "light",
       "size": [

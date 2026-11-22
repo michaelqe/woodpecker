@@ -54,8 +54,23 @@ def load(name: str) -> Design:
     return resolve(read_raw(name), design_path(name))
 
 
-def mtime(name: str) -> float:
-    return design_path(name).stat().st_mtime
+def mtime(name: str, _seen: set | None = None) -> float:
+    """Newest change to this design or any design placed in it (the viewer reloads on it)."""
+    seen = _seen if _seen is not None else set()
+    seen.add(name)
+    path = design_path(name)
+    t = path.stat().st_mtime
+    try:
+        placed = {sp["design"] for sp in json.loads(path.read_text()).get("parts", [])
+                  if isinstance(sp, dict) and isinstance(sp.get("design"), str)}
+    except (json.JSONDecodeError, AttributeError):
+        return t
+    for other in placed - seen:
+        try:
+            t = max(t, mtime(other, seen))
+        except (DesignError, OSError):
+            pass
+    return t
 
 
 def write(name: str, raw: dict, *, allow_errors: bool = False, snapshot: bool = True) -> Design:

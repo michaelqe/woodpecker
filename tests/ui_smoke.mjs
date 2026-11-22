@@ -191,6 +191,33 @@ try {
   check(await waitFor("document.querySelector('#boardMat').options.length >= 3", 3000), "blank design has starter materials for the Board tool");
   await api("/api/designs/ui-smoke-new/delete", {});
 
+  // ---- Duplicate the open design, then place the original inside the copy
+  await api("/api/designs/ui-smoke-copy/delete", {}).catch(() => {});
+  await evaluate("document.querySelector('#design').value = 'ui-smoke'; document.querySelector('#design').dispatchEvent(new Event('change')); true");
+  await waitFor("wp.state.name === 'ui-smoke'", 5000);
+  await evaluate("document.querySelector('#dupDesign').click(); true");
+  check(await waitFor("document.querySelector('#newDlg').open && document.querySelector('#ndFrom').value === 'ui-smoke'", 3000),
+    "Duplicate opens the dialog with this design as the source");
+  check(await evaluate("document.querySelector('#ndName').value === 'ui-smoke-copy' && document.querySelector('#ndTitle').value.endsWith('(copy)')"),
+    "Duplicate suggests a copy name and title");
+  await evaluate("document.querySelector('#newDlg button[value=ok]').click(); true");
+  check(await waitFor("wp.state.name === 'ui-smoke-copy'", 8000), "the copy is created and opened");
+  const nOrig = (await api("/api/designs/ui-smoke")).design.parts.length;
+  check((await api("/api/designs/ui-smoke-copy")).design.parts.length === nOrig, "the copy has the same parts");
+
+  await evaluate("document.querySelector('#addProduct').click(); true");
+  await evaluate("const q2 = document.querySelector('#catQ'); q2.value = 'ui smoke'; q2.dispatchEvent(new Event('input')); true");
+  check(await waitFor("!!document.querySelector('#dsgList [data-dsg=\"ui-smoke\"]')", 5000), "Your designs lists the other design");
+  check(await evaluate("!document.querySelector('#dsgList [data-dsg=\"ui-smoke-copy\"]')"), "…but not the open one");
+  await evaluate("document.querySelector('#dsgList [data-dsg=\"ui-smoke\"]').click(); true");
+  check(await waitFor("wp.state.data.design.parts.some((p) => p.component === 'design:ui-smoke')", 8000), "the design is placed in the copy");
+  const placedParts = (await api("/api/designs/ui-smoke-copy")).design.parts.filter((p) => p.component === "design:ui-smoke");
+  check(placedParts.length === nOrig && placedParts.every((p) => p.id.startsWith("ui_smoke/")), "all its parts come along under one id");
+  const m0 = (await api("/api/designs/ui-smoke-copy/mtime")).mtime;
+  await sleep(1100);
+  await api("/api/designs/ui-smoke/parts/base_top/move", { delta: [10, 0, 0] });
+  check((await api("/api/designs/ui-smoke-copy/mtime")).mtime > m0, "editing the placed design marks the copy changed (viewer reloads)");
+
   // ---- holes are cut once Manifold arrives
   check(await waitFor("!!wp.state.wasm", 20000), "Manifold (WebAssembly) loads");
 
@@ -201,6 +228,7 @@ try {
   ws.close();
 } finally {
   await fetch(`${BASE}/api/designs/ui-smoke/delete`, { method: "POST" }).catch(() => {});
+  await fetch(`${BASE}/api/designs/ui-smoke-copy/delete`, { method: "POST" }).catch(() => {});
   for (const f of imported) if (existsSync(f)) rmSync(f);
   const exited = new Promise((r) => chrome.once("exit", r));
   chrome.kill();

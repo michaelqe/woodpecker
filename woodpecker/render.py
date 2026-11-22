@@ -13,9 +13,8 @@ import math
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
-from .model import Design
+from .model import WOOD, Design
 
-WOOD = ["#c8b08a", "#b89a6e", "#d6c29b", "#a88a62", "#c9a77c"]
 BG = (243, 241, 236)
 EDGE = (40, 32, 26)
 REF_EDGE = (120, 126, 134)

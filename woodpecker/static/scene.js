@@ -115,7 +115,7 @@ export function buildMeshes(design, group, wasm) {
   for (const p of design.parts) {
     let geom = (wasm && (p.cutouts?.length || p.subtract?.length)) ? cutGeometry(wasm, p, byId) : null;
     geom ||= triangulate(p.mesh);
-    const ref = p.kind === "reference" && !p.component;  // cars etc. from the catalog are drawn solid
+    const ref = p.kind === "reference" && !(p.component && !p.component.startsWith("design:"));  // catalog cars are solid; a placed design keeps its see-through references
     const mat = new THREE.MeshStandardMaterial({
       color: colorFor(p, design), roughness: 0.85, metalness: p.kind === "hardware" ? 0.3 : 0,
       transparent: ref, opacity: ref ? 0.45 : 1, side: THREE.DoubleSide,

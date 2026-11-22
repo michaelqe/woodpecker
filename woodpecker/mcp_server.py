@@ -53,6 +53,12 @@ Model rules:
   (live search of ikea.com) and wp_ikea_import (reads the product page and saves it to the
   catalog). For other makers, wp_catalog_add with numbers from the maker's page only, and
   list anything not published in `assumed`. Tell the human what an import had to assume.
+- `design`: another design's name instead of material/size/component places that whole design
+  here, live (the TV stand in the living room): edits to it show up here. `at` is where its
+  bounding-box min corner goes; rotate/repeat/mirror work as usual. Its parts get ids like
+  tv_stand/top, are not in this design's cut list (it is listed once, like a product) and
+  cannot be resized here: change the placed design itself. A design cannot contain itself.
+  To try a variation without touching the original, wp_create_design with copy_from.
 - `cutouts`: [{"label", "at", "size"}] boxes cut from the part (local coords). A joint
   with `cut_into: [host ids]` cuts the joint's other parts out of the hosts (through-
   mortise, dado, birdsmouth notch). The viewer shows the holes; the cut list notes them.

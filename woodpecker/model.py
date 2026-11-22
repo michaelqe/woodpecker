@@ -359,6 +359,17 @@ def _copies(spec, params) -> list[tuple[str, str, g.Mat, bool]]:
 
 def resolve(raw: dict, path: Path | None = None) -> Design:
     path = path or Path("untitled.json")
+    key = path.resolve()
+    if key in _EMBEDDING:   # loading a placed design: the caller already guards
+        return _resolve(raw, path)
+    _EMBEDDING.append(key)
+    try:
+        return _resolve(raw, path)
+    finally:
+        _EMBEDDING.pop()
+
+
+def _resolve(raw: dict, path: Path) -> Design:
     params = resolve_params(raw.get("params", {}))
     materials = raw.get("materials", {})
     parts: list[Part] = []
@@ -374,7 +385,7 @@ def resolve(raw: dict, path: Path | None = None) -> Design:
             continue
         seen.add(sid)
         try:
-            parts.extend(_resolve_spec(sid, sp, params, materials, components))
+            parts.extend(_resolve_spec(sid, sp, params, materials, components, path.parent))
         except (DesignError, KeyError, TypeError, ValueError) as e:
             msg = str(e) if isinstance(e, DesignError) else f"{type(e).__name__}: {e}"
             issues.append(_issue("error", sid, f"{where}: {msg}"))
@@ -446,7 +457,7 @@ def _shape_solid(sp: dict, params: dict, size=None):
     return g.box_solid(size, *ends), size, extra
 
 
-def _resolve_spec(sid, sp, params, materials, components) -> list[Part]:
+def _resolve_spec(sid, sp, params, materials, components, base: Path | None = None) -> list[Part]:
     rot = _rotations(sp, params)
     at = _vec(sp.get("at", [0, 0, 0]), params, "at")
     place = g.mul(g.translate(*at), rot)
@@ -454,6 +465,9 @@ def _resolve_spec(sid, sp, params, materials, components) -> list[Part]:
     axis_map = [max(range(3), key=lambda r: abs(rot[r][c])) for c in range(3)] if aligned else None
     name = sp.get("name", sid)
     common = dict(group=sp.get("group", ""), role=sp.get("role", ""), notes=sp.get("notes", ""))
+
+    if "design" in sp:
+        return _resolve_design(sid, sp, params, components, place, aligned, axis_map, name, common, base)
 
     if "component" in sp:
         item = catalog.get(sp["component"])
@@ -516,6 +530,78 @@ def _resolve_spec(sid, sp, params, materials, components) -> list[Part]:
             p.cutouts.append(csol.transformed(tf))
             p.cut_notes.append(f"{label}: {cs[0]:g} x {cs[1]:g} x {cs[2]:g}")
         out.append(p)
+    return out
+
+
+WOOD = ["#c8b08a", "#b89a6e", "#d6c29b", "#a88a62", "#c9a77c"]
+_EMBEDDING: list[Path] = []   # designs being resolved right now, to stop a design containing itself
+
+
+def display_color(p: Part, design: Design) -> str:
+    """The colour the viewer and the drawings give a part (same rules as scene.js colorFor)."""
+    if p.color:
+        return p.color
+    mats = design.raw.get("materials") or {}
+    own = (mats.get(p.material) or {}).get("color")
+    if own and not p.component:
+        return own
+    if p.component:
+        return (design.components.get(p.component) or {}).get("color") or "#e9e7e2"
+    if p.kind == "hardware":
+        return "#4a4c50" if p.material == "ballast" else "#7a7f86"
+    if p.kind == "reference":
+        return "#262a30"
+    ids = [m for m, v in mats.items() if v.get("kind") in ("sheet", "lumber")]
+    return WOOD[(ids.index(p.material) if p.material in ids else 0) % len(WOOD)]
+
+
+def _resolve_design(sid, sp, params, components, place, aligned, axis_map, name, common, base) -> list[Part]:
+    """A part spec {"design": "<name>"} places another design here, live: it is read from the
+    same folder each time, so edits to it show up. `at` is where its bounding-box min corner goes.
+    Its parts are not built as part of this design (they are listed once, like a bought product)."""
+    from .cutlist import part_mass  # late import: cutlist imports this module
+
+    other = sp["design"]
+    if not isinstance(other, str) or not other.replace("-", "").replace("_", "").isalnum():
+        raise DesignError(f"bad design name {other!r}")
+    path = (base or Path(".")) / f"{other}.json"
+    if not path.exists():
+        raise DesignError(f"no design {other!r} to place")
+    key = path.resolve()
+    if key in _EMBEDDING:
+        raise DesignError(f"design {other!r} would contain itself")
+    inner = load(path)
+    errs = [i["message"] for i in inner.issues if i["level"] == "error"]
+    if errs:
+        raise DesignError(f"placed design {other!r}: {errs[0]}")
+    if not inner.parts:
+        raise DesignError(f"design {other!r} has no parts")
+    lo = inner.bounds()["min"]
+    to_origin = g.translate(-lo[0], -lo[1], -lo[2])
+    cid = f"design:{other}"
+    size = inner.bounds()["size"]
+    components[cid] = {
+        "id": cid, "brand": "Design", "name": inner.title, "article": None, "size_mm": size,
+        "price": None, "load": None, "url": f"/?design={other}", "design": other,
+        "assumed": [], "construction": inner.raw.get("description", ""), "material": "", "color": None,
+        "issues": len(inner.issues),
+    }
+    inner_mats = inner.raw.get("materials", {})
+    out = []
+    for suffix, nsuffix, copy, mirrored in _copies(sp, params):
+        tf = g.mul(copy, g.mul(place, to_origin))
+        inst = sid + suffix
+        for q in inner.parts:
+            out.append(Part(
+                id=f"{inst}/{q.id}", source=sid, instance=inst, name=f"{name}{nsuffix}: {q.name}",
+                material=f"@{cid}", kind="reference" if q.kind == "reference" else "component",
+                shape=q.shape, size=q.size, solid=q.solid.transformed(tf),
+                mass_kg=None if q.kind == "reference" else part_mass(q, inner_mats),
+                component=cid, aligned=aligned and q.aligned, axis_map=axis_map, mirrored=mirrored or q.mirrored,
+                axis=q.axis, color=display_color(q, inner), exact_volume=q.exact_volume,
+                cutouts=[c.transformed(tf) for c in q.cutouts], cut_notes=list(q.cut_notes),
+                **common,
+            ))
     return out
 
 

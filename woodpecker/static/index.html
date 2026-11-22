@@ -14,6 +14,7 @@
   <span class="brand">woodpecker</span>
   <select id="design" aria-label="Design"></select>
   <button id="newDesign" title="Start a new design">New</button>
+  <button id="dupDesign" title="Copy this design to try a variation; the original stays as it is">Duplicate</button>
   <nav class="views seg" aria-label="View">
     <button data-view="persp" class="on" title="3D (1)">3D</button>
     <button data-view="front" title="Front (2)">Front</button>
@@ -35,7 +36,7 @@
     </select>
     <label class="toggle">height <input id="boardLen" type="number" value="1000" step="10" style="width:72px"></label>
   </span>
-  <button id="addProduct" title="Add a bought product (IKEA etc.)">+ Product</button>
+  <button id="addProduct" title="Add a bought product (IKEA etc.) or one of your designs">+ Add</button>
   <span class="opts">
     <select id="snap" aria-label="Snap" title="Snap">
       <option value="1">1 mm</option><option value="10" selected>10 mm</option><option value="50">50 mm</option>
@@ -99,11 +100,13 @@
 
 <dialog id="catDlg">
   <form method="dialog">
-    <h2>Add a product</h2>
-    <input id="catQ" placeholder="Search: kallax, billy, 202.758.14…" autocomplete="off">
+    <h2>Add a product or a design</h2>
+    <input id="catQ" placeholder="Search: kallax, billy, 202.758.14, tv cart…" autocomplete="off">
     <div class="catlist">
       <h3>Your catalog</h3>
       <div id="catList"></div>
+      <h3>Your designs <span class="muted small">(placed live: edits to it show up here)</span></h3>
+      <div id="dsgList"></div>
       <h3 id="ikeaHead">From IKEA (live)</h3>
       <div id="ikeaList"></div>
     </div>

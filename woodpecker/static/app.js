@@ -400,7 +400,7 @@ function attachHandles() {
   const p = meshes.get(id)?.part;
   if (!p) return;
   if (state.tool === "size" && (!p.aligned || p.kind === "component" || p.mirrored)) {
-    status(p.kind === "component" ? "Catalog products have a fixed size." : "Resize works on square-on parts only; ask the agent for tilted ones.");
+    status(p.kind === "component" ? (p.component?.startsWith("design:") ? "A placed design has its own size: open it to change it." : "Catalog products have a fixed size.") : "Resize works on square-on parts only; ask the agent for tilted ones.");
     return;
   }
   const anchor = state.tool === "size" ? p.at : p.at.map((v, i) => (v + p.max[i]) / 2);
@@ -613,6 +613,12 @@ async function openCatalog() {
         <div><b>${esc(it.name)}</b> <span class="muted small">${esc(it.brand)} ${esc(it.article || "")}</span></div>
         <div class="small muted">${U.dims(it.size_mm)} (W × D × H)${it.price ? ` · ${num(it.price.amount, 2)} ${esc(it.price.currency)}` : ""}${it.load ? " · " + loadText(it.load) : ""}</div>
       </div>`).join("") : '<p class="muted small">Nothing in your catalog matches.</p>';
+    const terms = q.toLowerCase().split(/\W+/).filter(Boolean);
+    const mine = (await api("/api/designs")).filter((d) => d.name !== state.name
+      && terms.every((w) => `${d.name} ${d.title}`.toLowerCase().includes(w)));
+    $("#dsgList").innerHTML = mine.length ? mine.map((d) => `
+      <div class="cat" data-dsg="${esc(d.name)}"><div><b>${esc(d.title)}</b> <span class="muted small">${esc(d.name)}</span></div></div>`).join("")
+      : '<p class="muted small">No other design matches.</p>';
     clearTimeout(ikeaTimer);
     const box = $("#ikeaList");
     if (q.trim().length < 2) { box.innerHTML = '<p class="muted small">Type at least 2 letters to search IKEA too.</p>'; return; }
@@ -655,7 +661,29 @@ async function placeProduct(itemId) {
   accept(data, `added ${part.name} beside the design; use Move to place it${guessed}`);
   select(state.data.design.parts.find((p) => p.source === id)?.id);
 }
+async function placeDesign(name) {
+  const b = state.data.design.bounds;
+  const title = (await api("/api/designs")).find((d) => d.name === name)?.title || name;
+  const base = name.replace(/[^a-z0-9]+/g, "_");
+  const ids = new Set(state.data.design.parts.map((p) => p.source));
+  let id = base, k = 2; while (ids.has(id)) id = `${base}_${k++}`;
+  const part = {
+    id, name: title, group: "Placed designs", design: name,
+    at: [Math.round((b.max[0] + 200) / 10) * 10, 0, 0], role: "",
+  };
+  const data = await api(`/api/designs/${state.name}/parts`, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ part }),
+  });
+  accept(data, `placed ${title} beside the design; use Move to put it where it goes. Edits to ${title} show up here.`);
+  select(state.data.design.parts.find((p) => p.source === id)?.id);
+}
 $("#catDlg").addEventListener("click", async (e) => {
+  const d = e.target.closest("[data-dsg]");
+  if (d) {
+    $("#catDlg").close();
+    try { await placeDesign(d.dataset.dsg); } catch (err) { showError(err.message); }
+    return;
+  }
   const el = e.target.closest("[data-cat],[data-ikea]");
   if (!el) return;
   try {
@@ -702,7 +730,7 @@ function renderPart() {
       <p>${esc(p.role) || '<span class="muted">No role written yet. Ask the agent to describe what it does.</span>'}</p>
       ${p.notes ? `<p class="muted">${esc(p.notes)}</p>` : ""}
       <dl class="kv">
-        <dt>${comp ? "Product" : "Material"}</dt><dd>${comp ? `<a href="${esc(comp.url)}" target="_blank" rel="noopener">${esc(comp.name)}</a>` : esc(m.name || p.material)}</dd>
+        <dt>${comp?.design ? "Design" : comp ? "Product" : "Material"}</dt><dd>${comp ? `<a href="${esc(comp.url)}" target="_blank" rel="noopener">${esc(comp.name)}</a>` : esc(m.name || p.material)}</dd>
         <dt>${comp ? "Panel" : "Cut size"}</dt><dd>${U.dims(sortDesc(p.size))}${p.shape === "gusset" ? " (triangle)" : ""}</dd>
         ${p.ends ? `<dt>End cuts</dt><dd>${num(p.ends[0])}° / ${num(p.ends[1])}°</dd>` : ""}
         ${p.aligned ? "" : "<dt>Placed</dt><dd>at an angle</dd>"}
@@ -711,6 +739,7 @@ function renderPart() {
         ${(p.cut_notes || []).map((n) => `<dt>Cut</dt><dd>${esc(n)}</dd>`).join("")}
       </dl>
       ${comp ? `
+        ${comp.design ? `<p class="small muted">Placed live from the design “${esc(comp.name)}”: open it to change it, and the change shows up here. Move it like a product.</p>` : ""}
         <h3>${esc(comp.brand)} ${esc(comp.article || "")}</h3>
         <dl class="kv">
           <dt>Size</dt><dd>${U.dims(comp.size_mm)} (W × D × H)</dd>
@@ -995,15 +1024,27 @@ async function poll() {
 // ------------------------------------------------------------------ new design
 const slug = (t) => t.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
   .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60);
-$("#newDesign").addEventListener("click", async () => {
+async function openNew(copyFrom = "") {
   const list = await api("/api/designs");
   $("#ndFrom").innerHTML = `<option value="">a blank design (common plywood and timber ready)</option>` +
     list.map((d) => `<option value="${esc(d.name)}">a copy of ${esc(d.title)}</option>`).join("");
   for (const id of ["#ndTitle", "#ndName", "#ndAsk"]) $(id).value = "";
   $("#ndName").dataset.touched = "";
+  $("#ndFrom").value = copyFrom;
+  $("#newDlg").querySelector("h2").textContent = copyFrom ? "Duplicate design" : "New design";
+  if (copyFrom) {
+    const names = new Set(list.map((d) => d.name));
+    const title = `${state.data.design.title} (copy)`;
+    let name = slug(`${copyFrom}-copy`), k = 2;
+    while (names.has(name)) name = slug(`${copyFrom}-copy-${k++}`);
+    $("#ndTitle").value = title; $("#ndName").value = name; $("#ndName").dataset.touched = "1";
+  }
   $("#ndPage").textContent = state.page?.enabled ? "A Magpie page with drawings, shopping list and cut list is made for it and kept up to date." : "";
   $("#newDlg").showModal();
-});
+  if (copyFrom) $("#ndTitle").select();
+}
+$("#newDesign").addEventListener("click", () => openNew());
+$("#dupDesign").addEventListener("click", () => state.name && openNew(state.name));
 $("#ndTitle").addEventListener("input", () => { if (!$("#ndName").dataset.touched) $("#ndName").value = slug($("#ndTitle").value); });
 $("#ndName").addEventListener("input", () => { $("#ndName").dataset.touched = "1"; });
 $("#newDlg").addEventListener("close", async () => {

@@ -221,6 +221,16 @@ try {
   await evaluate("document.querySelector('#groupSel').click(); true");
   check(await waitFor(`${JSON.stringify(selIds.slice(0, 2))}.every((i) => wp.state.data.design.parts.find((p) => p.id === i).group === 'Smoke group')`, 8000),
     "Group… puts the selected parts in the named group");
+  // ---- turn the selected parts a quarter turn, as one piece about their shared middle
+  const box = `(() => { const ps = [...wp.state.selected].map((i) => wp.state.data.design.parts.find((p) => p.id === i));
+    const lo = [0, 1].map((k) => Math.min(...ps.map((p) => p.at[k]))), hi = [0, 1].map((k) => Math.max(...ps.map((p) => p.max[k])));
+    return [ (lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2, hi[0] - lo[0], hi[1] - lo[1] ]; })()`;
+  const b0 = await evaluate(box);
+  await evaluate("wp.renderPart(); document.querySelector('#tab-part [data-turn=\"90\"]').click(); true");
+  check(await waitFor(`(() => { const b = ${box}; return Math.abs(b[2] - ${b0[3]}) < 0.5 && Math.abs(b[3] - ${b0[2]}) < 0.5; })()`, 8000),
+    `↺ 90° turns the selection (footprint ${Math.round(b0[2])}×${Math.round(b0[3])} becomes ${Math.round(b0[3])}×${Math.round(b0[2])})`);
+  const b1 = await evaluate(box);
+  check(Math.hypot(b1[0] - b0[0], b1[1] - b0[1]) < 0.5, "it turns in place, about its middle");
   ws.removeEventListener("message", onPrompt);
 
   // ---- Duplicate the open design, then place the original inside the copy

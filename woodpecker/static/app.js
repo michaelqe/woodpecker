@@ -476,6 +476,21 @@ async function postDesign(action, body, msg) {
     buildScene();
   }
 }
+async function turnSelection(deg) {
+  const ids = [...state.selected];
+  if (!ids.length) { status("Select something to turn first."); return; }
+  if (deg === "ask") {
+    const a = prompt("Turn by how many degrees? (positive = anticlockwise seen from above)", "45");
+    if (a === null) return;
+    deg = parseFloat(a.replace(",", "."));
+    if (!Number.isFinite(deg) || !deg) return;
+  }
+  await postDesign("rotate-parts", { ids, deg: +deg }, `turned ${ids.length > 1 ? `${ids.length} parts together` : partById(ids[0])?.name} ${Math.abs(deg)}° ${deg > 0 ? "anticlockwise" : "clockwise"}`);
+}
+document.addEventListener("click", (e) => {
+  const b = e.target.closest("#tab-part [data-turn]");
+  if (b) turnSelection(b.dataset.turn === "ask" ? "ask" : +b.dataset.turn);
+});
 const selectGroup = (g) => {
   state.selected = new Set(state.data.design.parts.filter((p) => (p.group || "Parts") === g).map((p) => p.id));
   selectionChanged();
@@ -785,6 +800,7 @@ function renderPart() {
           ${j.fasteners ? `<div class="small">${esc(j.fasteners)}</div>` : ""}
           ${j.notes ? `<div class="small muted">${esc(j.notes)}</div>` : ""}
         </div>`).join("") : '<p class="muted">None.</p>'}
+      <div class="actions"><button class="turn" data-turn="90" title="Turn 90° anticlockwise, seen from above (R)">↺ 90°</button><button class="turn" data-turn="-90" title="Turn 90° clockwise (Shift+R)">↻ 90°</button><button class="turn" data-turn="ask" title="Turn by any angle">Turn…</button></div>
       <div class="actions"><button id="selGroup">Select group “${esc(p.group || "Parts")}”</button><button id="delPart">Delete ${copies > 1 ? "all copies" : comp ? "product" : "part"}</button></div>
       <p class="muted small">Ask tab: “explain this”.</p>`;
     $("#selGroup").onclick = () => selectGroup(p.group || "Parts");
@@ -800,7 +816,7 @@ function renderPart() {
       <h2>${esc(d.title)}</h2>
       <p class="muted">${esc(d.description)}</p>
       ${state.selected.size > 1 ? `<p>${state.selected.size} parts selected. Move (G) moves them together.</p>
-        <div class="actions"><button id="groupSel">Group…</button></div>`
+        <div class="actions"><button class="turn" data-turn="90" title="Turn 90° anticlockwise, seen from above (R)">↺ 90°</button><button class="turn" data-turn="-90" title="Turn 90° clockwise (Shift+R)">↻ 90°</button><button class="turn" data-turn="ask" title="Turn by any angle">Turn…</button><button id="groupSel">Group…</button></div>`
         : '<p class="muted small">Click a part to inspect it. Shift-click to select several. Click a group’s name to select all of it.</p>'}
       <div class="plist">${Object.entries(groups).map(([gname, ps]) => `
         <div class="grp"><h3 class="click" data-grp="${esc(gname)}" title="Select the whole group">${esc(gname)}</h3>${ps.map((p) => `
@@ -1188,6 +1204,7 @@ document.addEventListener("keydown", (e) => {
   const tools = { v: "select", g: "move", s: "size", b: "board" };
   if (tools[e.key]) setTool(tools[e.key]);
   if (e.key === "f") fit();
+  if ((e.key === "r" || e.key === "R") && !e.metaKey && !e.ctrlKey) turnSelection(e.shiftKey ? -90 : 90);
   if (e.key === "h" || e.key === "Home") setView(state.view);
   const arrows = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, 1], ArrowDown: [0, -1] }[e.key];
   if (arrows) {

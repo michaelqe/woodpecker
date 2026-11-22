@@ -197,6 +197,13 @@ class Handler(BaseHTTPRequestHandler):
         store.move_parts(name, [d.part(i).source for i in b["ids"]], b["delta"])
         self._json(design_payload(name))
 
+    @route("POST", rf"/api/designs/{NAME}/rotate-parts")
+    def rotate_parts(self, name):
+        b = self._body()
+        d = store.load(name)
+        store.rotate_parts(name, [d.part(i).source for i in b["ids"]], b["deg"])
+        self._json(design_payload(name))
+
     @route("POST", rf"/api/designs/{NAME}/group")
     def group_parts(self, name):
         b = self._body()

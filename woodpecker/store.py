@@ -223,6 +223,53 @@ def move_parts(name: str, part_ids: list[str], delta: list[float]) -> Design:
     return _edit(name, fn)
 
 
+def rotate_parts(name: str, part_ids: list[str], deg: float) -> Design:
+    """Turn part specs about the vertical axis by deg (counter-clockwise seen from above), as one
+    piece about the middle of their footprint, as one change (one undo). Repeated parts turn about
+    the first copy; each copy keeps its own place along the repeat."""
+    import math
+    from .model import _vec, resolve
+    ids = list(dict.fromkeys(part_ids))
+    deg = float(deg)
+    if not math.isfinite(deg) or abs(deg) > 3600:
+        raise DesignError("turn by a number of degrees")
+    def fn(raw):
+        d = resolve(raw, design_path(name))
+        boxes = []
+        for sid in ids:
+            ps = [p for p in d.parts if p.source == sid]
+            if not ps:
+                raise DesignError(f"no part {sid!r}")
+            first = [p for p in ps if p.instance in (sid, f"{sid}[0]")] or ps
+            boxes += [(p.at, p.max) for p in first]
+        cx = (min(a[0] for a, _ in boxes) + max(b[0] for _, b in boxes)) / 2
+        cy = (min(a[1] for a, _ in boxes) + max(b[1] for _, b in boxes)) / 2
+        c, s_ = math.cos(math.radians(deg)), math.sin(math.radians(deg))
+        for sid in ids:
+            _, p = _find(raw, sid)
+            at = _vec(p.get("at", [0, 0, 0]), d.params, "at")
+            dx, dy = at[0] - cx, at[1] - cy
+            nx, ny = cx + c * dx - s_ * dy, cy + s_ * dx + c * dy
+            p["at"] = [offset_expr(a, v) for a, v in zip(p.get("at", [0, 0, 0]), (nx - at[0], ny - at[1], 0))]
+            rots = p.get("rotate") or []
+            if isinstance(rots, dict):
+                rots = [rots]
+            if rots and rots[-1].get("axis") == "z":
+                last = dict(rots[-1])
+                v = offset_expr(last.get("deg", 0), deg)
+                if isinstance(v, (int, float)):
+                    v = round(((v + 180) % 360) - 180, 6) or 0   # keep it in -180..180
+                last["deg"] = v
+                rots = rots[:-1] + ([last] if v != 0 else [])
+            else:
+                rots = rots + [{"axis": "z", "deg": deg}]
+            if not rots:
+                p.pop("rotate", None)
+            else:
+                p["rotate"] = rots[0] if len(rots) == 1 else rots
+    return _edit(name, fn)
+
+
 def set_group(name: str, part_ids: list[str], group: str) -> Design:
     """Put several part specs in one group (the Layers panel and the part list use it)."""
     group = (group or "").strip()

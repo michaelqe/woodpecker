@@ -104,3 +104,35 @@ def test_deleting_a_design_deletes_its_magpie_page(tmp_path, monkeypatch):
     magpie.delete_page("stand")
     assert calls == [("DELETE", "/api/pages/42")]
     assert magpie._load_state() == {"other": {"page_id": 7}}
+
+
+def test_turning_parts_keeps_their_middle_and_merges_z_turns(tmp_path, monkeypatch):
+    from woodpecker import store
+    (tmp_path / "designs").mkdir()
+    monkeypatch.setattr(store, "DESIGNS", tmp_path / "designs")
+    monkeypatch.setattr(store, "STATE", tmp_path / ".woodpecker")
+    _write(tmp_path / "designs", "stand", BOARD)
+
+    def mid(d, sid):
+        ps = [p for p in d.parts if p.source == sid]
+        return [(min(p.at[k] for p in ps) + max(p.max[k] for p in ps)) / 2 for k in range(3)]
+
+    d0 = store.load("stand")
+    m0 = mid(d0, "top")
+    d = store.rotate_parts("stand", ["top"], 90)
+    assert all(abs(a - b) < 1e-6 for a, b in zip(mid(d, "top"), m0))       # turned in place
+    assert abs(d.part("top").bsize[0] - 400) < 1e-6                        # 800 x 400 is now 400 x 800
+    assert store.read_raw("stand")["parts"][0]["rotate"] == {"axis": "z", "deg": 90.0}
+    d = store.rotate_parts("stand", ["top"], -90)
+    assert "rotate" not in store.read_raw("stand")["parts"][0]             # back to square, no clutter
+    assert all(abs(a - b) < 1e-6 for a, b in zip(d.part("top").at, d0.part("top").at))
+
+    # two parts turn as one piece about their shared middle
+    both = [(min(p.at[k] for p in d0.parts) + max(p.max[k] for p in d0.parts)) / 2 for k in range(2)]
+    d = store.rotate_parts("stand", ["top", "tv"], 180)
+    after = [(min(p.at[k] for p in d.parts) + max(p.max[k] for p in d.parts)) / 2 for k in range(2)]
+    assert all(abs(a - b) < 1e-6 for a, b in zip(after, both))
+    # the TV was behind the top's front edge; after a half turn it is mirrored about the middle
+    assert abs((d.part("tv").at[1] + d.part("tv").max[1]) / 2 - (2 * both[1] - (200 + 60 / 2))) < 1e-6
+    store.undo("stand")
+    assert store.read_raw("stand")["parts"][1]["at"] == [100, 200, 518]

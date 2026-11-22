@@ -1,0 +1,41 @@
+{
+  "id": "ikea-kivik-4-seat-sofa-with-chaise-longue-99440585",
+  "brand": "IKEA",
+  "category": "sofas",
+  "name": "KIVIK 4-seat sofa with chaise longue, Tibbleby beige/grey, 318x163x83 cm",
+  "article": "994.405.85",
+  "url": "https://www.ikea.com/ee/en/p/kivik-4-seat-sofa-with-chaise-longue-tibbleby-beige-grey-s99440585/",
+  "retrieved": "2026-11-22",
+  "source": "ikea.com product page (unofficial endpoints)",
+  "price": {
+    "amount": 619.0,
+    "currency": "EUR"
+  },
+  "size": [
+    3180.0,
+    1630.0,
+    830.0
+  ],
+  "package_kg": 78.12,
+  "material": "100% polyester (min. 70% recycled), Particleboard, Felt liner, Plywood, Fibreboard, Solid wood; Fibreboard, Plywood, Polyurethane foam 20 kg/cu.m., Polyurethane foam 25 kg/cu.m., Solid wood, Particleboard; Highly resilient polyurethane foam (cold foam) 35 kg/cu.m.; Steel; 100% polyester - hollow fibre (100% recycled); 100% polypropylene; 100% polyester (min. 70% recycled), Particleboard, Felt liner, Plywood, Fibreboard, Solid wood; Highly resilient polyurethane foam (cold foam) 35 kg/cu.m., Polyurethane foam 30 kg/cu.m., Felt liner; Steel; 100 % polyester - hollow fibre (100% recycled); 100% polypropylene; 100% polyester (min. 90% recycled); 100 % polyester (100% recycled)",
+  "measurements": {
+    "Max. width": 3180.0,
+    "Height": 830.0,
+    "Min. depth": 950.0,
+    "Max. depth": 1630.0,
+    "Min. seat depth": 600.0,
+    "Max. seat depth": 1240.0,
+    "Seat height": 450.0
+  },
+  "notes": [
+    "IKEA of Sweden AB SE-343 81 Älmhult, IKEA.com"
+  ],
+  "geometry": {
+    "generator": "block"
+  },
+  "assumed": [
+    "drawn as a solid block of the published size",
+    "measurements from IKEA's page in another country (https://www.ikea.com/fi/en/p/kivik-4-seat-sofa-with-chaise-longue-tibbleby-beige-grey-s99440585/): the home market's page publishes none for this article"
+  ],
+  "color": "#9a9a96"
+}

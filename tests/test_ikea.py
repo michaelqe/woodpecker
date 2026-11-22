@@ -130,3 +130,52 @@ def test_live(home):
     (home / "catalog/ikea/ikea-billy-80x28x106.json").unlink()
     r = ikea.import_product("302.638.44")
     assert catalog.get(r["id"])["size"] == [800, 280, 1060]
+
+
+def test_sofa_max_measurements_give_the_bounding_box():
+    kivik = {"Max. width": 3180.0, "Height": 830.0, "Min. depth": 950.0, "Max. depth": 1630.0,
+             "Min. seat depth": 600.0, "Seat height": 450.0}
+    assert ikea.wdh(kivik) == (3180.0, 1630.0, 830.0)
+    assert ikea.wdh({"Width": 770, "Depth": 390, "Height": 1470}) == (770, 390, 1470)
+    assert ikea.wdh({"Height": 830.0, "Seat height": 450.0}) is None
+
+
+def _blank(no, url, meas=None):
+    return {"item_no": no, "article": ikea.article(no), "url": url, "measurements": meas or {}, "loads": {},
+            "packages": [], "notes": [], "materials": [], "page_data": True, "name": "KIVIK",
+            "type": "4-seat sofa with chaise longue", "variant": "Tibbleby beige/grey", "size_text": None,
+            "price": {"amount": 619.0, "currency": "EUR"}}
+
+
+def test_measurements_come_from_another_market_when_home_has_none(monkeypatch):
+    ee, fi = "https://www.ikea.com/ee/en/p/kivik-s99440585/", "https://www.ikea.com/fi/en/p/kivik-s99440585/"
+    monkeypatch.setattr(ikea, "_get", lambda url: url.encode())
+    monkeypatch.setattr(ikea, "_pip_url", lambda no, cc=None, lang=None, search_fallback=True:
+                        {None: ee, "fi": fi}.get(cc) or (_ for _ in ()).throw(DesignError("IKEA returned 404")))
+    pages = {ee: _blank("99440585", ee), fi: _blank("99440585", fi, {"Max. width": 3180.0, "Height": 830.0, "Max. depth": 1630.0})}
+    monkeypatch.setattr(ikea, "parse_product_page", lambda page, url, no: json.loads(json.dumps(pages[url])))
+    d = ikea.details("99440585")
+    assert d["measurements_from"] == fi and ikea.wdh(d["measurements"]) == (3180.0, 1630.0, 830.0)
+    item = ikea.to_catalog_item(d)
+    assert item["size"] == [3180.0, 1630.0, 830.0] and item["url"] == ee
+    assert any("another country" in a for a in item["assumed"])
+
+
+def test_blocked_server_imports_from_search_or_explains(home, monkeypatch):
+    hit = {"item_no": "20275814", "name": "KALLAX", "type": "Shelving unit", "variant": "white",
+           "size_text": "77x39x147 cm", "size_mm": [770, 390, 1470], "price": {"amount": 39.99, "currency": "EUR"},
+           "url": PIP_URL, "category": "shelving", "combination": False}
+    monkeypatch.setattr(ikea, "_safe_search", lambda q: [hit])
+
+    def blocked(ref):
+        raise DesignError("IKEA returned 403 for https://www.ikea.com/...")
+    monkeypatch.setattr(ikea, "details", blocked)
+    monkeypatch.setattr(catalog, "by_article", lambda a: None)
+    r = ikea.import_product("202.758.14")
+    item = catalog.get(r["id"])
+    assert item["size"] == [770, 390, 1470]
+    assert any("refused the product page" in a for a in item["assumed"])
+
+    monkeypatch.setattr(ikea, "_safe_search", lambda q: [{**hit, "size_text": "", "size_mm": None}])
+    with pytest.raises(DesignError, match="blocks its product pages from this server"):
+        ikea.import_product("202.758.14")

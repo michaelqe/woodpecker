@@ -125,16 +125,60 @@ def size_from_text(text: str) -> list[float] | None:
 
 # ---------------------------------------------------------------- product details
 
+# Markets tried, in English, when the home market's page gives no assembled size for an article
+# (IKEA Estonia lists none for some combinations, e.g. KIVIK 994.405.85, that Finland publishes).
+OTHER_MARKETS = ("fi", "se", "nl", "gb")
+
+
 def details(ref: str) -> dict:
-    """Published facts for one product: measurements, loads, packages, materials, notes."""
+    """Published facts for one product: measurements, loads, packages, materials, notes.
+    When the home market's page has no width/depth/height, the same article's page in a
+    neighbouring market fills in the measurements (`measurements_from` says which page)."""
     no = item_no(ref)
     url = ref if ref.startswith("http") else _pip_url(no)
     page = _get(url).decode("utf-8", "replace")
-    return parse_product_page(page, url, no)
+    d = parse_product_page(page, url, no)
+    if wdh(d["measurements"]) is None:
+        home = market()[0]
+        for cc in OTHER_MARKETS:
+            if cc == home:
+                continue
+            try:
+                other_url = _pip_url(no, cc, "en", search_fallback=False)
+                other = parse_product_page(_get(other_url).decode("utf-8", "replace"), other_url, no)
+            except DesignError:
+                continue
+            if wdh(other["measurements"]) is not None:
+                d["measurements"] = other["measurements"]
+                for k in ("loads", "packages", "notes", "materials"):
+                    d[k] = d[k] or other[k]
+                d["measurements_from"] = other_url
+                break
+    return d
 
 
-def _pip_url(no: str) -> str:
-    cc, lang = market()
+def wdh(meas: dict) -> tuple[float, float, float] | None:
+    """Width, depth, height from IKEA's measurement names, or None. Sofas and corner units give
+    "Max. width" / "Min. depth" / "Max. depth": the max values are the bounding box."""
+    m: dict[str, float] = {}
+    for k, v in meas.items():
+        low = k.lower().strip()
+        if low.startswith("min."):
+            continue
+        low = low.removeprefix("max.").strip()
+        if low not in m or k.lower().startswith("max."):
+            m[low] = v
+    if "depth" in m:
+        W, D = m.get("width") or m.get("length"), m["depth"]
+    else:  # tables: length x width
+        W, D = m.get("length"), m.get("width")
+    H = m.get("height") or m.get("thickness")
+    return (W, D, H) if W and D and H else None
+
+
+def _pip_url(no: str, cc: str | None = None, lang: str | None = None, search_fallback: bool = True) -> str:
+    if cc is None:
+        cc, lang = market()
     for candidate in (no, f"s{no}"):  # plain articles, then combinations (SPR)
         try:
             data = json.loads(_get(PRODUCT_JSON.format(cc=cc, lang=lang, suffix=candidate[-3:], item=candidate)))
@@ -142,7 +186,7 @@ def _pip_url(no: str) -> str:
                 return data["pipUrl"]
         except DesignError:
             continue
-    found = [r for r in search(no, 5) if r["item_no"] == no]
+    found = [r for r in search(no, 5) if r["item_no"] == no] if search_fallback else []
     if found and found[0]["url"]:
         return found[0]["url"]
     raise DesignError(f"IKEA {cc.upper()} has no product {article(no)}")
@@ -231,13 +275,8 @@ _STORAGE = ("bookcase", "shelving unit", "shelf unit", "cabinet", "tv bench", "t
 
 def to_catalog_item(d: dict, search_hit: dict | None = None) -> dict:
     """Catalog entry from published details. Raises if IKEA gives no W/D/H."""
-    m = {k.lower(): v for k, v in d["measurements"].items()}
+    W, D, H = wdh(d["measurements"]) or (None, None, None)
     fallback = False
-    if "depth" in m:
-        W, D = m.get("width") or m.get("length"), m["depth"]
-    else:  # tables: length x width
-        W, D = m.get("length"), m.get("width")
-    H = m.get("height") or m.get("thickness")
     if not (W and D and H):
         hint = size_from_text(d.get("size_text") or "") or (search_hit or {}).get("size_mm")
         if hint:
@@ -275,6 +314,12 @@ def to_catalog_item(d: dict, search_hit: dict | None = None) -> dict:
     if fallback:
         assumed.append("size from IKEA's size label only (the product page had no detailed "
                        "measurements); loads and weight not read")
+    if d.get("measurements_from"):
+        assumed.append(f"measurements from IKEA's page in another country ({d['measurements_from']}): "
+                       "the home market's page publishes none for this article")
+    if d.get("blocked"):
+        assumed.append("IKEA refused the product page to this server, so only its search result was used: "
+                       "name, price and size label; no loads, materials or weight")
     if package_kg is None:
         assumed.append("weight unknown (IKEA lists no package weight)")
     item = {
@@ -328,8 +373,22 @@ def import_product(ref: str) -> dict:
     existing = catalog.by_article(article(no))
     if existing:
         return {**catalog.summary(catalog.get(existing)), "already_in_catalog": True}
-    d = details(ref)
     hit = next((h for h in _safe_search(no) if h["item_no"] == no), None)
+    try:
+        d = details(ref)
+    except DesignError as e:
+        if "returned 403" not in str(e):
+            raise
+        # IKEA blocks product pages from data-centre addresses (the droplet); its search still answers.
+        if not (hit and hit.get("size_mm")):
+            what = f"{hit['name']} {hit.get('type') or ''}".strip() if hit else article(no)
+            raise DesignError(
+                f"IKEA blocks its product pages from this server, and its search gives no size for {what}. "
+                "Import it from Woodpecker on the Mac (IKEA answers there), or ask in the Ask tab: "
+                "\"add IKEA " + article(no) + " to the catalog, W x D x H cm\" with the size from the IKEA page.") from None
+        d = {"item_no": no, "article": article(no), "url": hit.get("url") or ref, "measurements": {}, "loads": {},
+             "packages": [], "notes": [], "materials": [], "page_data": False, "name": "", "type": "",
+             "variant": "", "size_text": hit.get("size_text"), "price": None, "blocked": True}
     item = to_catalog_item(d, hit)
     return catalog.add(item)
 

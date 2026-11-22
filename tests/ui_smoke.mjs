@@ -30,7 +30,7 @@ const chrome = spawn(CHROME, ["--headless=new", `--remote-debugging-port=${PORT}
 try {
   let target;
   for (let i = 0; i < 50 && !target; i++) {
-    try { target = await (await fetch(`http://127.0.0.1:${PORT}/json/new?${BASE}/?design=ui-smoke&view=top`, { method: "PUT" })).json(); }
+    try { target = await (await fetch(`http://127.0.0.1:${PORT}/json/new?about:blank`, { method: "PUT" })).json(); }
     catch { await sleep(200); }
   }
   const ws = new WebSocket(target.webSocketDebuggerUrl);
@@ -63,10 +63,16 @@ try {
   };
   const part = async (pid) => (await api("/api/designs/ui-smoke")).design.parts.find((p) => p.id === pid);
 
+  // open the page ourselves: newer Chrome ignores the URL given to /json/new
+  await send("Page.navigate", { url: `${BASE}/?design=ui-smoke&view=top` });
   check(await waitFor("!!window.wp?.state.data"), "viewer loads the design");
 
   // ---- draw a board on the floor in front of the cart (top view)
   await evaluate("wp.setTool('board'); document.querySelector('#boardMat').value = 'ply18'; document.querySelector('#boardOrient').value = 'flat'; true");
+  // zoom out (− key) so the spot in front of the cart is on screen below the header
+  const z = await evaluate("wp.camera.zoom");
+  for (let i = 0; i < 3; i++) await send("Input.dispatchKeyEvent", { type: "keyDown", key: "-", text: "-" });
+  check(await evaluate(`wp.camera.zoom < ${z}`), "− zooms out");
   await click(await screen(100, -400, 0));
   await click(await screen(700, -100, 0));
   check(await waitFor("document.querySelector('#boardDlg').open", 3000), "board dialog opens after two clicks");
@@ -91,6 +97,71 @@ try {
   check(await waitFor("wp.state.data.design.parts.find((p) => p.id === 'base_top').size[1] === 660"), "resize grows the part 60 mm deep");
   const raw = await (await fetch(`${BASE}/api/designs/ui-smoke`)).json();
   check(raw.design.params.length > 0, "design still resolves");
+
+  // ---- layers: hide a group, solo a material, all back on
+  await evaluate("document.querySelector('#layersBody').hidden && document.querySelector('#layersBtn').click(); true");
+  check(await waitFor("document.querySelectorAll('#layersBody [data-layer=groups]').length > 0", 3000), "layers panel lists the groups");
+  const grp = await evaluate("document.querySelector('#layersBody [data-layer=groups]').dataset.key");
+  await evaluate("document.querySelector('#layersBody [data-layer=groups]').click(); true");
+  check(await evaluate(`[...wp.meshes().values()].every(({ mesh, part }) => mesh.visible === ((part.group || 'Parts') !== ${JSON.stringify(grp)}))`),
+    `unticking group "${grp}" hides exactly its parts`);
+  check(await evaluate(`JSON.parse(localStorage.getItem('wp.layers.ui-smoke')).groups[${JSON.stringify(grp)}] === false`), "layer choice is remembered");
+  await evaluate("document.querySelector('#layersBody [data-all=\"1\"]').click(); true");
+  const mat = await evaluate("document.querySelector('#layersBody [data-solo=mats]')?.dataset.key ?? null");
+  if (mat) {
+    await evaluate("document.querySelector('#layersBody [data-solo=mats]').click(); true");
+    check(await evaluate(`[...wp.meshes().values()].every(({ mesh, part }) => mesh.visible === ((part.component ? 'Products' : part.material) === ${JSON.stringify(mat)}))`),
+      `clicking material "${mat}" shows only it`);
+    await evaluate("document.querySelector('#layersBody [data-solo=mats]').click(); true");
+  }
+  check(await evaluate("[...wp.meshes().values()].every(({ mesh }) => mesh.visible)"), "clicking it again shows everything");
+
+  // ---- navigation: pad buttons, keys, fit, double-click
+  const navPress = (n) => evaluate(`(() => { const b = document.querySelector('#nav [data-nav=${n}]');
+    b.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); b.dispatchEvent(new PointerEvent('pointerup', { bubbles: true })); return true; })()`);
+  const tgt = () => evaluate("wp.controls.target.toArray()");
+  const t0 = await tgt();
+  await navPress("pan-r");
+  const t1 = await tgt();
+  check(t1[0] > t0[0], `top view: ▶ moves the view right (${Math.round(t0[0])} → ${Math.round(t1[0])})`);
+  check(await evaluate("document.querySelector('#nav [data-nav=turn-l]').disabled"), "turn buttons are off in flat views");
+  const z0 = await evaluate("wp.camera.zoom");
+  await navPress("zoom-i");
+  check(await evaluate(`wp.camera.zoom > ${z0}`), "+ zooms in");
+  await send("Input.dispatchKeyEvent", { type: "keyDown", key: "1", text: "1" });
+  check(await waitFor("wp.state.view === 'persp'", 2000), "key 1 goes to 3D");
+  const az = "(() => { const o = wp.camera.position.clone().sub(wp.controls.target); return Math.atan2(o.y, o.x); })()";
+  const a0 = await evaluate(az);
+  await navPress("turn-r");
+  check(Math.abs((await evaluate(az)) - a0) > 0.01, "↻ turns the 3D view");
+  await evaluate("wp.select('base_top'); wp.fit(); true");
+  await sleep(600);
+  check(await evaluate(`(() => { const b = new (wp.controls.target.constructor)(); const box = wp.meshes().get('base_top').mesh;
+    box.geometry.computeBoundingBox(); box.geometry.boundingBox.getCenter(b).applyMatrix4(box.matrixWorld);
+    return b.distanceTo(wp.controls.target) < 5; })()`), "F fits the selected part (target at its centre)");
+  await send("Input.dispatchKeyEvent", { type: "keyDown", key: "Escape" });
+  await evaluate("wp.fit(); true");
+  await sleep(600);
+  const tb = await tgt();
+  const spot = await evaluate(`(() => {  // centre of another part, on screen
+    const r = document.querySelector('#canvas').getBoundingClientRect();
+    for (const { mesh } of wp.meshes().values()) {
+      mesh.geometry.computeBoundingBox();
+      const c = mesh.geometry.boundingBox.getCenter(wp.controls.target.clone()).applyMatrix4(mesh.matrixWorld);
+      const v = c.clone().project(wp.camera), x = r.left + (v.x + 1) / 2 * r.width, y = r.top + (1 - v.y) / 2 * r.height;
+      if (c.distanceTo(wp.controls.target) > 100 && x > r.left + 300 && x < r.right - 200 && y > r.top + 60 && y < r.bottom - 160) return [x, y];
+    }
+    return null;
+  })()`);
+  for (const n of [1, 2]) {
+    await send("Input.dispatchMouseEvent", { type: "mousePressed", x: spot[0], y: spot[1], button: "left", clickCount: n });
+    await send("Input.dispatchMouseEvent", { type: "mouseReleased", x: spot[0], y: spot[1], button: "left", clickCount: n });
+  }
+  await sleep(600);
+  const ta = await tgt();
+  check(Math.hypot(ta[0] - tb[0], ta[1] - tb[1], ta[2] - tb[2]) > 1, "double-click moves the view to that spot");
+  await send("Input.dispatchKeyEvent", { type: "keyDown", key: "4", text: "4" });
+  await waitFor("wp.state.view === 'top'", 2000);
 
   // ---- product picker: live IKEA search, import, place
   await evaluate("document.querySelector('#addProduct').click(); true");

@@ -55,6 +55,25 @@
     <div id="overall" class="overlay"></div>
     <div id="hover" class="hover" hidden></div>
     <div id="error" class="error" hidden></div>
+    <div id="layers" class="layers">
+      <button id="layersBtn" title="Show or hide groups and materials">Layers</button>
+      <div id="layersBody" class="layers-body" hidden></div>
+    </div>
+    <div id="nav" class="navpad" aria-label="Move the view">
+      <button data-nav="turn-l" data-turn title="Turn left (Shift+←)">↺</button>
+      <button data-nav="pan-u" title="Move up (↑)">▲</button>
+      <button data-nav="turn-r" data-turn title="Turn right (Shift+→)">↻</button>
+      <button data-nav="zoom-i" title="Zoom in (+, or scroll)">+</button>
+      <button data-nav="pan-l" title="Move left (←)">◀</button>
+      <button data-nav="fit" title="Fit the selection, or everything showing (F)">⊡</button>
+      <button data-nav="pan-r" title="Move right (→)">▶</button>
+      <button data-nav="zoom-o" title="Zoom out (−, or scroll)">−</button>
+      <button data-nav="tilt-u" data-tilt title="Look from higher (Shift+↑)">⤒</button>
+      <button data-nav="pan-d" title="Move down (↓)">▼</button>
+      <button data-nav="tilt-d" data-tilt title="Look from lower (Shift+↓)">⤓</button>
+      <button data-nav="home" title="Back to the start view (H)">⌂</button>
+    </div>
+    <div class="navhint">drag: turn · right-drag or shift-drag: move · scroll: zoom · double-click: go to that spot</div>
   </section>
   <aside id="panel">
     <nav class="tabs">

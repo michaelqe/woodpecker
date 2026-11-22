@@ -125,3 +125,21 @@ dialog label input, #catQ { display: block; width: 100%; margin-top: 4px; }
 .pagelink { color: var(--accent); text-decoration: none; font-size: 13px; white-space: nowrap; }
 .pagelink:hover { text-decoration: underline; }
 #newDlg textarea { width: 100%; box-sizing: border-box; }
+
+/* viewport overlays: layers (top left), nav pad (bottom right) */
+.layers { position: absolute; left: 16px; top: 12px; max-width: 280px; z-index: 2; }
+.layers > button { background: var(--panel); }
+.layers-body { margin-top: 2px; background: var(--panel); border: 1px solid var(--line); padding: 8px 12px; max-height: calc(100vh - 220px); overflow-y: auto; }
+.layers-body h3 { margin: 10px 0 4px; }
+.layers-body .row2 { display: flex; gap: 4px; }
+.lrow { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 6px; padding: 1px 0; }
+.lrow input { margin: 0; accent-color: var(--accent); }
+.lname { cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lname:hover { color: var(--accent); }
+.navpad { position: absolute; right: 16px; bottom: 30px; display: grid; grid-template-columns: repeat(3, 34px) 40px; gap: 2px; z-index: 2; user-select: none; touch-action: none; }
+.navpad button { height: 34px; padding: 0; background: var(--panel); font-size: 15px; line-height: 1; }
+.navpad button:nth-child(4n) { margin-left: 6px; }
+.navpad button:disabled { color: var(--line); cursor: default; }
+.navpad button:active:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.navhint { position: absolute; right: 16px; bottom: 8px; color: var(--muted); font-size: 11px; pointer-events: none; }
+@media (max-width: 900px) { .navhint { display: none; } }

@@ -270,8 +270,15 @@ def _publish_soon(name: str, by: str | None) -> None:
     threading.Thread(target=run, daemon=True).start()
 
 
+class Server(ThreadingHTTPServer):
+    # The viewer loads a dozen ES modules at once; with the default backlog of 5 some of those
+    # connections are reset and the page never starts.
+    request_queue_size = 128
+    daemon_threads = True
+
+
 def serve(host="127.0.0.1", port=8790):
-    httpd = ThreadingHTTPServer((host, port), Handler)
+    httpd = Server((host, port), Handler)
     if magpie.watch():
         print("Magpie pages: on (project %s at %s)" % (magpie.project_id(), magpie._base()))
     print(f"Woodpecker on http://{host}:{port}  (designs in {store.DESIGNS})")

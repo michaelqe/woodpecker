@@ -17,6 +17,7 @@ const state = {
   name: null, data: null, mtime: 0, wasm: null,
   selected: new Set(), view: qs.get("view") || "persp", showRef: true, showDims: true, fitted: false,
   tool: "select", snap: 10, busy: false,
+  layers: { groups: {}, mats: {} },  // layer name -> false when hidden
 };
 
 // ------------------------------------------------------------------ three setup
@@ -74,10 +75,89 @@ function buildScene() {
 
 function applyVisibility() {
   for (const { mesh, edges, part } of meshes.values()) {
-    const v = state.showRef || part.kind !== "reference";
+    const v = partVisible(part);
     mesh.visible = v; edges.visible = v;
   }
 }
+
+// ------------------------------------------------------------------ layers
+// Every part group and every material is a layer. A part shows when its group and its
+// material are both on (and the "reference" switch allows it). Remembered per design.
+const groupOf = (p) => p.group || "Parts";
+const matOf = (p) => (p.component ? "Products" : p.material || "Other");
+function partVisible(p) {
+  if (!state.showRef && p.kind === "reference") return false;
+  return state.layers.groups[groupOf(p)] !== false && state.layers.mats[matOf(p)] !== false;
+}
+function saveLayers() {
+  try { localStorage.setItem(`wp.layers.${state.name}`, JSON.stringify(state.layers)); } catch { /* private mode */ }
+}
+function loadLayers() {
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(`wp.layers.${state.name}`) || "null"); } catch { /* private mode */ }
+  state.layers = { groups: saved?.groups || {}, mats: saved?.mats || {} };
+}
+function layerList() {
+  const d = state.data.design, groups = new Map(), mats = new Map();
+  for (const p of d.parts) {
+    groups.set(groupOf(p), (groups.get(groupOf(p)) || 0) + 1);
+    mats.set(matOf(p), (mats.get(matOf(p)) || 0) + 1);
+  }
+  const matName = (m) => (m === "Products" ? "Bought products" : d.materials?.[m]?.name || m);
+  return {
+    groups: [...groups].map(([k, n]) => ({ k, n, label: k })),
+    mats: [...mats].map(([k, n]) => ({ k, n, label: matName(k).replace(/ \(reference\)$/, "") }))
+      .sort((a, b) => a.label.localeCompare(b.label)),
+  };
+}
+function renderLayers() {
+  if (!state.data) return;
+  const { groups, mats } = layerList();
+  const section = (title, kind, rows) => `
+    <h3>${title}</h3>
+    ${rows.map((r) => `<label class="lrow">
+      <input type="checkbox" data-layer="${kind}" data-key="${esc(r.k)}" ${state.layers[kind][r.k] !== false ? "checked" : ""}>
+      <span class="lname" data-solo="${kind}" data-key="${esc(r.k)}" title="Show only this">${esc(r.label)}</span>
+      <span class="muted small">${r.n}</span></label>`).join("")}`;
+  $("#layersBody").innerHTML = `
+    <div class="row2"><button data-all="1">All</button><button data-all="0">None</button></div>
+    ${section("Groups", "groups", groups)}
+    ${mats.length > 1 ? section("Materials", "mats", mats) : ""}
+    <p class="muted small">Click a name to show only that layer; click it again to show them all.</p>`;
+  const off = groups.filter((g) => state.layers.groups[g.k] === false).length
+    + mats.filter((m) => state.layers.mats[m.k] === false).length;
+  $("#layersBtn").textContent = off ? `Layers · ${off} off` : "Layers";
+  $("#layersBtn").classList.toggle("on", off > 0);
+}
+function layersChanged() { saveLayers(); applyVisibility(); renderLayers(); }
+$("#layersBtn").addEventListener("click", () => {
+  const b = $("#layersBody");
+  b.hidden = !b.hidden;
+  try { localStorage.setItem("wp.layersOpen", b.hidden ? "0" : "1"); } catch { /* private mode */ }
+});
+$("#layersBody").addEventListener("change", (e) => {
+  const t = e.target.closest("[data-layer]");
+  if (!t) return;
+  if (t.checked) delete state.layers[t.dataset.layer][t.dataset.key];
+  else state.layers[t.dataset.layer][t.dataset.key] = false;
+  layersChanged();
+});
+$("#layersBody").addEventListener("click", (e) => {
+  const all = e.target.closest("[data-all]");
+  if (all) {
+    state.layers = { groups: {}, mats: {} };
+    if (all.dataset.all === "0") for (const g of layerList().groups) state.layers.groups[g.k] = false;
+    return layersChanged();
+  }
+  const solo = e.target.closest("[data-solo]");
+  if (!solo) return;
+  e.preventDefault();  // a click on the name must not also toggle its checkbox
+  const kind = solo.dataset.solo, k = solo.dataset.key, rows = layerList()[kind];
+  const alone = rows.every((r) => (r.k === k) === (state.layers[kind][r.k] !== false));
+  state.layers[kind] = {};
+  if (!alone) for (const r of rows) if (r.k !== k) state.layers[kind][r.k] = false;
+  layersChanged();
+});
 
 function applySelection() {
   for (const [id, { mesh, edges, part }] of meshes) {
@@ -134,9 +214,122 @@ function setView(view) {
   controls.enableRotate = view === "persp";
   controls.screenSpacePanning = true;
   controls.zoomToCursor = true;
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.15;
+  if (view !== "persp") {
+    // flat views cannot turn, so a plain drag moves the drawing instead of doing nothing
+    controls.mouseButtons = { LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN };
+    controls.touches = { ONE: THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_PAN };
+  }
+  controls.addEventListener("start", () => { tween = null; });
   controls.update();
   tcontrols.camera = camera;
+  document.querySelectorAll("#nav [data-turn], #nav [data-tilt]").forEach((b) => { b.disabled = view !== "persp"; });
+  tween = null;
 }
+
+// ------------------------------------------------------------------ navigation
+// Buttons, keys and double-click all move the camera and its target together, so OrbitControls
+// keeps working from wherever they leave it. Steps are small and repeat while a button is held.
+const Z = new THREE.Vector3(0, 0, 1);
+let tween = null;  // {p0, t0, p1, t1, start, ms}: camera position and target, eased
+
+function camOffset() { return camera.position.clone().sub(controls.target); }
+function turn(deg) {
+  if (camera !== persp) return;
+  camera.position.copy(controls.target).add(camOffset().applyAxisAngle(Z, THREE.MathUtils.degToRad(deg)));
+}
+function tilt(deg) {
+  if (camera !== persp) return;
+  const off = camOffset(), axis = new THREE.Vector3().crossVectors(off, Z).normalize();
+  const next = off.clone().applyAxisAngle(axis, THREE.MathUtils.degToRad(deg));
+  const angle = next.angleTo(Z);
+  if (angle < 0.05 || angle > Math.PI - 0.05 || axis.lengthSq() === 0) return;
+  camera.position.copy(controls.target).add(next);
+}
+function viewHeight() {  // world units across the screen's height at the target
+  if (camera === persp) return 2 * camOffset().length() * Math.tan(THREE.MathUtils.degToRad(persp.fov / 2));
+  return (ortho.top - ortho.bottom) / ortho.zoom;
+}
+function pan(fx, fy) {  // fractions of the screen; +x right, +y up
+  const h = viewHeight(), w = h * camera.aspect || h * (size().w / size().h);
+  const right = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0);
+  const up = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 1);
+  const d = right.multiplyScalar(fx * w).add(up.multiplyScalar(fy * h));
+  camera.position.add(d); controls.target.add(d);
+}
+function zoom(f) {  // f < 1 closer
+  if (camera === persp) {
+    const off = camOffset();
+    off.setLength(Math.max(off.length() * f, 50));
+    camera.position.copy(controls.target).add(off);
+  } else {
+    ortho.zoom = Math.min(Math.max(ortho.zoom / f, 0.01), 500);
+    ortho.updateProjectionMatrix();
+  }
+}
+function visibleBox() {
+  const box = new THREE.Box3(), ids = state.selected.size ? [...state.selected] : [...meshes.keys()];
+  for (const id of ids) {
+    const m = meshes.get(id);
+    if (m && (m.mesh.visible || state.selected.size)) box.expandByObject(m.mesh);
+  }
+  return box.isEmpty() ? null : box;
+}
+// Frame the selection, or everything that is showing. Keeps the direction you look from.
+function fit() {
+  const box = visibleBox();
+  if (!box) return;
+  const c = box.getCenter(new THREE.Vector3()), r = Math.max(box.getSize(new THREE.Vector3()).length() / 2, 200);
+  const dir = camOffset().normalize();
+  if (camera === persp) {
+    const dist = r / Math.sin(THREE.MathUtils.degToRad(persp.fov / 2)) * 1.05;
+    flyTo(c.clone().add(dir.multiplyScalar(dist)), c);
+  } else {
+    flyTo(c.clone().add(dir.multiplyScalar(camOffset().length())), c);
+    ortho.zoom = Math.min(ortho.right - ortho.left, ortho.top - ortho.bottom) / (2 * r) * 0.95;
+    ortho.updateProjectionMatrix();
+  }
+}
+function flyTo(pos, target, ms = 350) {
+  tween = { p0: camera.position.clone(), t0: controls.target.clone(), p1: pos, t1: target, start: performance.now(), ms };
+}
+function stepTween(now) {
+  if (!tween) return;
+  const k = Math.min((now - tween.start) / tween.ms, 1), e = 1 - (1 - k) ** 3;
+  camera.position.lerpVectors(tween.p0, tween.p1, e);
+  controls.target.lerpVectors(tween.t0, tween.t1, e);
+  if (k === 1) tween = null;
+}
+// Double-click a spot: turn to it and come closer, so you can look around one room.
+canvas.addEventListener("dblclick", (e) => {
+  const h = hits(e)[0];
+  if (!h) return fit();
+  const off = camOffset();
+  if (camera === persp) off.setLength(Math.min(off.length(), 4000));
+  flyTo(h.point.clone().add(off), h.point.clone());
+});
+
+const NAV = {
+  "turn-l": () => turn(-4), "turn-r": () => turn(4), "tilt-u": () => tilt(-3), "tilt-d": () => tilt(3),
+  "pan-l": () => pan(-0.03, 0), "pan-r": () => pan(0.03, 0), "pan-u": () => pan(0, 0.03), "pan-d": () => pan(0, -0.03),
+  "zoom-i": () => zoom(0.94), "zoom-o": () => zoom(1 / 0.94),
+};
+let navRepeat = null;
+function navStop() { clearInterval(navRepeat); clearTimeout(navRepeat); navRepeat = null; }
+$("#nav").addEventListener("pointerdown", (e) => {
+  const b = e.target.closest("button");
+  if (!b || b.disabled) return;
+  e.preventDefault();
+  if (b.dataset.nav === "fit") return fit();
+  if (b.dataset.nav === "home") return setView(state.view);
+  const fn = NAV[b.dataset.nav];
+  if (!fn) return;
+  tween = null; fn();
+  navStop();
+  navRepeat = setTimeout(() => { navRepeat = setInterval(fn, 30); }, 250);
+});
+for (const ev of ["pointerup", "pointerleave", "pointercancel"]) $("#nav").addEventListener(ev, navStop);
 
 // ------------------------------------------------------------------ picking
 const ray = new THREE.Raycaster();
@@ -746,8 +939,9 @@ function status(t) { $("#status").textContent = t; }
 
 function accept(data, msg) {
   state.data = data; state.mtime = data.mtime;
+  if (state.layersFor !== state.name) { loadLayers(); state.layersFor = state.name; }  // per design
   showError(null);
-  buildScene(); renderAll();
+  buildScene(); renderAll(); renderLayers();
   if (msg) status(msg);
 }
 
@@ -894,13 +1088,23 @@ document.addEventListener("keydown", (e) => {
   if (views[e.key]) setView(views[e.key]);
   const tools = { v: "select", g: "move", s: "size", b: "board" };
   if (tools[e.key]) setTool(tools[e.key]);
-  if (e.key === "f") setView(state.view);
+  if (e.key === "f") fit();
+  if (e.key === "h" || e.key === "Home") setView(state.view);
+  const arrows = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, 1], ArrowDown: [0, -1] }[e.key];
+  if (arrows) {
+    e.preventDefault(); tween = null;
+    if (e.shiftKey) { if (arrows[0]) turn(arrows[0] * 10); else tilt(-arrows[1] * 6); }
+    else pan(arrows[0] * 0.08, arrows[1] * 0.08);
+  }
+  if (e.key === "+" || e.key === "=") zoom(0.85);
+  if (e.key === "-" || e.key === "_") zoom(1 / 0.85);
   if ((e.key === "Delete" || e.key === "Backspace") && state.selected.size === 1) $("#delPart")?.click();
   if ((e.metaKey || e.ctrlKey) && e.key === "z") { e.preventDefault(); $("#undo").click(); }
 });
 new ResizeObserver(resize).observe(canvas.parentElement);
 
 function frame() {
+  stepTween(performance.now());
   controls?.update();
   renderer.render(scene, camera);
   const { w, h } = size();
@@ -918,10 +1122,11 @@ function frame() {
 }
 
 // handle for debugging and the UI smoke test (tests/ui_smoke.mjs)
-window.wp = { state, tcontrols, proxy, get camera() { return camera; }, setTool, select };
+window.wp = { state, tcontrols, proxy, get camera() { return camera; }, get controls() { return controls; }, setTool, select, fit, meshes: () => meshes };
 
 (async function init() {
   $("#units").value = U.getUnit();
+  try { $("#layersBody").hidden = localStorage.getItem("wp.layersOpen") !== "1"; } catch { /* private mode */ }
   const list = await api("/api/designs");
   const sel = $("#design");
   sel.innerHTML = list.map((d) => `<option value="${esc(d.name)}">${esc(d.title)}</option>`).join("");

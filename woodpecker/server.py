@@ -148,7 +148,7 @@ class Handler(BaseHTTPRequestHandler):
     @route("POST", rf"/api/designs/{NAME}/delete")
     def delete_design(self, name):
         out = store.delete_design(name)
-        threading.Thread(target=magpie.mark_deleted, args=(name,), daemon=True).start()
+        threading.Thread(target=magpie.delete_page, args=(name,), daemon=True).start()
         self._json(out)
 
     @route("GET", rf"/api/designs/{NAME}/placed-in")
@@ -188,6 +188,20 @@ class Handler(BaseHTTPRequestHandler):
     @route("POST", rf"/api/designs/{NAME}/parts/{PART}/move")
     def move_part(self, name, part_id):
         store.move_part(name, self._source(name, part_id), self._body()["delta"])
+        self._json(design_payload(name))
+
+    @route("POST", rf"/api/designs/{NAME}/move-parts")
+    def move_parts(self, name):
+        b = self._body()
+        d = store.load(name)
+        store.move_parts(name, [d.part(i).source for i in b["ids"]], b["delta"])
+        self._json(design_payload(name))
+
+    @route("POST", rf"/api/designs/{NAME}/group")
+    def group_parts(self, name):
+        b = self._body()
+        d = store.load(name)
+        store.set_group(name, [d.part(i).source for i in b["ids"]], b["group"])
         self._json(design_payload(name))
 
     @route("POST", rf"/api/designs/{NAME}/parts/{PART}/resize")

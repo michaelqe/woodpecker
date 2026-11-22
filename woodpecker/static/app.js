@@ -395,6 +395,16 @@ function select(id) { state.selected = new Set([id]); selectionChanged(); showTa
 let drag = null;
 function attachHandles() {
   tcontrols.detach();
+  if (state.tool === "move" && state.selected.size > 1) {
+    const ps = [...state.selected].map((i) => meshes.get(i)?.part).filter(Boolean);
+    if (!ps.length) return;
+    const lo = [0, 1, 2].map((k) => Math.min(...ps.map((p) => p.at[k])));
+    const hi = [0, 1, 2].map((k) => Math.max(...ps.map((p) => p.max[k])));
+    proxy.position.set(...lo.map((v, k) => (v + hi[k]) / 2));
+    proxy.scale.set(1, 1, 1); proxy.rotation.set(0, 0, 0); proxy.updateMatrixWorld();
+    tcontrols.setMode("translate"); tcontrols.setTranslationSnap(state.snap); tcontrols.attach(proxy);
+    return;
+  }
   if (!["move", "size"].includes(state.tool) || state.selected.size !== 1) return;
   const id = [...state.selected][0];
   const p = meshes.get(id)?.part;
@@ -417,7 +427,8 @@ tcontrols.addEventListener("dragging-changed", (e) => {
   controls.enabled = !e.value;
   const id = [...state.selected][0];
   if (e.value) {
-    drag = { id, start: proxy.position.clone(), copies: [...meshes.values()].filter((m) => m.part.source === meshes.get(id).part.source) };
+    const sources = new Set([...state.selected].map((i) => meshes.get(i)?.part.source));
+    drag = { id, ids: [...state.selected], start: proxy.position.clone(), copies: [...meshes.values()].filter((m) => sources.has(m.part.source)) };
     return;
   }
   if (!drag) return;
@@ -425,7 +436,10 @@ tcontrols.addEventListener("dragging-changed", (e) => {
   const p = meshes.get(d.id).part;
   if (state.tool === "move") {
     const delta = proxy.position.clone().sub(d.start).toArray().map((v) => Math.round(v / state.snap) * state.snap);
-    if (delta.some((v) => v)) postPart(d.id, "move", { delta }, `moved ${p.name}`);
+    if (delta.some((v) => v)) {
+      if (d.ids.length > 1) postDesign("move-parts", { ids: d.ids, delta }, `moved ${d.ids.length} parts together`);
+      else postPart(d.id, "move", { delta }, `moved ${p.name}`);
+    }
   } else {
     const bs = p.max.map((v, i) => v - p.at[i]);
     const s = proxy.scale.toArray();
@@ -451,6 +465,22 @@ tcontrols.addEventListener("objectChange", () => {
   }
 });
 
+async function postDesign(action, body, msg) {
+  try {
+    const data = await api(`/api/designs/${state.name}/${action}`, {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+    });
+    accept(data, msg);
+  } catch (err) {
+    showError(err.message);
+    buildScene();
+  }
+}
+const selectGroup = (g) => {
+  state.selected = new Set(state.data.design.parts.filter((p) => (p.group || "Parts") === g).map((p) => p.id));
+  selectionChanged();
+  status(`selected group “${g}” (${state.selected.size} parts): Move (G) moves them together`);
+};
 async function postPart(id, action, body, msg) {
   try {
     const data = await api(`/api/designs/${state.name}/parts/${encodeURIComponent(id)}/${action}`, {
@@ -755,8 +785,9 @@ function renderPart() {
           ${j.fasteners ? `<div class="small">${esc(j.fasteners)}</div>` : ""}
           ${j.notes ? `<div class="small muted">${esc(j.notes)}</div>` : ""}
         </div>`).join("") : '<p class="muted">None.</p>'}
-      <div class="actions"><button id="delPart">Delete ${copies > 1 ? "all copies" : comp ? "product" : "part"}</button></div>
+      <div class="actions"><button id="selGroup">Select group “${esc(p.group || "Parts")}”</button><button id="delPart">Delete ${copies > 1 ? "all copies" : comp ? "product" : "part"}</button></div>
       <p class="muted small">Ask tab: “explain this”.</p>`;
+    $("#selGroup").onclick = () => selectGroup(p.group || "Parts");
     $("#delPart").onclick = async () => {
       if (!confirm(`Delete ${p.name}${copies > 1 ? ` and its ${copies - 1} copies` : ""}? (Undo brings it back.)`)) return;
       state.selected.clear();
@@ -768,13 +799,22 @@ function renderPart() {
     el.innerHTML = `
       <h2>${esc(d.title)}</h2>
       <p class="muted">${esc(d.description)}</p>
-      ${state.selected.size > 1 ? `<p>${state.selected.size} parts selected.</p>` : '<p class="muted small">Click a part to inspect it. Shift-click to select several.</p>'}
+      ${state.selected.size > 1 ? `<p>${state.selected.size} parts selected. Move (G) moves them together.</p>
+        <div class="actions"><button id="groupSel">Group…</button></div>`
+        : '<p class="muted small">Click a part to inspect it. Shift-click to select several. Click a group’s name to select all of it.</p>'}
       <div class="plist">${Object.entries(groups).map(([gname, ps]) => `
-        <div class="grp"><h3>${esc(gname)}</h3>${ps.map((p) => `
+        <div class="grp"><h3 class="click" data-grp="${esc(gname)}" title="Select the whole group">${esc(gname)}</h3>${ps.map((p) => `
           <div class="row ${state.selected.has(p.id) ? "sel" : ""}" data-sel="${esc(p.id)}">
             <span>${esc(p.name)}</span><span class="muted small">${U.dims(sortDesc(p.size))}</span>
           </div>`).join("")}</div>`).join("")}
       </div>`;
+    el.querySelectorAll("[data-grp]").forEach((h) => { h.onclick = () => selectGroup(h.dataset.grp); });
+    const gb = $("#groupSel");
+    if (gb) gb.onclick = () => {
+      const sel = [...state.selected].map((i) => partById(i)).filter(Boolean);
+      const name = prompt(`Name for a group of these ${sel.length} parts:`, sel[0]?.group || "");
+      if (name && name.trim()) postDesign("group", { ids: sel.map((p) => p.id), group: name.trim() }, `grouped ${sel.length} parts as “${name.trim()}”`);
+    };
   }
 }
 
@@ -1051,7 +1091,7 @@ $("#delDesign").addEventListener("click", async () => {
   try {
     const used = await api(`/api/designs/${name}/placed-in`);
     const warn = used.length ? `\n\nIt is placed in ${used.map((d) => `“${d.title}”`).join(", ")}; ${used.length > 1 ? "those show" : "that shows"} an error until you remove it there.` : "";
-    if (!confirm(`Delete “${title}”?${warn}\n\nA copy stays in its history, so it can be brought back.`)) return;
+    if (!confirm(`Delete “${title}” for good?${warn}\n\nThe design, its undo history and its Magpie page are all deleted. This cannot be undone.`)) return;
     await api(`/api/designs/${name}/delete`, { method: "POST" });
     const list = await api("/api/designs");
     $("#design").innerHTML = list.map((d) => `<option value="${esc(d.name)}">${esc(d.title)}</option>`).join("");
@@ -1181,7 +1221,7 @@ function frame() {
 }
 
 // handle for debugging and the UI smoke test (tests/ui_smoke.mjs)
-window.wp = { state, tcontrols, proxy, get camera() { return camera; }, get controls() { return controls; }, setTool, select, fit, meshes: () => meshes };
+window.wp = { state, tcontrols, proxy, renderPart, get camera() { return camera; }, get controls() { return controls; }, setTool, select, fit, meshes: () => meshes };
 
 (async function init() {
   $("#units").value = U.getUnit();

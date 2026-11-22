@@ -11,6 +11,7 @@ from __future__ import annotations
 import copy
 import json
 import os
+import shutil
 import re
 import time
 from pathlib import Path
@@ -213,6 +214,26 @@ def move_part(name: str, part_id: str, delta: list[float]) -> Design:
     return _edit(name, fn)
 
 
+def move_parts(name: str, part_ids: list[str], delta: list[float]) -> Design:
+    """Move several part specs by the same delta, as one change (one undo)."""
+    def fn(raw):
+        for pid in dict.fromkeys(part_ids):
+            _, p = _find(raw, pid)
+            p["at"] = [offset_expr(a, d) for a, d in zip(p.get("at", [0, 0, 0]), delta)]
+    return _edit(name, fn)
+
+
+def set_group(name: str, part_ids: list[str], group: str) -> Design:
+    """Put several part specs in one group (the Layers panel and the part list use it)."""
+    group = (group or "").strip()
+    if not group:
+        raise DesignError("a group needs a name")
+    def fn(raw):
+        for pid in dict.fromkeys(part_ids):
+            _find(raw, pid)[1]["group"] = group
+    return _edit(name, fn)
+
+
 def resize_part(name: str, part_id: str, delta: list[float]) -> Design:
     """Grow or shrink a part's local size by delta (mm per local axis)."""
     def fn(raw):
@@ -323,13 +344,15 @@ def placed_in(name: str) -> list[dict]:
 
 
 def delete_design(name: str) -> dict:
-    """Remove a design file. A snapshot stays in .woodpecker/history/<name>/ to recover it."""
+    """Delete a design for good: the file and its undo history. (The server also deletes its Magpie page.)"""
     path = design_path(name)
     if not path.exists():
         raise DesignError(f"no design {name!r}")
     used = placed_in(name)
-    _snapshot(name, path.read_text())
     path.unlink()
+    hist = STATE / "history" / name
+    if hist.is_dir():
+        shutil.rmtree(hist)
     return {"deleted": name, "was_placed_in": used}
 
 

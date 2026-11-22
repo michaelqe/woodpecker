@@ -191,6 +191,38 @@ try {
   check(await waitFor("document.querySelector('#boardMat').options.length >= 3", 3000), "blank design has starter materials for the Board tool");
   await api("/api/designs/ui-smoke-new/delete", {});
 
+  // ---- select a whole group, move it as one, then regroup the selection
+  await send("Page.enable");
+  let promptAnswer = null;
+  const onPrompt = (e) => { const m = JSON.parse(e.data); if (m.method === "Page.javascriptDialogOpening" && m.params.type === "prompt") {
+    ws.send(JSON.stringify({ id: 99998, method: "Page.handleJavaScriptDialog", params: { accept: true, promptText: promptAnswer } })); } };
+  ws.addEventListener("message", onPrompt);
+  await evaluate("document.querySelector('#design').value = 'ui-smoke'; document.querySelector('#design').dispatchEvent(new Event('change')); true");
+  await waitFor("wp.state.name === 'ui-smoke' && wp.state.data.design.parts.length > 3", 8000);
+  await evaluate("wp.setTool('move'); document.querySelector('[data-tab=part]').click(); wp.state.selected.clear(); wp.renderPart(); true");
+  check(await waitFor("!!document.querySelector('#tab-part [data-grp]')", 3000), "the part list shows clickable group names");
+  const grpName = await evaluate(`[...document.querySelectorAll('#tab-part [data-grp]')].map((h) => h.dataset.grp)
+    .find((g) => wp.state.data.design.parts.filter((p) => (p.group || 'Parts') === g && p.kind !== 'reference').length > 1)`);
+  await evaluate(`document.querySelector('#tab-part [data-grp="${grpName}"]').click(); true`);
+  const selIds = await evaluate("[...wp.state.selected]");
+  check(selIds.length > 1 && await evaluate("!!wp.tcontrols.object"), `clicking group “${grpName}” selects its ${selIds.length} parts and shows the Move handle`);
+  const before = await evaluate(`Object.fromEntries(${JSON.stringify(selIds)}.map((i) => [i, wp.state.data.design.parts.find((p) => p.id === i).at[0]]))`);
+  await evaluate(`(() => { const t = wp.tcontrols; t.dispatchEvent({ type: 'dragging-changed', value: true });
+    wp.proxy.position.x += 100; t.dispatchEvent({ type: 'objectChange' });
+    t.dispatchEvent({ type: 'dragging-changed', value: false }); return true; })()`);
+  check(await waitFor(`${JSON.stringify(selIds)}.every((i) => Math.abs(wp.state.data.design.parts.find((p) => p.id === i).at[0] - ${JSON.stringify(before)}[i] - 100) < 0.01)`, 8000),
+    "Move moves every selected part by the same 100 mm");
+  await evaluate("document.querySelector('#undo').click(); true");
+  check(await waitFor(`${JSON.stringify(selIds)}.every((i) => Math.abs(wp.state.data.design.parts.find((p) => p.id === i).at[0] - ${JSON.stringify(before)}[i]) < 0.01)`, 8000),
+    "one Undo puts them all back");
+  await evaluate(`wp.state.selected = new Set(${JSON.stringify(selIds.slice(0, 2))}); wp.renderPart(); true`);
+  promptAnswer = "Smoke group";
+  check(await waitFor("!!document.querySelector('#groupSel')", 3000), "Group… appears with several parts selected");
+  await evaluate("document.querySelector('#groupSel').click(); true");
+  check(await waitFor(`${JSON.stringify(selIds.slice(0, 2))}.every((i) => wp.state.data.design.parts.find((p) => p.id === i).group === 'Smoke group')`, 8000),
+    "Group… puts the selected parts in the named group");
+  ws.removeEventListener("message", onPrompt);
+
   // ---- Duplicate the open design, then place the original inside the copy
   await api("/api/designs/ui-smoke-copy/delete", {}).catch(() => {});
   await evaluate("document.querySelector('#design').value = 'ui-smoke'; document.querySelector('#design').dispatchEvent(new Event('change')); true");
@@ -221,7 +253,6 @@ try {
   // ---- Delete: warns where it is placed, then removes it and opens another design
   await evaluate("document.querySelector('#design').value = 'ui-smoke'; document.querySelector('#design').dispatchEvent(new Event('change')); true");
   await waitFor("wp.state.name === 'ui-smoke'", 5000);
-  await send("Page.enable");
   let dialogText = "";
   const onDialog = (e) => { const m = JSON.parse(e.data); if (m.method === "Page.javascriptDialogOpening") { dialogText = m.params.message;
     ws.send(JSON.stringify({ id: 99999, method: "Page.handleJavaScriptDialog", params: { accept: true } })); } };

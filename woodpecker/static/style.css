@@ -143,3 +143,5 @@ dialog label input, #catQ { display: block; width: 100%; margin-top: 4px; }
 .navpad button:active:not(:disabled) { border-color: var(--accent); color: var(--accent); }
 .navhint { position: absolute; right: 16px; bottom: 8px; color: var(--muted); font-size: 11px; pointer-events: none; }
 @media (max-width: 900px) { .navhint { display: none; } }
+.grp h3.click { cursor: pointer; }
+.grp h3.click:hover { color: var(--accent, #1ba1e2); }

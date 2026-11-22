@@ -292,16 +292,17 @@ def publish(name: str, by: str | None = None, force: bool = False) -> dict:
     return info(name)
 
 
-def mark_deleted(name: str) -> None:
-    if not enabled():
-        return
-    s = _load_state().get(name) or {}
-    if s.get("page_id"):
-        try:
-            _req("PATCH", f"/api/pages/{s['page_id']}", {"append_markdown": "\n**This design was deleted in Woodpecker.**\n",
-                                                          "author": "woodpecker"})
-        except DesignError:
-            pass
+def delete_page(name: str) -> None:
+    """The design was deleted: delete its Magpie page too, and forget it."""
+    with _lock():
+        st = _load_state()
+        s = st.pop(name, None) or {}
+        if enabled() and s.get("page_id"):
+            try:
+                _req("DELETE", f"/api/pages/{s['page_id']}")
+            except DesignError:
+                st[name] = s   # Magpie unreachable: keep the id so it can be retried
+        _save_state(st)
 
 
 # ---------------------------------------------------------------- background sync

@@ -7,8 +7,13 @@ is checked against the traced walls when this script runs.
 Coordinates below are the drawing's: x = left -> right along grid 1 -> 4 (0 = outer face of the
 bay wall), y = down the drawing (0 = outer face of the kitchen wall). box() turns them into
 Woodpecker's axes (y grows toward the back, so y_wp = DEPTH - y), which keeps the top view the
-same way round as the plan instead of mirrored. z = up (0 = ground-floor floor). Which way is
-north is not known yet.
+same way round as the plan instead of mirrored. z = up (0 = ground-floor floor).
+
+Site orientation (from the cadastral / Google Maps, north up): the long wall with the front door
+(plan "east") faces north toward Tiskre tee; the short wall with the back door (plan "south")
+faces east onto the parking pad. The living-room bay (plan "west") faces south. shell_on_pad()
+rotates the shell into the garage site frame (origin at the house's SE / pad's SW, +x east,
++y north) so Top view matches the map.
 
 Change the house here and re-run; do not edit designs/house.json with the tools, the next run
 overwrites it. Everything is a reference part: nothing here is built, so there is no cut list.
@@ -268,6 +273,63 @@ def stair_parts():
     P.append(box("rail-west", "Landing railing", g, "rail", 5753, 5134, 3000, 5793, 6234, 3900, "Railing round the stairwell upstairs."))
     P.append(box("rail-south", "Landing railing", g, "rail", 5793, 6214, 3000, 6874, 6254, 3900, "Railing round the stairwell upstairs."))
     return P
+
+
+def _wall_thickness(r):
+    x0, y0, x1, y1 = r
+    return (y1 - y0) if (x1 - x0) >= (y1 - y0) else (x1 - x0)
+
+
+def shell_parts():
+    """Exterior walls, glass, terrace/steps and the chimney — the massing for other designs.
+
+    No interior walls, floors, stairs or fixtures. Used by scripts/garage_options.py so the
+    carport/garage drawings show the real house instead of a flat stub.
+    """
+    parts = []
+    for w in WALLS:
+        if _wall_thickness(w[3]) < 280:
+            continue
+        parts += wall_parts(*w)
+    for r in ROOMS:
+        if r[6] == "outside":
+            parts += room_parts(*r)
+    for bid, f, name, (x0, y0, x1, y1), (h0, h1), mat, role in BLOCKS:
+        if bid != "chimney-up":
+            continue
+        z = LEVEL[f]["z"]
+        parts.append(box(bid, name, LEVEL[f]["name"], mat, x0, y0, z + h0, x1, y1, z + h1, role))
+    for p in parts:
+        p["size"] = [round(v, 1) for v in p["size"]]
+        p["at"] = [round(v, 1) for v in p["at"]]
+    return parts
+
+
+# Plan-south wall runs twin x = SOUTH_WEST .. NORTH_FACE (geo east face of the house).
+# SOUTH_WEST is the geo-SE corner (pad SW); NORTH_FACE is the geo-NE corner (pad NW on the road).
+SOUTH_WEST = 2750
+NORTH_FACE = 8450
+
+
+def shell_on_pad():
+    """Shell parts in garage/carport site coordinates (north up, matching Google Maps).
+
+    Origin = house SE = pad SW corner. +x = east (into the pad), +y = north (toward the road).
+    The short plan-south / back-door wall is the pad's west edge; the long plan-east / front-door
+    wall faces the road. Part ids are prefixed with `house-`.
+    """
+    out = []
+    for p in shell_parts():
+        hx, hy, hz = p["at"]
+        sx, sy, sz = p["size"]
+        q = dict(p)
+        q["id"] = f"house-{p['id']}"
+        q["group"] = "House"
+        # 90° CCW in plan: south → +x (east), east → +y (north)
+        q["at"] = [round(-(hy + sy), 1), round(hx - SOUTH_WEST, 1), round(hz, 1)]
+        q["size"] = [round(sy, 1), round(sx, 1), round(sz, 1)]
+        out.append(q)
+    return out
 
 
 def build():

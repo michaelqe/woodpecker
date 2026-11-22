@@ -1,17 +1,30 @@
 """Generate Woodpecker designs (run: python3 scripts/garage_options.py designs/) for the House > Garage (Proposed) options.
 
-Site from the Garage page (screenshot 19.11.2026): pad NW corner = origin, x east along the
-road-side edge (10.29 m), y south toward the garden, house wall along x = 0 (6.1 m).
-SE corner solved from the four side lengths: (11593, 4380); area 57.9 m2 (page: 58.07).
+Site from the cadastral overlay on the Garage page (58.07 m2) and Google Maps (north up):
+origin = pad SW = house SE corner, +x east into the pad, +y north toward Tiskre tee. House wall
+at x = 0 (6.1 m along y). Road-side (north) edge is 10.29 m; garden-side (south) edge 11.72 m;
+east edge 4.57 m. NE corner of the rectangular part of the pad is at (10290, 6100); the slanted
+east/south corner is at (11593, 1720).
+
+Top view is north-up (same as Maps). The house shell from scripts/house_model.py is placed by
+shell_on_pad(): short back-door wall on the pad's west edge, long front-door wall facing the road.
+Re-run this script after changing the house model.
 """
+import importlib.util
 import json
 import math
 import sys
 from pathlib import Path
 
 OUT = Path(sys.argv[1])
+_REPO = Path(__file__).resolve().parent.parent
+_spec = importlib.util.spec_from_file_location("house_model", _REPO / "scripts" / "house_model.py")
+_house = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_house)
 
-SE = (11593, 4380)
+PAD_N = 6100          # north (road) edge of the pad at the house, in site y
+PAD_NE = (10290, 6100)  # north-east of the rectangular body
+PAD_SE = (11593, 1720)  # south-east tip after the slant
 DEG = math.degrees
 
 
@@ -32,13 +45,17 @@ MATS = {
     "osb12": {"name": "OSB/3 12 mm (ceiling deck)", "kind": "sheet", "thickness": 12, "stock": [2500, 1250], "density": 600},
     "roof_sheet": {"name": "Profiled steel roof sheet (reference)", "kind": "reference", "color": "#59636e"},
     "solar": {"name": "Solar panel about 430 W, 1722x1134 (reference)", "kind": "reference", "color": "#1d3557"},
-    "house": {"name": "House (reference)", "kind": "reference", "color": "#c79a8f"},
     "boundary": {"name": "Plot boundary (reference)", "kind": "reference", "color": "#e3b505"},
     "site": {"name": "Site (reference, approximate)", "kind": "reference", "color": "#b9b4aa"},
     "car": {"name": "Car (reference)", "kind": "reference", "color": "#4f7cac"},
     "zone": {"name": "Cable protection zone (reference, approximate)", "kind": "reference", "color": "#d64541"},
     "opening": {"name": "Door / window (reference)", "kind": "reference", "color": "#8fbfe0"},
     "slab": {"name": "Concrete slab (reference)", "kind": "reference", "color": "#a7a7a2"},
+    # House shell materials (from house_model; keys must not collide with the ones above)
+    "wall": _house.MATERIALS["wall"],
+    "glass": _house.MATERIALS["glass"],
+    "outside": _house.MATERIALS["outside"],
+    "masonry": _house.MATERIALS["masonry"],
 }
 
 
@@ -48,53 +65,65 @@ def mats(*keys):
 
 # ---------------------------------------------------------------- site and cars
 def site_parts():
-    ex, ey = SE[0] - 10290, SE[1]
+    # East edge from PAD_NE to PAD_SE (slanting south-east). Outward = away from the house.
+    ex, ey = PAD_SE[0] - PAD_NE[0], PAD_SE[1] - PAD_NE[1]
     east_len = math.hypot(ex, ey)
-    east_ang = DEG(math.atan2(ey, ex))           # direction of the pad's east edge
-    nx, ny = ey / east_len, -ex / east_len       # outward normal (east-north-east)
-    bx, by = 10290 + 2000 * nx, 2000 * ny        # boundary about 2 m out from the pad's NE corner
-    g_len = math.hypot(SE[0], SE[1] - 6100)
-    g_ang = DEG(math.atan2(SE[1] - 6100, SE[0]))
+    east_ang = DEG(math.atan2(ey, ex))
+    nx, ny = -ey / east_len, ex / east_len       # outward normal (roughly east)
+    bx = PAD_NE[0] + 2000 * nx
+    by = PAD_NE[1] + 2000 * ny
+    rect_h = PAD_N - PAD_SE[1]                   # 4380: rectangular body height
     P = []
     P.append({"id": "pad", "name": "Parking pad (pavers), main part", "group": "Site", "material": "site",
-              "size": [10290, SE[1], 20], "at": [0, 0, 0],
-              "role": "The existing paved pad, 58 m2 (in the Top view the road is at the bottom, the garden at the top). Measured on the map: 10.29 m along the road side, 11.72 m along the garden side, 6.1 m at the house, 4.57 m at the east end."})
+              "size": [10290, rect_h, 20], "at": [0, PAD_SE[1], 0],
+              "role": "The existing paved pad, 58 m2 (Top view is north-up like the map: road at the top, garden at the bottom). Measured on the cadastral: 10.29 m along the road, 11.72 m along the garden, 6.1 m at the house, 4.57 m at the east end."})
+    # Garden wedge: triangle (0,0)-(0, PAD_SE[1])-(PAD_SE[0], PAD_SE[1]) under the rectangular body
     P.append({"id": "pad_wedge", "name": "Parking pad, garden-side wedge", "group": "Site", "material": "site",
-              "shape": "gusset", "leg": "left", "size": [SE[0], 20, 6100 - SE[1]], "at": [0, SE[1], 20],
+              "shape": "gusset", "leg": "left", "size": [PAD_SE[0], 20, PAD_SE[1]], "at": [0, 0, 20],
               "rotate": {"axis": "x", "deg": -90},
               "role": "Part of the pad: it is deeper at the house end (6.1 m) than at the east end (4.4-4.6 m)."})
+    # East wedge: triangle PAD_NE-PAD_SE-(10290, PAD_SE[1]) east of the rectangular body
     P.append({"id": "pad_east", "name": "Parking pad, east wedge", "group": "Site", "material": "site",
-              "shape": "gusset", "leg": "left", "size": [SE[0] - 10290, 20, SE[1]], "at": [10290, SE[1], 0],
-              "rotate": {"axis": "x", "deg": 90},
+              "shape": "gusset", "leg": "left", "size": [PAD_SE[0] - 10290, 20, rect_h],
+              "at": [10290, PAD_SE[1], 20], "rotate": {"axis": "x", "deg": -90},
               "role": "Part of the pad: the east edge slants outward toward the garden."})
-    P.append({"id": "house", "name": "House (footprint, east end)", "group": "Site", "material": "house",
-              "size": [6000, 7000, 300], "at": [-6000, 0, 0],
-              "role": "The house. Its east gable wall is the pad's west edge (x = 0). Drawn low so it does not hide the design."})
+    for hp in _house.shell_on_pad():
+        hp = dict(hp)
+        hp["role"] = (
+            (hp.get("role") or "")
+            + " House shell from the digital twin (north-up): short back-door wall at x = 0,"
+            " long front-door wall facing the road (north)."
+        ).strip()
+        P.append(hp)
     P.append({"id": "boundary_north", "name": "Plot boundary, road side (approx.)", "group": "Site", "material": "boundary",
-              "size": [14000, 60, 100], "at": [-2000, -3500, 0],
+              "size": [14000, 60, 100], "at": [-2000, PAD_N + 3500, 0],
               "role": "Boundary with the road-side strip, about 3.5 m north of the pad (measured on the map)."})
     P.append({"id": "boundary_east", "name": "Plot boundary with 0127 (approx.)", "group": "Site", "material": "boundary",
-              "size": [9000, 60, 100], "at": [round(bx - 3500 * math.cos(math.radians(east_ang))), round(by - 3500 * math.sin(math.radians(east_ang))), 0],
+              "size": [9000, 60, 100],
+              "at": [round(bx - 3500 * math.cos(math.radians(east_ang))),
+                     round(by - 3500 * math.sin(math.radians(east_ang))), 0],
               "rotate": {"axis": "z", "deg": round(east_ang, 2)},
               "role": "Boundary with plot 0127, about 2 m from the east end of the pad. Under 4 m means EI60 walls and, in Tallinn, a written agreement with the neighbour."})
     P.append({"id": "cable_zone_front", "name": "Cable corridor protection zone (approx.)", "group": "Site", "material": "zone",
-              "size": [16000, 2000, 15], "at": [-3000, -5500, 0],
+              "size": [16000, 2000, 15], "at": [-3000, PAD_N + 3500, 0],
               "role": "Low-voltage cables run 4-5 m north of the pad's front edge, with about 1 m protection zone each side. No digging or footings here without Elektrilevi's consent."})
     P.append({"id": "cable_zone_ne", "name": "Service cables from 1239, zone (approx.)", "group": "Site", "material": "zone",
-              "size": [2000, 5500, 15], "at": [11300, -3500, 0],
+              "size": [2000, 5500, 15], "at": [11300, PAD_N - 2000, 0],
               "role": "AXPK 4x25 service cables leave distribution point 1239 heading south then east, about 2 m from the pad's NE corner. Positions on utility maps can be off by a metre; order an on-site marking."})
     P.append({"id": "dist_1239", "name": "Distribution point 1239 (Haabersti)", "group": "Site", "material": "site",
-              "size": [900, 500, 1400], "at": [11200, -2600, 0],
+              "size": [900, 500, 1400], "at": [11200, PAD_N + 1000, 0],
               "role": "Elektrilevi distribution point on the neighbouring land, just past the NE corner of the pad."})
-    del g_len, g_ang
     return P
 
 
-def car(prefix, label, item, width, cx, y0, z=0):
+def car(prefix, label, item, width, y_nose, cx, z=0):
     """A car from the catalog (published size, drawn with wheels and glass), backed in:
-    nose toward the road (small y)."""
+    nose toward the road (north, +y). Catalog vehicles face -y (nose at local y = 0), so they
+    are rotated 180° about z; after that flip `at` is the nose / max-x corner, so use
+    cx + width/2 (not cx - width/2) or the car lands a full width too far west."""
     return [{"id": prefix, "name": label, "group": "Cars", "component": item,
-             "at": [round(cx - width / 2), y0, z],
+             "at": [round(cx + width / 2), round(y_nose), z],
+             "rotate": {"axis": "z", "deg": 180},
              "role": f"{label}, to check the fit. Reference only: not in the cut list."}]
 
 
@@ -103,18 +132,22 @@ ALLTRACK = ("VW Golf Alltrack (2017)", "vw-golf-alltrack-2017", 1799)
 
 
 # ---------------------------------------------------------------- carport roof frame (parametric)
-def carport_params(W, D, bays, h_front, pitch=5, x0=150):
+def carport_params(W, D, bays, h_front, pitch=5, x0=150, y0=None):
+    """y0 is the garden (south) edge of the roof; +y is north toward the road. Default y0
+    places the road edge of a depth-D roof on the pad's north edge (PAD_N)."""
+    if y0 is None:
+        y0 = PAD_N - D
     return {
         "x0": {"value": x0, "label": "Gap between house wall and roof edge"},
         "W": {"value": W, "label": "Roof width (along the house wall's side, x)"},
-        "D": {"value": D, "label": "Roof depth, road side to garden side (y)"},
-        "y0": {"value": 0, "label": "Roof front edge (0 = front edge of the pad)"},
+        "D": {"value": D, "label": "Roof depth, garden (south) to road (north)"},
+        "y0": {"value": y0, "label": "Roof garden (south) edge"},
         "bays": {"value": bays, "label": "Bays between posts", "unit": "count"},
-        "h_front": {"value": h_front, "label": "Top of the front beam"},
-        "pitch": {"value": pitch, "label": "Roof pitch (falls toward the garden)", "unit": "deg"},
+        "h_front": {"value": h_front, "label": "Top of the front (road / north) beam"},
+        "pitch": {"value": pitch, "label": "Roof pitch (falls toward the garden / south)", "unit": "deg"},
         "oh_side": {"value": 250, "label": "Roof overhang past the end posts"},
-        "oh_front": {"value": 300, "label": "Roof overhang in front of the front posts"},
-        "oh_back": {"value": 300, "label": "Roof overhang behind the back posts"},
+        "oh_front": {"value": 300, "label": "Roof overhang north of the front posts"},
+        "oh_back": {"value": 300, "label": "Roof overhang south of the back posts"},
         "post": {"value": 140, "label": "Post size (glulam, square)"},
         "beam_h": {"value": 225, "label": "Beam depth (glulam)"},
         "raf_h": {"value": 220, "label": "Rafter depth"},
@@ -123,37 +156,38 @@ def carport_params(W, D, bays, h_front, pitch=5, x0=150):
         "batten_max": {"value": 800, "label": "Max batten spacing (along the slope)"},
         "brace": {"value": 600, "label": "Knee brace leg"},
         "post_step": "(W - 2 * oh_side - post) / bays",
-        "yf": "y0 + oh_front",
-        "yb": "y0 + D - oh_back - post",
-        "h_back": {"value": "h_front - (yb - yf) * tan(pitch)", "label": "Top of the back beam"},
+        "yb": "y0 + oh_back",
+        "yf": "y0 + D - oh_front - post",
+        "h_back": {"value": "h_front - (yf - yb) * tan(pitch)", "label": "Top of the back (garden) beam"},
         "raf_len": "D / cos(pitch)",
         "raf_n": "ceil((W - raf_t) / raf_max) + 1",
         "raf_step": "(W - raf_t) / (raf_n - 1)",
-        "raf_z": "h_front + (yf + post / 2 - y0) * tan(pitch)",
+        # Rafter sits on the low (garden) end and rises toward the road (+pitch about x)
+        "raf_z": "h_back + (yb + post / 2 - y0) * tan(pitch)",
         "top_z": "raf_z + raf_h / cos(pitch)",
         "bat_n": "ceil((raf_len - 100) / batten_max) + 1",
         "bat_step": "(raf_len - 100) / (bat_n - 1)",
         "roof_area_m2": {"value": "W * D / 1000000", "label": "Roofed area (counts as footprint)", "unit": "m2"},
-        "height_max": {"value": "top_z + 32 + 25", "label": "Highest point (roof sheet at the front)"},
+        "height_max": {"value": "h_front + raf_h / cos(pitch) + 32 + 25", "label": "Highest point (roof sheet at the road edge)"},
     }
 
 
 def carport_parts(batten_pieces=2, solar_rows=3, solar_cols=5):
     P = []
-    P.append({"id": "post_front", "name": "Post, front", "group": "Frame", "material": "gl_post",
+    P.append({"id": "post_front", "name": "Post, front (road)", "group": "Frame", "material": "gl_post",
               "size": ["post", "post", "h_front - beam_h"], "at": ["x0 + oh_side", "yf", 0],
               "repeat": {"count": "bays + 1", "axis": "x", "spacing": "post_step"},
-              "role": "Carries the front beam down to a ground screw. Sized and spaced so walls and a door can be added later."})
-    P.append({"id": "post_back", "name": "Post, back", "group": "Frame", "material": "gl_post",
+              "role": "Carries the front (road / north) beam down to a ground screw. Sized and spaced so walls and a door can be added later."})
+    P.append({"id": "post_back", "name": "Post, back (garden)", "group": "Frame", "material": "gl_post",
               "size": ["post", "post", "h_back - beam_h"], "at": ["x0 + oh_side", "yb", 0],
               "repeat": {"count": "bays + 1", "axis": "x", "spacing": "post_step"},
-              "role": "Carries the back (low) beam. Shorter than the front posts because the roof falls toward the garden."})
-    P.append({"id": "beam_front", "name": "Beam, front", "group": "Frame", "material": "gl_beam",
+              "role": "Carries the back (low / garden) beam. Shorter than the front posts because the roof falls toward the garden."})
+    P.append({"id": "beam_front", "name": "Beam, front (road)", "group": "Frame", "material": "gl_beam",
               "size": ["W - 200", "post", "beam_h"], "at": ["x0 + 100", "yf", "h_front - beam_h"],
-              "role": "Front (high) beam on top of the front posts; the rafters sit on it."})
-    P.append({"id": "beam_back", "name": "Beam, back", "group": "Frame", "material": "gl_beam",
+              "role": "Front (high / road) beam on top of the front posts; the rafters sit on it."})
+    P.append({"id": "beam_back", "name": "Beam, back (garden)", "group": "Frame", "material": "gl_beam",
               "size": ["W - 200", "post", "beam_h"], "at": ["x0 + 100", "yb", "h_back - beam_h"],
-              "role": "Back (low) beam on top of the back posts."})
+              "role": "Back (low / garden) beam on top of the back posts."})
     for row, y, top in (("front", "yf", "h_front"), ("back", "yb", "h_back")):
         P.append({"id": f"brace_{row}", "name": f"Knee brace, {row}", "group": "Frame", "material": "c24_95",
                   "size": ["brace / cos(45)", 45, 95],
@@ -164,28 +198,29 @@ def carport_parts(batten_pieces=2, solar_rows=3, solar_cols=5):
                   "role": "Diagonal between post and beam. Stops the frame racking sideways along its length (wind, a nudge from a car)."})
     P.append({"id": "rafter", "name": "Rafter", "group": "Roof", "material": "c24_220",
               "size": ["raf_t", "raf_len", "raf_h"], "at": ["x0", "y0", "raf_z"],
-              "rotate": {"axis": "x", "deg": "-pitch"},
+              "rotate": {"axis": "x", "deg": "pitch"},
               "repeat": {"count": "raf_n", "axis": "x", "spacing": "raf_step"},
-              "role": "Spans from the front beam to the back beam, falling toward the garden so rain and snow run off away from the cars' noses. Fixed with a rafter tie at each beam.",
+              "role": "Spans from the back beam to the front beam, rising toward the road so rain and snow run off to the garden. Fixed with a rafter tie at each beam.",
               "notes": "About 5.3 m between the beams: check the span against the snow load in the design project (45x220 at 600 c/c is at the limit; 400 c/c or 45x245 if needed)."})
     for k in range(batten_pieces):
         P.append({"id": f"batten_{k + 1}", "name": f"Roof batten, piece {k + 1}", "group": "Roof", "material": "batten",
                   "size": [f"W / {batten_pieces}", 100, 32],
-                  "at": [f"x0 + {k} * W / {batten_pieces}", "y0 + 50 * cos(pitch)", "top_z - 50 * sin(pitch)"],
-                  "rotate": {"axis": "x", "deg": "-pitch"},
-                  "repeat": {"count": "bat_n", "step": [0, "bat_step * cos(pitch)", "-bat_step * sin(pitch)"]},
+                  "at": [f"x0 + {k} * W / {batten_pieces}", "y0 + 50 * cos(pitch)", "top_z + 50 * sin(pitch)"],
+                  "rotate": {"axis": "x", "deg": "pitch"},
+                  "repeat": {"count": "bat_n", "step": [0, "bat_step * cos(pitch)", "bat_step * sin(pitch)"]},
                   "role": "Across the rafters; the steel roof sheets are screwed to these. Joints fall on a rafter."})
     P.append({"id": "roof", "name": "Roof sheet", "group": "Roof", "material": "roof_sheet",
-              "size": ["W", "raf_len", 25], "at": ["x0", "y0", "top_z + 32"], "rotate": {"axis": "x", "deg": "-pitch"},
+              "size": ["W", "raf_len", 25], "at": ["x0", "y0", "top_z + 32"], "rotate": {"axis": "x", "deg": "pitch"},
               "role": "Profiled steel sheet with anti-condensation felt (so it does not drip on the cars)."})
     for r in range(solar_rows):
         P.append({"id": f"solar_{r + 1}", "name": f"Solar panel, row {r + 1}", "group": "Solar", "material": "solar",
                   "size": [1134, 1722, 35],
                   "at": ["x0 + (W - %d * 1150) / 2" % solar_cols,
-                         f"y0 + (150 + {r} * 1740) * cos(pitch)", f"top_z + 32 + 25 + 60 - (150 + {r} * 1740) * sin(pitch)"],
-                  "rotate": {"axis": "x", "deg": "-pitch"},
+                         f"y0 + (150 + {r} * 1740) * cos(pitch)",
+                         f"top_z + 32 + 25 + 60 + (150 + {r} * 1740) * sin(pitch)"],
+                  "rotate": {"axis": "x", "deg": "pitch"},
                   "repeat": {"count": solar_cols, "axis": "x", "spacing": 1150},
-                  "role": "Solar panels on rails over the roof sheet. The roof faces roughly south-south-east."})
+                  "role": "Solar panels on rails over the roof sheet. The roof falls to the south (garden), so the panels face south."})
     return P
 
 
@@ -308,10 +343,11 @@ def main():
     # ---------- 1. two-car carport with solar
     p = carport_params(W=6600, D=5950, bays=2, h_front=2900)
     parts = carport_parts(batten_pieces=2, solar_rows=3, solar_cols=5)
-    parts += car("multivan", *MULTIVAN, cx=150 + 250 + 140 + 1450 - 140, y0=450)
-    parts += car("alltrack", *ALLTRACK, cx=150 + 250 + 1585 + 3110 - 70 - 140, y0=450)
+    parts += car("multivan", *MULTIVAN, y_nose=PAD_N - 450, cx=150 + 250 + 140 + 1450 - 140)
+    parts += car("alltrack", *ALLTRACK, y_nose=PAD_N - 450, cx=150 + 250 + 1585 + 3110 - 70 - 140)
     parts.append({"id": "cargo_bike", "name": "Cargo bike", "group": "Cars", "material": "car", "size": [2700, 650, 1100],
-                  "at": [3900, 5320, 0], "role": "Cargo bike, about 2.7 m long, behind the Alltrack (which is shorter than the Multivan)."})
+                  "at": [3900, PAD_N - 5320 - 650, 0],
+                  "role": "Cargo bike, about 2.7 m long, behind the Alltrack (which is shorter than the Multivan)."})
     parts += site_parts()
     designs["carport-2car"] = {
         "title": "Carport for 2 cars with solar roof (6.6 x 6.0 m)",
@@ -322,7 +358,7 @@ def main():
                         "(one building, 100 m2, realised) is the real hurdle. Posts and clear height are sized so walls and doors can be "
                         "added later. Free-standing, 150 mm off the house wall. Sizes are a starting point for the designer, not a calculation."),
         "units": "mm", "anchored": "Stands on ground screws, so there is no tip check; the designer checks wind uplift and snow.",
-        "params": p, "materials": mats("gl_post", "gl_beam", "c24_220", "c24_95", "batten", "roof_sheet", "solar", "site", "house", "boundary", "car", "zone"),
+        "params": p, "materials": mats("gl_post", "gl_beam", "c24_220", "c24_95", "batten", "roof_sheet", "solar", "site", "wall", "glass", "outside", "masonry", "boundary", "car", "zone"),
         "parts": parts, "joints": carport_joints(2),
         "hardware": carport_hardware(posts=6, rafters=13, roof_m2=6.6 * 5.97, panels=15),
     }
@@ -331,7 +367,7 @@ def main():
     p = carport_params(W=3600, D=5450, bays=1, h_front=2800)
     p["oh_side"]["value"] = 200
     parts = carport_parts(batten_pieces=1, solar_rows=3, solar_cols=3)
-    parts += car("multivan", *MULTIVAN, cx=150 + 1800, y0=300)
+    parts += car("multivan", *MULTIVAN, y_nose=PAD_N - 300, cx=150 + 1800)
     parts += site_parts()
     j = carport_joints(1)
     designs["carport-1car-20m2"] = {
@@ -342,7 +378,7 @@ def main():
                         "Same construction as option 1, so a second bay can be added later (but that makes it 20-60 m2). "
                         "Room for 9 solar panels (about 3.9 kWp)."),
         "units": "mm", "anchored": "Stands on ground screws, so there is no tip check.",
-        "params": p, "materials": mats("gl_post", "gl_beam", "c24_220", "c24_95", "batten", "roof_sheet", "solar", "site", "house", "boundary", "car", "zone"),
+        "params": p, "materials": mats("gl_post", "gl_beam", "c24_220", "c24_95", "batten", "roof_sheet", "solar", "site", "wall", "glass", "outside", "masonry", "boundary", "car", "zone"),
         "parts": parts, "joints": j,
         "hardware": carport_hardware(posts=4, rafters=7, roof_m2=3.6 * 5.47, panels=9),
     }
@@ -350,10 +386,10 @@ def main():
     # ---------- 3. carport + office and bike box, just under 60 m2
     p = carport_params(W=9950, D=5950, bays=3, h_front=3500)
     parts = carport_parts(batten_pieces=3, solar_rows=3, solar_cols=8)
-    parts += car("multivan", *MULTIVAN, cx=150 + 250 + 70 + 1551, y0=450)
-    parts += car("alltrack", *ALLTRACK, cx=150 + 250 + 70 + 3103 + 1551, y0=450)
-    # the box: x 6780..9950, y 520..4400; timber floor on ground screws
-    bx0, bx1, by0, by1 = 6780, 9950, 520, 4400
+    parts += car("multivan", *MULTIVAN, y_nose=PAD_N - 450, cx=150 + 250 + 70 + 1551)
+    parts += car("alltrack", *ALLTRACK, y_nose=PAD_N - 450, cx=150 + 250 + 70 + 3103 + 1551)
+    # the box: x 6780..9950; y garden 1700 .. road 5580 (flipped from the old 520..4400)
+    bx0, bx1, by0, by1 = 6780, 9950, PAD_N - 4400, PAD_N - 520
     bw, bd = bx1 - bx0, by1 - by0
     fz = 100  # underside of floor beams
     for i, x in enumerate((bx0, bx0 + (bw - 90) / 2, bx1 - 90)):
@@ -376,17 +412,17 @@ def main():
     wall_h = 2480
     wz = floor_top
     walls, wall_ids = [], []
-    w, ids = wall("box_n", "Office box: front wall", "x", (bx0, by0, wz), bw, wall_h)
+    w, ids = wall("box_n", "Office box: road wall", "x", (bx0, by1 - 145, wz), bw, wall_h)
     walls += w; wall_ids += ids
-    w, ids = wall("box_s", "Office box: garden wall", "x", (bx0, by1 - 145, wz), bw, wall_h,
+    w, ids = wall("box_s", "Office box: garden wall", "x", (bx0, by0, wz), bw, wall_h,
                   openings=[(900, 1300, 1300, 900, "window")])
     walls += w; wall_ids += ids
     w, ids = wall("box_w", "Office box: carport-side wall", "y", (bx0, by0 + 145, wz), bd - 290, wall_h,
-                  openings=[(150, 1000, 2100, 0, "bike-room door"), (2050, 900, 2100, 0, "office door")])
+                  openings=[(150, 900, 2100, 0, "office door"), (2050, 1000, 2100, 0, "bike-room door")])
     walls += w; wall_ids += ids
     w, ids = wall("box_e", "Office box: east wall (EI60)", "y", (bx1 - 145, by0 + 145, wz), bd - 290, wall_h)
     walls += w; wall_ids += ids
-    w, ids = wall("box_p", "Office box: partition", "x", (bx0 + 145, by0 + 1350, wz), bw - 290, wall_h, stud=95,
+    w, ids = wall("box_p", "Office box: partition", "x", (bx0 + 145, by1 - 145 - 1350, wz), bw - 290, wall_h, stud=95,
                   openings=[])
     for q in w:
         if q.get("material") == "c24_145":
@@ -406,9 +442,10 @@ def main():
                           "material": "osb12", "size": [fw, fl, 12], "at": [fx, fy, wz + wall_h + 145],
                           "role": "Deck over the ceiling joists, under the carport roof."})
     parts.append({"id": "cargo_bike", "name": "Cargo bike", "group": "Cars", "material": "car", "size": [2700, 650, 1100],
-                  "at": [bx0 + 220, by0 + 330, floor_top], "role": "Cargo bike in the bike room, in and out through the side door."})
+                  "at": [bx0 + 220, by1 - 145 - 330 - 650, floor_top],
+                  "role": "Cargo bike in the bike room (road end), in and out through the side door."})
     parts.append({"id": "desk", "name": "Sit/stand desk", "group": "Office box: inside", "material": "car", "size": [1600, 800, 740],
-                  "at": [bx0 + 800, by1 - 145 - 850, floor_top], "role": "Desk under the garden window."})
+                  "at": [bx0 + 800, by0 + 145 + 50, floor_top], "role": "Desk under the garden window."})
     parts += site_parts()
     joints = carport_joints(3)
     floor_ids = ["box_beam1", "box_beam2", "box_beam3", "box_joist"] + [f"box_floor{i}" for i in range(1, 7)]
@@ -426,7 +463,7 @@ def main():
                         "no window, plus a written agreement with the neighbour. The roof takes about 24 panels (about 10 kWp)."),
         "units": "mm", "anchored": "Stands on ground screws, so there is no tip check.",
         "params": p, "materials": mats("gl_post", "gl_beam", "gl_floor", "c24_220", "c24_195", "c24_145", "c24_95", "batten", "osb22", "osb12",
-                                       "roof_sheet", "solar", "site", "house", "boundary", "car", "zone", "opening"),
+                                       "roof_sheet", "solar", "site", "wall", "glass", "outside", "masonry", "boundary", "car", "zone", "opening"),
         "parts": parts, "joints": joints,
         "hardware": carport_hardware(posts=8, rafters=18, roof_m2=9.95 * 5.97, panels=24) + [
             {"item": "Ground screw 76x1000 for the box floor beams", "qty": 9},
@@ -443,40 +480,46 @@ def main():
     # ---------- 4. insulated two-car garage on a slab
     GW, GD, hf, pitch = 6600, 6200, 2900, 5
     gx0 = 150
+    gy0 = PAD_N - GD  # garden (south) edge of the garage footprint; front/road at gy0 + GD
     drop = math.tan(math.radians(pitch))
     t = 45
     gparams = {
         "GW": {"value": GW, "label": "Garage width (outside of the frame)"},
         "GD": {"value": GD, "label": "Garage depth (outside of the frame)"},
-        "pitch": {"value": pitch, "label": "Roof pitch (falls toward the garden)", "unit": "deg"},
-        "h_front": {"value": hf, "label": "Front wall height (top of the plates)"},
+        "pitch": {"value": pitch, "label": "Roof pitch (falls toward the garden / south)", "unit": "deg"},
+        "h_front": {"value": hf, "label": "Front (road) wall height (top of the plates)"},
         "slab": {"value": 100, "label": "Slab thickness above the pad"},
         "footprint_m2": {"value": "GW * GD / 1000000", "label": "Footprint of the walls", "unit": "m2"},
         "roof_area_m2": {"value": "(GW + 400) * (GD + 600) / 1000000", "label": "Roofed area with eaves", "unit": "m2"},
     }
     parts = []
     parts.append({"id": "slab", "name": "Insulated slab", "group": "Slab", "material": "slab",
-                  "size": [GW + 200, GD + 200, 100], "at": [gx0 - 100, -100, 0],
+                  "size": [GW + 200, GD + 200, 100], "at": [gx0 - 100, gy0 - 100, 0],
                   "role": "Frost-protected insulated slab (hire this). Floor falls to the door, with a channel drain outside it; no floor drain inside."})
     z0 = 100
     walls, wall_ids = [], []
-    # front (road side): two 2500 doors with a pier between
-    w, ids = wall("g_front", "Garage: front wall", "x", (gx0, 0, z0), GW, hf,
+    # front (road / north): two 2500 doors with a pier between
+    w, ids = wall("g_front", "Garage: front wall", "x", (gx0, gy0 + GD - 145, z0), GW, hf,
                   openings=[(300, 2500, 2125, 0, "sectional door 1"), (3800, 2500, 2125, 0, "sectional door 2")])
     walls += w; wall_ids += ids
     hb = hf - (GD - 145) * drop
-    w, ids = wall("g_back", "Garage: garden wall", "x", (gx0, GD - 145, z0), GW, round(hb, 1),
+    w, ids = wall("g_back", "Garage: garden wall", "x", (gx0, gy0, z0), GW, round(hb, 1),
                   openings=[(2700, 1200, 1000, 1100, "window")])
     walls += w; wall_ids += ids
-    w, ids = wall("g_west", "Garage: house-side wall", "y", (gx0, 145, z0), GD - 290, hf, sloped=(hf - 145 * drop, drop))
+    # Side walls run from garden toward road; roof slopes down toward garden, so height rises with y
+    w, ids = wall("g_west", "Garage: house-side wall", "y", (gx0, gy0 + 145, z0), GD - 290, hf,
+                  sloped=(hb + 145 * drop, -drop))
     walls += w; wall_ids += ids
-    w, ids = wall("g_east", "Garage: east wall", "y", (gx0 + GW - 145, 145, z0), GD - 290, hf, sloped=(hf - 145 * drop, drop),
-                  openings=[(3600, 900, 2100, 0, "side door")])
+    w, ids = wall("g_east", "Garage: east wall", "y", (gx0 + GW - 145, gy0 + 145, z0), GD - 290, hf,
+                  sloped=(hb + 145 * drop, -drop),
+                  openings=[(GD - 290 - 3600 - 900, 900, 2100, 0, "side door")])
     walls += w; wall_ids += ids
     parts += walls
-    # mid beam on a post between the bays, rafters on front wall, mid beam, back wall
-    ym = GD / 2 - 70
-    zm = z0 + hf - (ym + 70 - 72.5) * drop  # top of beam under the rafter line
+    # mid beam on a post between the bays
+    ym = gy0 + GD / 2 - 70
+    # Height under the rafter line: high at the road, falling toward the garden
+    dist_from_front = (gy0 + GD) - (ym + 70)
+    zm = z0 + hf - (dist_from_front - 72.5) * drop
     parts.append({"id": "g_midpost", "name": "Garage: middle post", "group": "Garage: roof", "material": "gl_post",
                   "size": [140, 140, round(zm - 225 - z0, 1)], "at": [gx0 + GW / 2 - 70, ym, z0],
                   "role": "Post between the two bays, under the middle beam. Halves the rafter span."})
@@ -484,29 +527,31 @@ def main():
                   "size": [GW - 290, 140, 225], "at": [gx0 + 145, ym, round(zm - 225, 1)],
                   "role": "Glulam beam across the garage at mid-depth, from side wall to side wall, with the post in the middle."})
     rn = math.ceil((GW + 400 - 45) / 600) + 1
-    raf_z = z0 + hf + 72.5 * drop + 300 * drop
+    # Rafters rise toward the road (+pitch); sit on the garden eave and run north
     cosp = math.cos(math.radians(pitch))
-    front_len = (ym + 140 + 300) / cosp
-    back_len = (GD + 300 - ym) / cosp
+    back_len = (GD / 2 + 300) / cosp
+    front_len = (GD / 2 + 300) / cosp
     rstep = round((GW + 400 - 90) / (rn - 1), 1)
-    parts.append({"id": "g_rafter", "name": "Garage: rafter, front half", "group": "Garage: roof", "material": "c24_195",
-                  "size": [45, round(front_len, 1), 195], "at": [gx0 - 200, -300, round(raf_z, 1)],
-                  "rotate": {"axis": "x", "deg": -pitch},
-                  "repeat": {"count": rn, "axis": "x", "spacing": rstep},
-                  "role": "Front half of a rafter pair: from the 300 mm front eave over the front wall to the middle beam. Insulated between (195 mm) with a ventilated roof above."})
-    parts.append({"id": "g_rafter_b", "name": "Garage: rafter, back half", "group": "Garage: roof", "material": "c24_195",
+    raf_z_garden = z0 + hb + 300 * drop
+    parts.append({"id": "g_rafter_b", "name": "Garage: rafter, garden half", "group": "Garage: roof", "material": "c24_195",
                   "size": [45, round(back_len, 1), 195],
-                  "at": [gx0 - 200 + 45, ym, round(raf_z - (ym + 300) * drop, 1)],
-                  "rotate": {"axis": "x", "deg": -pitch},
+                  "at": [gx0 - 200, gy0 - 300, round(raf_z_garden, 1)],
+                  "rotate": {"axis": "x", "deg": pitch},
                   "repeat": {"count": rn, "axis": "x", "spacing": rstep},
-                  "role": "Back half: lapped beside the front half over the middle beam and bolted to it, then over the garden wall to a 300 mm eave."})
+                  "role": "Garden half of a rafter pair: from the 300 mm garden eave over the garden wall to the middle beam."})
+    parts.append({"id": "g_rafter", "name": "Garage: rafter, road half", "group": "Garage: roof", "material": "c24_195",
+                  "size": [45, round(front_len, 1), 195],
+                  "at": [gx0 - 200 + 45, ym, round(raf_z_garden + (ym - (gy0 - 300)) * drop, 1)],
+                  "rotate": {"axis": "x", "deg": pitch},
+                  "repeat": {"count": rn, "axis": "x", "spacing": rstep},
+                  "role": "Road half: lapped beside the garden half over the middle beam and bolted to it, then over the front wall to a 300 mm eave."})
     parts.append({"id": "g_roof", "name": "Garage: roof sheet", "group": "Garage: roof", "material": "roof_sheet",
                   "size": [GW + 400, round((GD + 600) / math.cos(math.radians(pitch)), 1), 25],
-                  "at": [gx0 - 200, -300, round(raf_z + 195 / math.cos(math.radians(pitch)) + 50, 1)],
-                  "rotate": {"axis": "x", "deg": -pitch},
-                  "role": "Profiled steel roof on counter-battens (ventilated)."})
-    parts += car("multivan", *MULTIVAN, cx=gx0 + 300 + 1250, y0=400)
-    parts += car("alltrack", *ALLTRACK, cx=gx0 + 3800 + 1250, y0=400)
+                  "at": [gx0 - 200, gy0 - 300, round(raf_z_garden + 195 / math.cos(math.radians(pitch)) + 50, 1)],
+                  "rotate": {"axis": "x", "deg": pitch},
+                  "role": "Profiled steel roof on counter-battens (ventilated). Falls toward the garden."})
+    parts += car("multivan", *MULTIVAN, y_nose=PAD_N - 400, cx=gx0 + 300 + 1250)
+    parts += car("alltrack", *ALLTRACK, y_nose=PAD_N - 400, cx=gx0 + 3800 + 1250)
     for q in parts:
         if q.get("group") == "Cars":
             q["at"][2] = 100
@@ -520,7 +565,7 @@ def main():
                         "and design project, and the detailed plan still applies. It is the most expensive option for the smallest "
                         "gain over a carport (page section 8). The slab runs about 1 m past the pad on the garden side at the east end."),
         "units": "mm", "anchored": "Bolted to the slab, so there is no tip check.",
-        "params": gparams, "materials": mats("gl_post", "gl_beam", "c24_220", "c24_195", "c24_145", "roof_sheet", "site", "house", "boundary", "car", "zone", "opening", "slab"),
+        "params": gparams, "materials": mats("gl_post", "gl_beam", "c24_220", "c24_195", "c24_145", "roof_sheet", "site", "wall", "glass", "outside", "masonry", "boundary", "car", "zone", "opening", "slab"),
         "parts": parts,
         "joints": [
             {"id": "g_walls", "type": "nailed", "parts": wall_ids + ["g_rafter", "g_rafter_b", "g_midbeam", "g_midpost", "slab"],
